@@ -7,14 +7,14 @@ import { Link } from 'react-router-dom';
 function Reports() {
   const [reportData, setReportData] = useState({});
 
-  // Academic Performance Data (Line Chart)
+  // Academic Performance Data Chart
   const academicData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
         label: "Student Performance",
-        backgroundColor: "#3B82F6", // Blue
-        borderColor: "#3B82F6", // Blue
+        backgroundColor: "#3B82F6", 
+        borderColor: "#3B82F6", 
         fill: true,
         tension: 0.4,
         data: [75, 80, 85, 90, 88, 92],
@@ -22,34 +22,34 @@ function Reports() {
     ],
   };
 
-  // Payment Data (Bar Chart)
+  // Payment Data Chart
   const paymentData = {
     labels: ["Completed", "Pending", "Failed"],
     datasets: [
       {
         label: "Payment Status",
-        backgroundColor: ["#34D399", "#F59E0B", "#F87171"], // Green, Yellow, Red
-        borderColor: "#10B981", // Green
+        backgroundColor: ["#34D399", "#F59E0B", "#F87171"], 
+        borderColor: "#10B981", 
         borderWidth: 1,
-        hoverBackgroundColor: ["#059669", "#D97706", "#EF4444"], // Darker shades
+        hoverBackgroundColor: ["#059669", "#D97706", "#EF4444"], 
         data: [3000, 1000, 500],
       },
     ],
   };
 
-  // Attendance Data (Pie Chart)
+  // Attendance Data Chart
   const attendanceData = {
     labels: ["Present", "Absent", "Late"],
     datasets: [
       {
         data: [90, 5, 5],
-        backgroundColor: ["#34D399", "#F87171", "#F59E0B"], // Green, Red, Yellow
+        backgroundColor: ["#34D399", "#F87171", "#F59E0B"], 
         hoverBackgroundColor: ["#059669", "#EF4444", "#D97706"],
       },
     ],
   };
 
-  // Financial Overview Data (Doughnut Chart)
+  // Financial Overview Data Chart
   const financialData = {
     labels: ["Paid", "Outstanding", "Scholarships"],
     datasets: [
@@ -61,7 +61,7 @@ function Reports() {
     ],
   };
 
-  // Recent Activities Table Data
+  // Recent Activities Table 
   const recentActivities = [
     { name: "Math Exam", date: "Feb 10, 2025", status: "Completed", details: "View Results" },
     { name: "History Assignment", date: "Feb 12, 2025", status: "In Progress", details: "Submit Assignment" },
@@ -150,7 +150,7 @@ function Reports() {
         </table>
       </div>
 
-      {/* Student Performance by Subject (Bar Chart) */}
+      {/* Student Performance by Subject Chart */}
       <div className="bg-white p-6 shadow-xl rounded-lg mb-8">
         <h3 className="text-2xl font-semibold text-gray-800 mb-4">Subject-wise Performance</h3>
         <div className="h-72">

@@ -16,13 +16,11 @@ function Admindb() {
   const [revenue] = useState("$250,000");
 
   useEffect(() => {
-    // Fetch the student count from the Laravel API
     fetch("http://127.0.0.1:8000/api/total-students")
       .then((response) => response.json())
       .then((data) => setStudents(data.total));
   }, []);
 
-  // Fake chart data
   const barData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [

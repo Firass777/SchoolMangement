@@ -62,7 +62,7 @@ if (!$user) {
          return response()->json([
             'message' => 'Login successful',
             'token' => $token,
-            'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),  // Hide sensitive fields
+            'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),  
         ]);
     }
     
@@ -99,4 +99,19 @@ if (!$user) {
             return response()->json(['error' => 'Failed to log out'], 500);
         }
     }    
+
+        // This method will return all users
+        public function index()
+        {
+            $users = User::all(); 
+            return response()->json($users); 
+        }
+
+        public function totalStudents()
+        {
+            $total = User::count();
+            return response()->json(['total' => $total]);
+        }
 }
+
+

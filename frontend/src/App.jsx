@@ -7,7 +7,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register';
 import Admindb from './components/Admin/Admindb';
-import Student from './components/Admin/Student';  {/* Add the import for Student */}
+import Student from './components/Admin/Student';  
 import Teacher from './components/Admin/Teacher';
 import Reports from './components/Admin/Reports';
 
@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 overflow-x-hidden flex flex-col" style={{ overflow: 'hidden' }}>
-      {/* Fixed Navbar */}
+      {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <h1 className="text-2xl font-bold text-blue-600">SchoolManager</h1>
