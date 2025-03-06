@@ -78,6 +78,12 @@ function Teacherdb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/courseform" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
+                  <span>Courses</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>

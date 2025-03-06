@@ -74,7 +74,7 @@ const GradesForm = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/students" className="flex items-center space-x-2">
+                <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
                   <span>Students</span>
                 </Link>
@@ -89,6 +89,12 @@ const GradesForm = () => {
                 <Link to="/gradesform" className="flex items-center space-x-2">
                   <FaChartLine />
                   <span>Grades</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/courseform" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
+                  <span>Courses</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">

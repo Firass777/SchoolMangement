@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\GradesController;
+use App\Http\Controllers\CourseController;
+
+Route::post('/courses/add', [CourseController::class, 'addCourse']);
+Route::get('/courses', [CourseController::class, 'getCourses']);
+Route::get('/courses/download/{id}', [CourseController::class, 'downloadCourse']);
 
 Route::post('/grades/add', [GradesController::class, 'addGrade']);
 Route::get('/grades/{studentNIN}', [GradesController::class, 'getGrades']);
