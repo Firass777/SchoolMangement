@@ -13,9 +13,11 @@ import Reports from './components/Admin/Reports';
 
 import Teacherdb from './components/Teacher/Teacherdb'
 import AttendanceForm from "./components/Teacher/AttendanceForm";
+import GradeForm from "./components/Teacher/GradesForm";
 
 import Studentdb from './components/Student/Studentdb';
 import AttendanceView from "./components/Student/AttendanceView";
+import GradeView from "./components/Student/GradesView";
 
 import Guardindb from './components/Guardian/Guardiandb';
 
@@ -63,11 +65,13 @@ function App() {
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
+          <Route path="/gradesform" element={<GradeForm />} />
 
           <Route path="/guardiandb" element={<Guardindb />} />
 
           <Route path="/studentdb" element={<Studentdb />} />
           <Route path="/attendanceview" element={<AttendanceView />} />
+          <Route path="/gradesview" element={<GradeView />} />
           
         </Routes>
       </div>

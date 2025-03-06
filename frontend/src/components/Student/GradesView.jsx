@@ -1,49 +1,89 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload } from 'react-icons/fa';
-import html2pdf from 'html2pdf.js'; // Import html2pdf
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import html2pdf from 'html2pdf.js';
 
-const AttendanceView = () => {
-  const [attendances, setAttendances] = useState([]);
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-  // Function to fetch attendance data and sort it
+const GradesView = () => {
+  const [grades, setGrades] = useState([]);
+
+  // Fetch grades data
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const fetchGrades = async () => {
       const studentData = JSON.parse(localStorage.getItem('user'));
       const studentNIN = studentData?.nin;
 
       if (!studentNIN) return;
 
       try {
-        const response = await fetch(`http://localhost:8000/api/attendance/${studentNIN}`);
+        const response = await fetch(`http://localhost:8000/api/grades/${studentNIN}`);
         const data = await response.json();
 
         if (response.ok) {
-          // Sort the attendances by created_at in descending order
-          const sortedAttendances = data.attendances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          setAttendances(sortedAttendances);
+          const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          setGrades(sortedGrades);
         } else {
-          alert(data.message || 'Failed to fetch attendance.');
+          alert(data.message || 'Failed to fetch grades.');
         }
       } catch (error) {
-        console.error('Error fetching attendance:', error);
+        console.error('Error fetching grades:', error);
       }
     };
 
-    fetchAttendance();
+    fetchGrades();
   }, []);
 
-  // Function to download attendance as PDF
+  // Prepare data for the chart
+  const chartData = {
+    labels: grades.map((grade) => grade.subject),
+    datasets: [
+      {
+        label: 'Grades',
+        data: grades.map((grade) => {
+          // Convert grades to numerical values for the chart (e.g., A=4, B=3, etc.)
+          switch (grade.grade) {
+            case 'A': return 4;
+            case 'B': return 3;
+            case 'C': return 2;
+            case 'D': return 1;
+            default: return 0;
+          }
+        }),
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Your Grades Overview',
+      },
+    },
+  };
+
+  // Function to download grades as PDF
   const handleDownloadPDF = () => {
-    const element = document.getElementById('attendance-table'); // Get the attendance table
+    const element = document.getElementById('grades-table');
     const opt = {
       margin: 10,
-      filename: 'attendance_report.pdf',
+      filename: 'grades_report.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     };
-    html2pdf().from(element).set(opt).save(); // Download as PDF
+    html2pdf().from(element).set(opt).save();
   };
 
   return (
@@ -94,8 +134,8 @@ const AttendanceView = () => {
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           {/* Header */}
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Your Attendance</h2>
-            <p className="text-lg text-gray-600 mt-2">View your attendance records below:</p>
+            <h2 className="text-3xl font-bold text-gray-800">Your Grades</h2>
+            <p className="text-lg text-gray-600 mt-2">View your grades and performance below:</p>
           </div>
 
           {/* Download Button */}
@@ -109,28 +149,28 @@ const AttendanceView = () => {
             </button>
           </div>
 
-          {/* Attendance Table */}
-          <div id="attendance-table" className="mb-6 p-6 bg-white shadow-md rounded-lg">
-            {attendances.length === 0 ? (
-              <p className="text-gray-500">No attendance records found.</p>
+          {/* Grades Table */}
+          <div id="grades-table" className="mb-6 p-6 bg-white shadow-md rounded-lg">
+            {grades.length === 0 ? (
+              <p className="text-gray-500">No grade records found.</p>
             ) : (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full table-auto">
                   <thead className="bg-purple-800 text-white">
                     <tr>
                       <th className="px-6 py-3 text-left">Subject</th>
-                      <th className="px-6 py-3 text-left">Status</th>
+                      <th className="px-6 py-3 text-left">Grade</th>
                       <th className="px-6 py-3 text-left">Class</th>
                       <th className="px-6 py-3 text-left">Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {attendances.map((attendance) => (
-                      <tr key={attendance.id} className="border-b">
-                        <td className="px-6 py-3">{attendance.subject}</td>
-                        <td className="px-6 py-3">{attendance.status}</td>
-                        <td className="px-6 py-3">{attendance.class}</td>
-                        <td className="px-6 py-3">{new Date(attendance.created_at).toLocaleDateString()}</td>
+                    {grades.map((grade) => (
+                      <tr key={grade.id} className="border-b">
+                        <td className="px-6 py-3">{grade.subject}</td>
+                        <td className="px-6 py-3">{grade.grade}</td>
+                        <td className="px-6 py-3">{grade.class}</td>
+                        <td className="px-6 py-3">{new Date(grade.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -138,10 +178,18 @@ const AttendanceView = () => {
               </div>
             )}
           </div>
+
+          {/* Grades Chart */}
+          <div className="mb-6 p-6 bg-white shadow-md rounded-lg">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
+            <div className="w-full h-96">
+              <Bar data={chartData} options={chartOptions} />
+            </div>
+          </div>
         </main>
       </div>
     </div>
   );
 };
 
-export default AttendanceView;
+export default GradesView;

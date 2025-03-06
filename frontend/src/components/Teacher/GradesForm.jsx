@@ -1,18 +1,17 @@
-// src/components/AttendanceForm.jsx
 import React, { useState, useEffect } from 'react';
 import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const AttendanceForm = () => {
+const GradesForm = () => {
   const [studentNIN, setStudentNIN] = useState('');
-  const [status, setStatus] = useState('Present');
-  const [className, setClassName] = useState('');
   const [subject, setSubject] = useState('');
+  const [grade, setGrade] = useState('');
+  const [className, setClassName] = useState('');
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showStudents, setShowStudents] = useState(false); // State to control visibility of student list
-  const [showSearch, setShowSearch] = useState(false); // State to control visibility of the search bar
+  const [showStudents, setShowStudents] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   // Fetch students
   useEffect(() => {
@@ -31,24 +30,24 @@ const AttendanceForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch('http://localhost:8000/api/attendance/add', {
+    const response = await fetch('http://localhost:8000/api/grades/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         student_nin: studentNIN,
-        status,
-        class: className,
         subject,
+        grade,
+        class: className,
       }),
     });
 
     const data = await response.json();
     if (response.ok) {
-      alert('Attendance added successfully!');
+      alert('Grade added successfully!');
     } else {
-      alert(data.message || 'Failed to add attendance.');
+      alert(data.message || 'Failed to add grade.');
     }
   };
 
@@ -111,8 +110,8 @@ const AttendanceForm = () => {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Add Attendance</h2>
-            <p className="text-gray-600">Enter the attendance details below.</p>
+            <h2 className="text-3xl font-bold text-gray-800">Add Grade</h2>
+            <p className="text-gray-600">Enter the grade details below.</p>
           </div>
 
           {/* Search Bar for Students */}
@@ -133,7 +132,7 @@ const AttendanceForm = () => {
             <button
               onClick={() => {
                 setShowStudents(!showStudents);
-                setShowSearch(!showSearch); // Toggle search bar visibility with student list
+                setShowSearch(!showSearch);
               }}
               className="py-2 px-4 ml-4 bg-green-800 text-white rounded hover:bg-green-700"
             >
@@ -161,7 +160,8 @@ const AttendanceForm = () => {
             </div>
           )}
 
-        <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
+          {/* Grade Form */}
+          <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-gray-700">Student NIN:</label>
@@ -169,31 +169,6 @@ const AttendanceForm = () => {
                   type="text"
                   value={studentNIN}
                   onChange={(e) => setStudentNIN(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Status:</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="Present">Present</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Late">Late</option>
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Class:</label>
-                <input
-                  type="text"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
                   className="w-full p-2 border rounded"
                   required
                 />
@@ -210,8 +185,30 @@ const AttendanceForm = () => {
                 />
               </div>
 
+              <div className="mb-4">
+                <label className="block text-gray-700">Grade:</label>
+                <input
+                  type="text"
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700">Class:</label>
+                <input
+                  type="text"
+                  value={className}
+                  onChange={(e) => setClassName(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+
               <button type="submit" className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Add Attendance
+                Add Grade
               </button>
             </form>
           </div>
@@ -221,4 +218,4 @@ const AttendanceForm = () => {
   );
 };
 
-export default AttendanceForm;
+export default GradesForm;

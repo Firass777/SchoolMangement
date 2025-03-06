@@ -72,7 +72,7 @@ function Teacherdb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/grades" className="flex items-center space-x-2">
+                <Link to="/gradesform" className="flex items-center space-x-2">
                   <FaChartLine />
                   <span>Grades</span>
                 </Link>
