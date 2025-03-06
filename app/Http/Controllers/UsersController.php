@@ -21,7 +21,7 @@ class UsersController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|max:12',
-            'role' => 'required|string|in:student,teacher,admin,parent', // Validate role
+            'role' => 'required|string|in:student,teacher,admin,parent', 
         ]);
     
         if ($validator->fails()) {
@@ -64,7 +64,7 @@ class UsersController extends Controller
             'message' => 'Login successful',
             'token' => $token,
             'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),
-            'role' => $user->role, // Add this line
+            'role' => $user->role, 
         ]);
     }
     
