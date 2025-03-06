@@ -15,27 +15,29 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  
 class UsersController extends Controller
 {
-     public function register(Request $request)
+    public function register(Request $request)
     {
-         $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|max:12',
+            'role' => 'required|string|in:student,teacher,admin,parent', // Validate role
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
-         $user = User::create([
+    
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role, // Add this line
         ]);
-
-         $token = JWTAuth::fromUser($user);
-
-         return response()->json([
+    
+        $token = JWTAuth::fromUser($user);
+    
+        return response()->json([
             'message' => 'User registered successfully',
             'user' => $user,
             'token' => $token
@@ -43,26 +45,26 @@ class UsersController extends Controller
     }
     public function login(Request $request)
     {
-         $request->validate([
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:8|max:12',
         ]);
     
-         $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
     
-       
-if (!$user) {
-    return response()->json(['error' => 'Invalid email address'], 401);
-} elseif (!Hash::check($request->password, $user->password)) {
-    return response()->json(['error' => 'Incorrect password'], 401);
-}
-
-         $token = JWTAuth::fromUser($user);
+        if (!$user) {
+            return response()->json(['error' => 'Invalid email address'], 401);
+        } elseif (!Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Incorrect password'], 401);
+        }
     
-         return response()->json([
+        $token = JWTAuth::fromUser($user);
+    
+        return response()->json([
             'message' => 'Login successful',
             'token' => $token,
-            'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),  
+            'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),
+            'role' => $user->role, // Add this line
         ]);
     }
     

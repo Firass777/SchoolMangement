@@ -1,33 +1,35 @@
 import React, { useState } from "react";
-import axios from "axios"; 
+import axios from "axios";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); 
-  const [success, setSuccess] = useState(""); 
+  const [role, setRole] = useState("student"); // Add this line
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); 
-    setError(""); 
-    setSuccess(""); 
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/register", {
         name,
         email,
         password,
+        role, // Add this line
       });
 
-      console.log("Response:", response.data); 
+      console.log("Response:", response.data);
       setSuccess("Registration successful! Please log in.");
     } catch (err) {
       setLoading(false);
       if (err.response) {
-        console.error("Error response:", err.response); 
+        console.error("Error response:", err.response);
         if (err.response.data.errors) {
           setError(err.response.data.errors.email || "Registration failed. Please try again.");
         } else {
@@ -86,6 +88,24 @@ const Register = () => {
             placeholder="Enter your password"
             required
           />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700" htmlFor="role">
+            Role
+          </label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            id="role"
+            className="w-full p-3 border border-gray-300 rounded-md mt-2"
+            required
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+            <option value="parent">Parent</option>
+          </select>
         </div>
 
         <button

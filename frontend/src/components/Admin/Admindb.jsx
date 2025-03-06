@@ -12,13 +12,19 @@ function Admindb() {
   }, []);
 
   const [students, setStudents] = useState(0);
-  const [teachers] = useState(150);
+  const [teachers, setTeachers] = useState(0);
   const [revenue] = useState("$250,000");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/total-students")
+    fetch("http://127.0.0.1:8000/api/users")
       .then((response) => response.json())
-      .then((data) => setStudents(data.total));
+      .then((data) => {
+        const studentCount = data.filter((user) => user.role === "student").length;
+        const teacherCount = data.filter((user) => user.role === "teacher").length;
+        setStudents(studentCount);
+        setTeachers(teacherCount);
+      })
+      .catch((error) => console.error("Error fetching users:", error));
   }, []);
 
   const barData = {

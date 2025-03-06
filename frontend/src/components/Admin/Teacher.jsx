@@ -8,18 +8,20 @@ function Teacher() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [showDeleteForm, setShowDeleteForm] = useState(false);
-  
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/teachers")
+    fetch("http://localhost:8000/api/users") // Fetch data from the users API
       .then((response) => response.json())
-      .then((data) => setTeacherData(data))
+      .then((data) => setTeacherData(data))  // Set the data
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
   const filteredTeachers = teacherData.filter((teacher) =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.id.toString().includes(searchTerm)
+    teacher.role === 'teacher' && (
+      teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.id.toString().includes(searchTerm)
+    )
   );
 
   return (
@@ -115,7 +117,7 @@ function Teacher() {
             </div>
           </div>
 
-                      {/* Add Form */}
+          {/* Add Form */}
           {showAddForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
               <h2 className="text-2xl font-bold mb-4">Add Teacher</h2>
@@ -128,7 +130,7 @@ function Teacher() {
           {/* Update Form */}
           {showUpdateForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Update Teachert</h2>
+              <h2 className="text-2xl font-bold mb-4">Update Teacher</h2>
               <input type="text" placeholder="Teacher ID" className="w-full p-2 border rounded mb-2" />
               <input type="text" placeholder="New Name" className="w-full p-2 border rounded mb-2" />
               <input type="email" placeholder="New Email" className="w-full p-2 border rounded mb-2" />
@@ -144,7 +146,6 @@ function Teacher() {
               <button className="bg-red-600 text-white px-4 py-2 rounded">Delete</button>
             </div>
           )}
-
 
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Teachers List</h2>

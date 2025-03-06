@@ -11,6 +11,12 @@ import Student from './components/Admin/Student';
 import Teacher from './components/Admin/Teacher';
 import Reports from './components/Admin/Reports';
 
+import Teacherdb from './components/Teacher/Teacherdb'
+
+import Studentdb from './components/Student/Studentdb';
+
+import Guardindb from './components/Guardian/Guardiandb';
+
 function App() {
   useEffect(() => {
     AOS.init();
@@ -49,9 +55,16 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admindb" element={<Admindb />} />
-          <Route path="/students" element={<Student />} /> {/* Add the Student Route */}
+          <Route path="/students" element={<Student />} /> 
           <Route path="/teachers" element={<Teacher />} /> 
           <Route path="/reports" element={<Reports />} />
+
+          <Route path="/teacherdb" element={<Teacherdb />} />
+
+          <Route path="/guardiandb" element={<Guardindb />} />
+
+          <Route path="/studentdb" element={<Studentdb />} />
+          
         </Routes>
       </div>
 

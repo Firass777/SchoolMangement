@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaUsers, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 function Student() {
@@ -8,20 +9,62 @@ function Student() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [showDeleteForm, setShowDeleteForm] = useState(false);
-  
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/users")
-      .then((response) => response.json())
-      .then((data) => setStudentData(data))
-      .catch((error) => console.error("Error fetching data:", error));
+    fetchStudents();
   }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/users");
+      const students = response.data.filter((user) => user.role === "student");
+      setStudentData(students);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/register", {
+        name,
+        email,
+        password,
+        role: "student",
+      });
+
+      setSuccess("Student added successfully!");
+      setShowAddForm(false);
+      setName("");
+      setEmail("");
+      setPassword("");
+      fetchStudents();
+    } catch (err) {
+      setLoading(false);
+      if (err.response && err.response.data.errors) {
+        setError(err.response.data.errors.email || "Failed to add student.");
+      } else {
+        setError("Something went wrong.");
+      }
+    }
+  };
 
   const filteredStudents = studentData.filter((student) =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.id.toString().includes(searchTerm)
   );
-  
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -124,9 +167,37 @@ function Student() {
           {showAddForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
               <h2 className="text-2xl font-bold mb-4">Add Student</h2>
-              <input type="text" placeholder="Name" className="w-full p-2 border rounded mb-2" />
-              <input type="email" placeholder="Email" className="w-full p-2 border rounded mb-2" />
-              <button className="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+              <form onSubmit={handleAddSubmit}>
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-2 border rounded mb-2"
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-2 border rounded mb-2"
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 border rounded mb-2"
+                  required
+                />
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
+                  {loading ? "Adding..." : "Add"}
+                </button>
+              </form>
+              {error && <div className="text-red-500 mt-3">{error}</div>}
+              {success && <div className="text-green-500 mt-3">{success}</div>}
             </div>
           )}
 
