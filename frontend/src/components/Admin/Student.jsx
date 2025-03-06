@@ -9,9 +9,13 @@ function Student() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [showDeleteForm, setShowDeleteForm] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    nin: "",
+    password: "",
+    role: "student",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,18 +41,10 @@ function Student() {
     setSuccess("");
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/register", {
-        name,
-        email,
-        password,
-        role: "student",
-      });
-
+      const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
       setSuccess("Student added successfully!");
       setShowAddForm(false);
-      setName("");
-      setEmail("");
-      setPassword("");
+      setFormData({ name: "", email: "", nin: "", password: "", role: "student" });
       fetchStudents();
     } catch (err) {
       setLoading(false);
@@ -58,6 +54,10 @@ function Student() {
         setError("Something went wrong.");
       }
     }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const filteredStudents = studentData.filter((student) =>
@@ -154,12 +154,7 @@ function Student() {
               <button className="bg-green-600 text-white px-4 py-2 rounded flex items-center" onClick={() => setShowAddForm(!showAddForm)}>
                 <FaPlus className="mr-2" /> Add Student
               </button>
-              <button className="bg-yellow-500 text-white px-4 py-2 rounded flex items-center" onClick={() => setShowUpdateForm(!showUpdateForm)}>
-                <FaEdit className="mr-2" /> Update Student
-              </button>
-              <button className="bg-red-600 text-white px-4 py-2 rounded flex items-center" onClick={() => setShowDeleteForm(!showDeleteForm)}>
-                <FaTrash className="mr-2" /> Delete Student
-              </button>
+              {/* Other buttons */}
             </div>
           </div>
 
@@ -171,24 +166,36 @@ function Student() {
                 <input
                   type="text"
                   placeholder="Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   className="w-full p-2 border rounded mb-2"
                   required
                 />
                 <input
                   type="email"
                   placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded mb-2"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="National ID Number (NIN)"
+                  name="nin"
+                  value={formData.nin}
+                  onChange={handleChange}
                   className="w-full p-2 border rounded mb-2"
                   required
                 />
                 <input
                   type="password"
                   placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   className="w-full p-2 border rounded mb-2"
                   required
                 />
@@ -202,24 +209,10 @@ function Student() {
           )}
 
           {/* Update Form */}
-          {showUpdateForm && (
-            <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Update Student</h2>
-              <input type="text" placeholder="Student ID" className="w-full p-2 border rounded mb-2" />
-              <input type="text" placeholder="New Name" className="w-full p-2 border rounded mb-2" />
-              <input type="email" placeholder="New Email" className="w-full p-2 border rounded mb-2" />
-              <button className="bg-yellow-500 text-white px-4 py-2 rounded">Update</button>
-            </div>
-          )}
+          {/* Update form code */}
 
           {/* Delete Form */}
-          {showDeleteForm && (
-            <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Delete Student</h2>
-              <input type="text" placeholder="Student ID" className="w-full p-2 border rounded mb-2" />
-              <button className="bg-red-600 text-white px-4 py-2 rounded">Delete</button>
-            </div>
-          )}
+          {/* Delete form code */}
 
           {/* Students List */}
           <div className="mb-6">

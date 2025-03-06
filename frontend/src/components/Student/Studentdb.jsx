@@ -62,7 +62,7 @@ function Studentdb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/attendance" className="flex items-center space-x-2">
+                <Link to="/attendanceview" className="flex items-center space-x-2">
                   <FaCalendarAlt />
                   <span>Attendance</span>
                 </Link>
