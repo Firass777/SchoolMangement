@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook  } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook } from 'react-icons/fa';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import html2pdf from 'html2pdf.js';
@@ -116,15 +116,15 @@ const GradesView = () => {
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook  />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/studenteventview" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Events</span>
-              </Link>
-            </li>              
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/studenteventview" className="flex items-center space-x-2">
+                  <FaCalendarAlt /> <span>Events</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
@@ -190,11 +190,50 @@ const GradesView = () => {
             )}
           </div>
 
-          {/* Grades Chart */}
-          <div className="mb-6 p-6 bg-white shadow-md rounded-lg">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
-            <div className="w-full h-96">
-              <Bar data={chartData} options={chartOptions} />
+          <div className="flex justify-center space-x-6">
+            {/* Grades Chart */}
+            <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
+              <div className="w-full h-64">
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+            </div>
+
+            {/* Performance Summary */}
+            <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Performance Summary</h3>
+              {grades.length > 0 ? (
+                <>
+                  <p className="text-gray-600">
+                    Your average grade is{' '}
+                    <span className="font-semibold text-purple-800">
+                      {(
+                        grades.reduce((acc, grade) => {
+                          switch (grade.grade) {
+                            case 'A': return acc + 4;
+                            case 'B': return acc + 3;
+                            case 'C': return acc + 2;
+                            case 'D': return acc + 1;
+                            default: return acc;
+                          }
+                        }, 0) / grades.length
+                      ).toFixed(2)}
+                    </span>
+                    .
+                  </p>
+                  <p className="text-gray-600 mt-2">
+                    {grades.some((g) => g.grade === 'A') ? (
+                      "Great job! Keep up the excellent work!"
+                    ) : grades.some((g) => g.grade === 'D') ? (
+                      "Consider reviewing your weaker subjects to improve."
+                    ) : (
+                      "You're doing well, keep pushing forward!"
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className="text-gray-500">No grade records found.</p>
+              )}
             </div>
           </div>
         </main>
