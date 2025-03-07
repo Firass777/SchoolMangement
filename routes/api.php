@@ -6,6 +6,10 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\GradesController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\EventController;
+
+Route::post('/events/add', [EventController::class, 'addEvent']);
+Route::get('/events', [EventController::class, 'getEvents']);
 
 Route::post('/courses/add', [CourseController::class, 'addCourse']);
 Route::get('/courses', [CourseController::class, 'getCourses']);

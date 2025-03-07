@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -93,10 +93,15 @@ const GradesForm = () => {
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/courseform" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teachereventview" className="flex items-center space-x-2">
+                  <FaClipboardList /> <span>Events</span>
+                </Link>
+              </li>                 
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />

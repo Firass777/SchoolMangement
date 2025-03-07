@@ -61,10 +61,15 @@ const CoursesView = () => {
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
+                  <FaBook  />
                   <span>Courses</span>
                 </Link>
               </li>
+            <li className="px-6 py-3 hover:bg-purple-700">
+              <Link to="/studenteventview" className="flex items-center space-x-2">
+                <FaCalendarAlt /> <span>Events</span>
+              </Link>
+            </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />

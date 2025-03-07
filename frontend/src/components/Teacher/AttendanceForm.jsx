@@ -1,6 +1,6 @@
 // src/components/AttendanceForm.jsx
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -11,8 +11,9 @@ const AttendanceForm = () => {
   const [subject, setSubject] = useState('');
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showStudents, setShowStudents] = useState(false); // State to control visibility of student list
-  const [showSearch, setShowSearch] = useState(false); // State to control visibility of the search bar
+  const [showStudents, setShowStudents] = useState(false); 
+  const [showSearch, setShowSearch] = useState(false); 
+
 
   // Fetch students
   useEffect(() => {
@@ -94,10 +95,15 @@ const AttendanceForm = () => {
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/courseform" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teachereventview" className="flex items-center space-x-2">
+                  <FaClipboardList /> <span>Events</span>
+                </Link>
+              </li>                 
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
@@ -139,7 +145,7 @@ const AttendanceForm = () => {
             <button
               onClick={() => {
                 setShowStudents(!showStudents);
-                setShowSearch(!showSearch); // Toggle search bar visibility with student list
+                setShowSearch(!showSearch); 
               }}
               className="py-2 px-4 ml-4 bg-green-800 text-white rounded hover:bg-green-700"
             >

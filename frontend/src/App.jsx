@@ -10,16 +10,19 @@ import Admindb from './components/Admin/Admindb';
 import Student from './components/Admin/Student';  
 import Teacher from './components/Admin/Teacher';
 import Reports from './components/Admin/Reports';
+import EventForm from "./components/Admin/EventForm";
 
 import Teacherdb from './components/Teacher/Teacherdb'
 import AttendanceForm from "./components/Teacher/AttendanceForm";
 import GradeForm from "./components/Teacher/GradesForm";
 import CourseForm from "./components/Teacher/CourseForm";
+import TeacherEventView from "./components/Teacher/TeacherEventView";
 
 import Studentdb from './components/Student/Studentdb';
 import AttendanceView from "./components/Student/AttendanceView";
 import GradeView from "./components/Student/GradesView";
 import CourseView from "./components/Student/CourseView";
+import StudentEventView from "./components/Student/StudentEventView";
 
 import Guardindb from './components/Guardian/Guardiandb';
 
@@ -64,11 +67,13 @@ function App() {
           <Route path="/students" element={<Student />} /> 
           <Route path="/teachers" element={<Teacher />} /> 
           <Route path="/reports" element={<Reports />} />
+          <Route path="/eventform" element={<EventForm />} />
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
           <Route path="/gradesform" element={<GradeForm />} />
           <Route path="/courseform" element={<CourseForm />} />
+          <Route path="/teachereventview" element={<TeacherEventView />} />
 
           <Route path="/guardiandb" element={<Guardindb />} />
 
@@ -76,6 +81,7 @@ function App() {
           <Route path="/attendanceview" element={<AttendanceView />} />
           <Route path="/gradesview" element={<GradeView />} />
           <Route path="/courseview" element={<CourseView />} />
+          <Route path="/studenteventview" element={<StudentEventView />} />
           
         </Routes>
       </div>

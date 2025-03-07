@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList } from 'react-icons/fa';
 import axios from 'axios';
 
 const AddCourseForm = () => {
@@ -70,10 +70,15 @@ const AddCourseForm = () => {
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/courseform" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teachereventview" className="flex items-center space-x-2">
+                  <FaClipboardList /> <span>Events</span>
+                </Link>
+              </li>                 
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
@@ -135,7 +140,7 @@ const AddCourseForm = () => {
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2 bg-purple-800 text-white rounded hover:bg-purple-700">
+              <button type="submit" className="w-full py-2 bg-green-800 text-white rounded hover:bg-green-700">
                 Add Course
               </button>
             </form>

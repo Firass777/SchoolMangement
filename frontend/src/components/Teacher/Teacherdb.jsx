@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaBell, FaSignOutAlt } from "react-icons/fa";
+import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaBell, FaSignOutAlt, FaBook, FaClipboardList } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -79,10 +79,15 @@ function Teacherdb() {
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/courseform" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teachereventview" className="flex items-center space-x-2">
+                  <FaClipboardList /> <span>Events</span>
+                </Link>
+              </li>              
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
