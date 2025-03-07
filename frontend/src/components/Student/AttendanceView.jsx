@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload } from 'react-icons/fa';
-import html2pdf from 'html2pdf.js'; // Import html2pdf
+import html2pdf from 'html2pdf.js';
 
 const AttendanceView = () => {
   const [attendances, setAttendances] = useState([]);
@@ -19,7 +19,6 @@ const AttendanceView = () => {
         const data = await response.json();
 
         if (response.ok) {
-          // Sort the attendances by created_at in descending order
           const sortedAttendances = data.attendances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           setAttendances(sortedAttendances);
         } else {
@@ -35,7 +34,7 @@ const AttendanceView = () => {
 
   // Function to download attendance as PDF
   const handleDownloadPDF = () => {
-    const element = document.getElementById('attendance-table'); // Get the attendance table
+    const element = document.getElementById('attendance-table');
     const opt = {
       margin: 10,
       filename: 'attendance_report.pdf',
@@ -43,7 +42,21 @@ const AttendanceView = () => {
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     };
-    html2pdf().from(element).set(opt).save(); // Download as PDF
+    html2pdf().from(element).set(opt).save();
+  };
+
+  // Function to get color class based on status
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'present':
+        return 'text-green-600 font-semibold';
+      case 'absent':
+        return 'text-red-600 font-semibold';
+      case 'late':
+        return 'text-yellow-600 font-semibold';
+      default:
+        return 'text-gray-600';
+    }
   };
 
   return (
@@ -134,7 +147,9 @@ const AttendanceView = () => {
                     {attendances.map((attendance) => (
                       <tr key={attendance.id} className="border-b">
                         <td className="px-6 py-3">{attendance.subject}</td>
-                        <td className="px-6 py-3">{attendance.status}</td>
+                        <td className={`px-6 py-3 ${getStatusColor(attendance.status)}`}>
+                          {attendance.status}
+                        </td>
                         <td className="px-6 py-3">{attendance.class}</td>
                         <td className="px-6 py-3">{new Date(attendance.created_at).toLocaleDateString()}</td>
                       </tr>
