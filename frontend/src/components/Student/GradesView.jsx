@@ -125,6 +125,12 @@ const GradesView = () => {
                   <FaCalendarAlt /> <span>Events</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/semails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>                 
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />

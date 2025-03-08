@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaMoneyBillWave, FaCog, FaUsers, FaSchool, FaSignOutAlt, FaClipboardList, FaBell } from "react-icons/fa";
+import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaMoneyBillWave, FaCog, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell } from "react-icons/fa";
 import { Bar, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -100,9 +100,9 @@ function Admindb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/messages" className="flex items-center space-x-2">
-                  <FaUsers />
-                  <span>Messages</span>
+                <Link to="/aemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

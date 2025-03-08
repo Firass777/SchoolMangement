@@ -7,6 +7,10 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\GradesController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EmailController;
+
+Route::post('/emails/send', [EmailController::class, 'sendEmail']);
+Route::get('/emails', [EmailController::class, 'getEmails']);
 
 Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
