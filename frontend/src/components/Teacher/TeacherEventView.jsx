@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate  } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope  } from 'react-icons/fa';
 
 const TeacherEventView = () => {
   const [events, setEvents] = useState([]);
@@ -10,7 +10,7 @@ const TeacherEventView = () => {
   const [expandedEventId, setExpandedEventId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const eventsPerPage = 4; // Number of events per page
+  const eventsPerPage = 4; 
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -25,13 +25,13 @@ const TeacherEventView = () => {
           params: { role: userRole },
         });
 
-        // Sort events by date (newest to oldest)
+        // Sort events by date 
         const sortedEvents = response.data.events.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
 
         setEvents(sortedEvents);
-        setFilteredEvents(sortedEvents); // Initialize filtered events
+        setFilteredEvents(sortedEvents); 
         setMessage('');
       } catch (error) {
         setMessage('No events found.');
@@ -110,6 +110,12 @@ const TeacherEventView = () => {
                 <FaClipboardList /> <span>Events</span>
               </Link>
             </li>
+            <li className="px-6 py-3 hover:bg-green-700">
+              <Link to="/temails" className="flex items-center space-x-2">
+                <FaEnvelope />
+                <span>Emails</span>
+              </Link>
+            </li>            
             <li className="px-6 py-3 hover:bg-green-700">
               <Link to="/notifications" className="flex items-center space-x-2">
                 <FaBell /> <span>Notifications</span>

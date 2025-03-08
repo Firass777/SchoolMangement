@@ -5,7 +5,7 @@ import {
   FaUserGraduate,
   FaChalkboardTeacher,
   FaChartBar,
-  FaUsers,
+  FaEnvelope,
   FaCog,
   FaSignOutAlt,
   FaBell,
@@ -98,9 +98,9 @@ const EventForm = () => {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/messages" className="flex items-center space-x-2">
-                  <FaUsers />
-                  <span>Messages</span>
+                <Link to="/aemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
                 </Link>
               </li>
             <li className="px-6 py-3 hover:bg-blue-700">

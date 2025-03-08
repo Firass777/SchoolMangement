@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaSearch } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaSearch, FaEnvelope } from 'react-icons/fa';
 
 const StudentEventView = () => {
   const [events, setEvents] = useState([]);
@@ -105,6 +105,12 @@ const StudentEventView = () => {
                 <FaCalendarAlt /> <span>Events</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/semails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>               
             <li className="px-6 py-3 hover:bg-purple-700">
               <Link to="/notifications" className="flex items-center space-x-2">
                 <FaBell /> <span>Notifications</span>

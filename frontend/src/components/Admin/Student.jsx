@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaUsers, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash } from "react-icons/fa";
+import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash } from "react-icons/fa";
 
 function Student() {
   const [studentData, setStudentData] = useState([]);
@@ -113,9 +113,9 @@ function Student() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/messages" className="flex items-center space-x-2">
-                  <FaUsers />
-                  <span>Messages</span>
+                <Link to="/aemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

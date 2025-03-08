@@ -1,6 +1,6 @@
 // src/components/AttendanceForm.jsx
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -103,7 +103,13 @@ const AttendanceForm = () => {
                 <Link to="/teachereventview" className="flex items-center space-x-2">
                   <FaClipboardList /> <span>Events</span>
                 </Link>
-              </li>                 
+              </li>      
+            <li className="px-6 py-3 hover:bg-green-700">
+              <Link to="/temails" className="flex items-center space-x-2">
+                <FaEnvelope />
+                <span>Emails</span>
+              </Link>
+            </li>                         
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
