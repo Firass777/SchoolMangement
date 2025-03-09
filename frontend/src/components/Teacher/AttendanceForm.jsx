@@ -111,7 +111,7 @@ const AttendanceForm = () => {
               </Link>
             </li>                         
               <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/notifications" className="flex items-center space-x-2">
+                <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>

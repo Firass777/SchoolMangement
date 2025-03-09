@@ -88,14 +88,14 @@ function Teacherdb() {
                   <FaClipboardList /> <span>Events</span>
                 </Link>
               </li>          
-              <li className="px-6 py-3 hover:bg-blue-700">
+              <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/temails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
               </li>                  
               <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/notifications" className="flex items-center space-x-2">
+                <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>
@@ -121,7 +121,7 @@ function Teacherdb() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
-              <FaUserGraduate className="text-blue-600 text-4xl mr-4" />
+              <FaUserGraduate className="text-green-600 text-4xl mr-4" />
               <div>
                 <h3 className="text-2xl font-semibold">{students}</h3>
                 <p className="text-gray-600">Total Students</p>

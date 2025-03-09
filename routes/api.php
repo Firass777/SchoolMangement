@@ -8,6 +8,10 @@ use App\Http\Controllers\GradesController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\NotificationController;
+
+Route::post('/notification/send', [NotificationController::class, 'sendNotification']);
+Route::get('/notifications/{recipient}', [NotificationController::class, 'getNotifications']);
 
 Route::post('/emails/send', [EmailController::class, 'sendEmail']);
 Route::get('/emails', [EmailController::class, 'getEmails']);
