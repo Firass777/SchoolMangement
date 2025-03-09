@@ -4,7 +4,7 @@ import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBoo
 import { Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 
-// Register Chart.js components
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
 const StudentDB = () => {
@@ -97,14 +97,14 @@ const StudentDB = () => {
             default: return 0;
           }
         }),
-        borderColor: 'rgba(153, 102, 255, 1)', // Purple line
-        backgroundColor: 'rgba(153, 102, 255, 0.2)', // Light purple fill
+        borderColor: 'rgba(153, 102, 255, 1)', 
+        backgroundColor: 'rgba(153, 102, 255, 0.2)', 
         borderWidth: 2,
-        pointBackgroundColor: 'rgba(153, 102, 255, 1)', // Purple points
-        pointBorderColor: '#fff', // White border for points
-        pointHoverBackgroundColor: '#fff', // White hover background
-        pointHoverBorderColor: 'rgba(153, 102, 255, 1)', // Purple hover border
-        fill: true, // Fill area under the line
+        pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+        pointBorderColor: '#fff', 
+        pointHoverBackgroundColor: '#fff', 
+        pointHoverBorderColor: 'rgba(153, 102, 255, 1)', 
+        fill: true, 
       },
     ],
   };
@@ -114,7 +114,7 @@ const StudentDB = () => {
     responsive: true,
     plugins: {
       legend: {
-        display: false, // Hide the legend
+        display: false, 
       },
       title: {
         display: true,
@@ -127,7 +127,7 @@ const StudentDB = () => {
     scales: {
       x: {
         grid: {
-          display: false, // Hide x-axis grid lines
+          display: false, 
         },
         title: {
           display: true,
@@ -139,7 +139,7 @@ const StudentDB = () => {
       },
       y: {
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)', // Light gray grid lines
+          color: 'rgba(0, 0, 0, 0.1)', 
         },
         title: {
           display: true,
@@ -151,7 +151,7 @@ const StudentDB = () => {
         min: 0,
         max: 5,
         ticks: {
-          stepSize: 1, // Show ticks in increments of 1
+          stepSize: 1, 
         },
       },
     },
@@ -231,7 +231,7 @@ const StudentDB = () => {
             {/* Attendance Chart */}
             <div className="p-6 bg-white shadow-md rounded-lg">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Attendance Overview</h3>
-              <div className="w-full h-96"> {/* Increased height */}
+              <div className="w-full h-96"> 
                 <Pie data={attendanceChartData} options={gradesChartOptions} />
               </div>
             </div>
@@ -239,7 +239,7 @@ const StudentDB = () => {
             {/* Grades Chart */}
             <div className="p-6 bg-white shadow-md rounded-lg">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
-              <div className="w-full h-96"> {/* Increased height */}
+              <div className="w-full h-96"> 
                 <Line data={gradesChartData} options={gradesChartOptions} />
               </div>
             </div>
@@ -262,7 +262,7 @@ const StudentDB = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {attendance.slice(0, 2).map((record) => ( // Show only last 2 records
+                    {attendance.slice(0, 2).map((record) => ( 
                       <tr key={record.id} className="border-b">
                         <td className="px-6 py-3">{record.subject}</td>
                         <td className="px-6 py-3">{record.status}</td>
@@ -293,7 +293,7 @@ const StudentDB = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {grades.slice(0, 2).map((grade) => ( // Show only last 2 records
+                    {grades.slice(0, 2).map((grade) => ( 
                       <tr key={grade.id} className="border-b">
                         <td className="px-6 py-3">{grade.subject}</td>
                         <td className="px-6 py-3">{grade.grade}</td>

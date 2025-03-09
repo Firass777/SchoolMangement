@@ -2,53 +2,102 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaMoneyBillWave, FaCog, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell } from "react-icons/fa";
+import {
+  FaUserGraduate,
+  FaChalkboardTeacher,
+  FaChartBar,
+  FaMoneyBillWave,
+  FaCog,
+  FaEnvelope,
+  FaSchool,
+  FaSignOutAlt,
+  FaClipboardList,
+  FaBell,
+} from "react-icons/fa";
 import { Bar, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
 function Admindb() {
-  useEffect(() => {
-    AOS.init({ duration: 1000 });
-  }, []);
-
   const [students, setStudents] = useState(0);
   const [teachers, setTeachers] = useState(0);
   const [revenue] = useState("$250,000");
+  const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0, late: 0 });
+  const [latestEvents, setLatestEvents] = useState([]);
+  const [latestStudents, setLatestStudents] = useState([]);
+  const [latestTeachers, setLatestTeachers] = useState([]);
+  const [latestCourses, setLatestCourses] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/users")
-      .then((response) => response.json())
-      .then((data) => {
-        const studentCount = data.filter((user) => user.role === "student").length;
-        const teacherCount = data.filter((user) => user.role === "teacher").length;
-        setStudents(studentCount);
-        setTeachers(teacherCount);
-      })
-      .catch((error) => console.error("Error fetching users:", error));
+    AOS.init({ duration: 1000 });
+    fetchDashboardData();
   }, []);
 
-  const barData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch users (students and teachers)
+      const usersResponse = await fetch("http://127.0.0.1:8000/api/users");
+      const usersData = await usersResponse.json();
+      const studentCount = usersData.filter((user) => user.role === "student").length;
+      const teacherCount = usersData.filter((user) => user.role === "teacher").length;
+      setStudents(studentCount);
+      setTeachers(teacherCount);
+
+      // Fetch attendance statistics
+      const attendanceResponse = await fetch("http://127.0.0.1:8000/api/attendance");
+      const attendanceData = await attendanceResponse.json();
+      const presentCount = attendanceData.attendances.filter((a) => a.status === "Present").length;
+      const absentCount = attendanceData.attendances.filter((a) => a.status === "Absent").length;
+      const lateCount = attendanceData.attendances.filter((a) => a.status === "Late").length;
+      setAttendanceStats({ present: presentCount, absent: absentCount, late: lateCount });
+
+      // Fetch latest events
+      const eventsResponse = await fetch("http://127.0.0.1:8000/api/events/latest");
+      const eventsData = await eventsResponse.json();
+      setLatestEvents(eventsData.events);
+
+      // Fetch latest students
+      const studentsResponse = await fetch("http://127.0.0.1:8000/api/users/latest/students");
+      const studentsData = await studentsResponse.json();
+      setLatestStudents(studentsData.students);
+
+      // Fetch latest teachers
+      const teachersResponse = await fetch("http://127.0.0.1:8000/api/users/latest/teachers");
+      const teachersData = await teachersResponse.json();
+      setLatestTeachers(teachersData.teachers);
+
+      // Fetch latest courses
+      const coursesResponse = await fetch("http://127.0.0.1:8000/api/courses/latest");
+      const coursesData = await coursesResponse.json();
+      setLatestCourses(coursesData.courses);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  };
+
+  // Prepare data for the attendance chart
+  const attendanceChartData = {
+    labels: ["Present", "Absent", "Late"],
     datasets: [
       {
-        label: "Student Registrations",
-        backgroundColor: "#4F46E5",
-        borderColor: "#4F46E5",
+        label: "Attendance",
+        data: [attendanceStats.present, attendanceStats.absent, attendanceStats.late],
+        backgroundColor: ["rgba(75, 192, 192, 0.6)", "rgba(255, 99, 132, 0.6)", "rgba(255, 206, 86, 0.6)"],
+        borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)", "rgba(255, 206, 86, 1)"],
         borderWidth: 1,
-        hoverBackgroundColor: "#4338CA",
-        hoverBorderColor: "#4338CA",
-        data: [100, 200, 150, 300, 250, 400],
       },
     ],
   };
 
-  const pieData = {
-    labels: ["Paid", "Overdue", "Pending"],
+  // Prepare data for the revenue chart
+  const revenueChartData = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
-        data: [60, 25, 15],
-        backgroundColor: ["#4F46E5", "#E53E3E", "#FBBF24"],
-        hoverBackgroundColor: ["#4338CA", "#C53030", "#F59E0B"],
+        label: "Revenue",
+        data: [50000, 75000, 60000, 90000, 80000, 120000],
+        backgroundColor: "rgba(153, 102, 255, 0.6)",
+        borderColor: "rgba(153, 102, 255, 1)",
+        borderWidth: 1,
       },
     ],
   };
@@ -94,7 +143,7 @@ function Admindb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/notificationform" className="flex items-center space-x-2">
+                <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>
@@ -131,21 +180,21 @@ function Admindb() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
+            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaUserGraduate className="text-blue-600 text-4xl mr-4" />
               <div>
                 <h3 className="text-2xl font-semibold">{students}</h3>
                 <p className="text-gray-600">Total Students</p>
               </div>
             </div>
-            <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
+            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaChalkboardTeacher className="text-green-600 text-4xl mr-4" />
               <div>
                 <h3 className="text-2xl font-semibold">{teachers}</h3>
                 <p className="text-gray-600">Total Teachers</p>
               </div>
             </div>
-            <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
+            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaMoneyBillWave className="text-yellow-500 text-4xl mr-4" />
               <div>
                 <h3 className="text-2xl font-semibold">{revenue}</h3>
@@ -154,69 +203,118 @@ function Admindb() {
             </div>
           </div>
 
-          {/* Chart Section */}
-          <div className="flex flex-col sm:flex-row sm:space-x-6 mb-6">
-            {/* Bar Chart */}
-            <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full mb-6 sm:mb-0" data-aos="fade-up">
-              <h3 className="text-xl font-bold mb-4">Student Attendances (Last 6 Months)</h3>
-              <div className="h-80">
-                <Bar data={barData} options={{ maintainAspectRatio: false }} />
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Attendance Chart */}
+            <div className="bg-white p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-bold mb-4">Attendance Overview</h3>
+              <div className="h-64 flex items-center justify-center">
+                <Pie data={attendanceChartData} />
               </div>
             </div>
 
-            {/* Pie Chart */}
-            <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full" data-aos="fade-up">
-              <h3 className="text-xl font-bold mb-4">Student Payment Status</h3>
-              <div className="h-80">
-                <Pie data={pieData} options={{ maintainAspectRatio: false }} />
+            {/* Revenue Chart */}
+            <div className="bg-white p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-bold mb-4">Revenue Trends</h3>
+              <div className="h-64 flex items-center justify-center">
+                <Bar data={revenueChartData} />
               </div>
             </div>
           </div>
 
-          {/* Table Section */}
-          <div className="bg-white p-6 shadow-lg rounded-lg mb-6" data-aos="fade-up">
-            <h3 className="text-xl font-bold mb-4">Recent Student Admissions</h3>
+          {/* Latest Events */}
+          <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
+            <h3 className="text-xl font-bold mb-4">Latest Events</h3>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-200">
                   <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Grade</th>
-                  <th className="p-3 text-left">Enrollment Date</th>
-                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Date</th>
+                  <th className="p-3 text-left">Description</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b">
-                  <td className="p-3">Student 1</td>
-                  <td className="p-3">10th</td>
-                  <td className="p-3">Jan 5, 2025</td>
-                  <td className="p-3 text-green-600 font-semibold">Active</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-3">Student 2</td>
-                  <td className="p-3">9th</td>
-                  <td className="p-3">Feb 12, 2025</td>
-                  <td className="p-3 text-green-600 font-semibold">Active</td>
-                </tr>
-                <tr>
-                  <td className="p-3">Student 3</td>
-                  <td className="p-3">11th</td>
-                  <td className="p-3">Mar 20, 2025</td>
-                  <td className="p-3 text-red-600 font-semibold">Inactive</td>
-                </tr>
+                {latestEvents.map((event, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="p-3">{event.name}</td>
+                    <td className="p-3">{new Date(event.date).toLocaleDateString()}</td>
+                    <td className="p-3">{event.description}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-          
-          {/* Recent Activity */}
-          <div className="bg-white p-6 shadow-lg rounded-lg mb-6" data-aos="fade-up">
-            <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-            <ul>
-              <li className="border-b p-3">New student "Student 1" registered.</li>
-              <li className="border-b p-3">Teacher "Student 2" updated his profile.</li>
-              <li className="border-b p-3">New course "Laraval 101" added.</li>
-              <li className="p-3">Student "Student 1" completed the course "React".</li>
-            </ul>
+
+          {/* Latest Students and Teachers */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Latest Students */}
+            <div className="bg-white p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-bold mb-4">Latest Students</h3>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Email</th>
+                    <th className="p-3 text-left">Registered On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latestStudents.map((student, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-3">{student.name}</td>
+                      <td className="p-3">{student.email}</td>
+                      <td className="p-3">{new Date(student.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Latest Teachers */}
+            <div className="bg-white p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-bold mb-4">Latest Teachers</h3>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Email</th>
+                    <th className="p-3 text-left">Registered On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latestTeachers.map((teacher, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-3">{teacher.name}</td>
+                      <td className="p-3">{teacher.email}</td>
+                      <td className="p-3">{new Date(teacher.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Latest Courses */}
+          <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
+            <h3 className="text-xl font-bold mb-4">Latest Courses</h3>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Class</th>
+                  <th className="p-3 text-left">Subject</th>
+                </tr>
+              </thead>
+              <tbody>
+                {latestCourses.map((course, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="p-3">{course.name}</td>
+                    <td className="p-3">{course.class}</td>
+                    <td className="p-3">{course.subject}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </main>
       </div>

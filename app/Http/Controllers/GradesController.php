@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Controllers/GradesController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
@@ -27,6 +25,18 @@ class GradesController extends Controller
         ]);
 
         return response()->json(['message' => 'Grade added successfully!', 'grade' => $grade], 201);
+    }
+
+    // Get all grade records
+    public function getAllGrades()
+    {
+        $grades = Grade::all();
+
+        if ($grades->isEmpty()) {
+            return response()->json(['message' => 'No grade records found.'], 404);
+        }
+
+        return response()->json(['message' => 'Grade records retrieved successfully.', 'grades' => $grades], 200);
     }
 
     // Get grade records for a student

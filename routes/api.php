@@ -18,18 +18,24 @@ Route::get('/emails', [EmailController::class, 'getEmails']);
 
 Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
+Route::get('/events/latest', [EventController::class, 'getLatestEvents']);
 
 Route::post('/courses/add', [CourseController::class, 'addCourse']);
 Route::get('/courses', [CourseController::class, 'getCourses']);
 Route::get('/courses/download/{id}', [CourseController::class, 'downloadCourse']);
+Route::get('/courses/latest', [CourseController::class, 'getLatestCourses']);
 
 Route::post('/grades/add', [GradesController::class, 'addGrade']);
+Route::get('/grades', [GradesController::class, 'getAllGrades']); 
 Route::get('/grades/{studentNIN}', [GradesController::class, 'getGrades']);
 
 Route::post('attendance/add', [AttendanceController::class, 'addAttendance']);
+Route::get('attendance', [AttendanceController::class, 'getAllAttendance']); 
 Route::get('attendance/{studentNIN}', [AttendanceController::class, 'getAttendance']);
 
 
+Route::get('/users/latest/students', [UsersController::class, 'getLatestStudents']);
+Route::get('/users/latest/teachers', [UsersController::class, 'getLatestTeachers']);
 Route::put('/users/{id}', [UsersController::class, 'update']); 
 Route::delete('/users/{id}', [UsersController::class, 'destroy']);
 Route::post('/register', [UsersController::class, 'register']);

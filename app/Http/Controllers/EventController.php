@@ -55,4 +55,15 @@ class EventController extends Controller
 
         return response()->json(['message' => 'Events retrieved successfully.', 'events' => $events], 200);
     }
+
+    public function getLatestEvents()
+{
+    $events = Event::latest()->take(2)->get();
+
+    if ($events->isEmpty()) {
+        return response()->json(['message' => 'No events found.'], 404);
+    }
+
+    return response()->json(['message' => 'Latest events retrieved successfully.', 'events' => $events], 200);
+}
 }

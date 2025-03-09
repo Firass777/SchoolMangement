@@ -70,4 +70,15 @@ class CourseController extends Controller
 
         return response()->download($filePath, $course->name . '.pdf');
     }
+
+    public function getLatestCourses()
+    {
+        $courses = Course::latest()->take(4)->get();
+
+        if ($courses->isEmpty()) {
+            return response()->json(['message' => 'No courses found.'], 404);
+        }
+
+        return response()->json(['message' => 'Latest courses retrieved successfully.', 'courses' => $courses], 200);
+    }
 }

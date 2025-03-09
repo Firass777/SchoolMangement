@@ -122,57 +122,79 @@ class UsersController extends Controller
 
 
         public function update(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'sometimes|string|max:255',
-        'email' => 'sometimes|email|unique:users,email,' . $id,
-        'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
-        'password' => 'sometimes|string|min:8|max:12',
-        'role' => 'sometimes|string|in:student,teacher,admin,parent',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
+            'password' => 'sometimes|string|min:8|max:12',
+            'role' => 'sometimes|string|in:student,teacher,admin,parent',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+        }
+        if ($request->has('nin')) {
+            $user->nin = $request->nin;
+        }
+        if ($request->has('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        if ($request->has('role')) {
+            $user->role = $request->role;
+        }
+
+        $user->save();
+
+        return response()->json(['message' => 'User updated successfully', 'user' => $user]);
     }
 
-    $user = User::find($id);
-    if (!$user) {
-        return response()->json(['error' => 'User not found'], 404);
+    // Delete a user
+    public function destroy($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'User deleted successfully']);
     }
 
-    if ($request->has('name')) {
-        $user->name = $request->name;
-    }
-    if ($request->has('email')) {
-        $user->email = $request->email;
-    }
-    if ($request->has('nin')) {
-        $user->nin = $request->nin;
-    }
-    if ($request->has('password')) {
-        $user->password = Hash::make($request->password);
-    }
-    if ($request->has('role')) {
-        $user->role = $request->role;
+        public function getLatestStudents()
+    {
+        $students = User::where('role', 'student')->latest()->take(3)->get();
+
+        if ($students->isEmpty()) {
+            return response()->json(['message' => 'No students found.'], 404);
+        }
+
+        return response()->json(['message' => 'Latest students retrieved successfully.', 'students' => $students], 200);
     }
 
-    $user->save();
+    public function getLatestTeachers()
+    {
+        $teachers = User::where('role', 'teacher')->latest()->take(3)->get();
 
-    return response()->json(['message' => 'User updated successfully', 'user' => $user]);
-}
+        if ($teachers->isEmpty()) {
+            return response()->json(['message' => 'No teachers found.'], 404);
+        }
 
-// Delete a user
-public function destroy($id)
-{
-    $user = User::find($id);
-    if (!$user) {
-        return response()->json(['error' => 'User not found'], 404);
+        return response()->json(['message' => 'Latest teachers retrieved successfully.', 'teachers' => $teachers], 200);
     }
-
-    $user->delete();
-
-    return response()->json(['message' => 'User deleted successfully']);
-}
 }
 
 
