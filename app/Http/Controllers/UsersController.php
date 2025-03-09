@@ -46,6 +46,7 @@ class UsersController extends Controller
             'user' => $user,
             'token' => $token
         ], 201);
+        
     }
     public function login(Request $request)
     {
@@ -118,6 +119,60 @@ class UsersController extends Controller
             $total = User::count();
             return response()->json(['total' => $total]);
         }
+
+
+        public function update(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'sometimes|string|max:255',
+        'email' => 'sometimes|email|unique:users,email,' . $id,
+        'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
+        'password' => 'sometimes|string|min:8|max:12',
+        'role' => 'sometimes|string|in:student,teacher,admin,parent',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $user = User::find($id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    if ($request->has('name')) {
+        $user->name = $request->name;
+    }
+    if ($request->has('email')) {
+        $user->email = $request->email;
+    }
+    if ($request->has('nin')) {
+        $user->nin = $request->nin;
+    }
+    if ($request->has('password')) {
+        $user->password = Hash::make($request->password);
+    }
+    if ($request->has('role')) {
+        $user->role = $request->role;
+    }
+
+    $user->save();
+
+    return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+}
+
+// Delete a user
+public function destroy($id)
+{
+    $user = User::find($id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    $user->delete();
+
+    return response()->json(['message' => 'User deleted successfully']);
+}
 }
 
 

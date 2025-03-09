@@ -29,6 +29,9 @@ Route::get('/grades/{studentNIN}', [GradesController::class, 'getGrades']);
 Route::post('attendance/add', [AttendanceController::class, 'addAttendance']);
 Route::get('attendance/{studentNIN}', [AttendanceController::class, 'getAttendance']);
 
+
+Route::put('/users/{id}', [UsersController::class, 'update']); 
+Route::delete('/users/{id}', [UsersController::class, 'destroy']);
 Route::post('/register', [UsersController::class, 'register']);
 Route::post('/login', [UsersController::class, 'login']);
 Route::get('/dashboard', [UsersController::class, 'dashboard']);

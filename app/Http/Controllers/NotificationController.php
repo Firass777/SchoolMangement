@@ -30,7 +30,7 @@ class NotificationController extends Controller
                 'description' => $request->description,
             ]);
 
-            // Send email (we'll implement this later)
+            // Send email 
             $this->sendEmail($request->to, $request->title, $request->description);
 
             return response()->json(['message' => 'Notification sent successfully!', 'notification' => $notification], 201);
@@ -63,7 +63,6 @@ class NotificationController extends Controller
     private function sendEmail($to, $title, $description)
     {
         // Implement email sending logic here
-        // For now, we'll just log the email details
         \Log::info("Email sent to: $to, Title: $title, Description: $description");
     }
 }

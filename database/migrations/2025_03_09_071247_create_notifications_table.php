@@ -1,6 +1,5 @@
 <?php
 
-// database/migrations/xxxx_xx_xx_xxxxxx_create_notifications_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,7 +11,7 @@ class CreateNotificationsTable extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->string('to'); // Recipient (e.g., student_nin, class, or "all")
+            $table->string('to'); 
             $table->string('title');
             $table->text('description');
             $table->timestamps();
