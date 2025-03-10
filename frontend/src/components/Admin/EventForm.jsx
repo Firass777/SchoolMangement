@@ -63,7 +63,7 @@ const EventForm = () => {
         <nav className="mt-6">
           <ul>
             <li className="px-6 py-3 hover:bg-blue-700">
-              <Link to="/students" className="flex items-center space-x-2">
+              <Link to="/admindb" className="flex items-center space-x-2">
                 <FaSchool />
                 <span>Dashboard</span>
               </Link>

@@ -3,16 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Log;
-
- use App\Models\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-
 use Tymon\JWTAuth\Facades\JWTAuth;
- 
+
 class UsersController extends Controller
 {
     public function register(Request $request)
@@ -23,59 +20,65 @@ class UsersController extends Controller
             'nin' => 'required|string|size:11|unique:users,nin',
             'password' => 'required|string|min:8|max:12',
             'role' => 'required|string|in:student,teacher,admin,parent',
+            'class' => 'nullable|string|required_if:role,student', // Add this line
         ]);
-        
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-    
-        $user = User::create([
+
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
-            'nin' => $request->nin, 
+            'nin' => $request->nin,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-        ]);
-        
-    
+        ];
+
+        // Only add class if the role is student
+        if ($request->role === 'student') {
+            $userData['class'] = $request->class;
+        }
+
+        $user = User::create($userData);
+
         $token = JWTAuth::fromUser($user);
-    
+
         return response()->json([
             'message' => 'User registered successfully',
             'user' => $user,
             'token' => $token
         ], 201);
-        
     }
+
     public function login(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:8|max:12',
         ]);
-    
+
         $user = User::where('email', $request->email)->first();
-    
+
         if (!$user) {
             return response()->json(['error' => 'Invalid email address'], 401);
         } elseif (!Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Incorrect password'], 401);
         }
-    
+
         $token = JWTAuth::fromUser($user);
-    
+
         return response()->json([
             'message' => 'Login successful',
             'token' => $token,
             'user' => $user->makeHidden(['password', 'created_at', 'updated_at']),
-            'role' => $user->role, 
+            'role' => $user->role,
         ]);
     }
-    
+
     public function dashboard(Request $request)
     {
-         try {
+        try {
             $user = JWTAuth::parseToken()->authenticate();
         } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
             return response()->json(['error' => 'Token is expired'], 401);
@@ -84,44 +87,44 @@ class UsersController extends Controller
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json(['error' => 'Token not provided'], 401);
         }
-    
-         return response()->json([
+
+        return response()->json([
             'user' => $user,
             'message' => 'Welcome to your dashboard'
         ]);
     }
+
     public function logout(Request $request)
     {
         try {
-             $token = JWTAuth::getToken();
-    
+            $token = JWTAuth::getToken();
+
             if (!$token) {
                 return response()->json(['error' => 'Token not provided'], 401);
             }
-    
-             JWTAuth::invalidate($token);
-    
+
+            JWTAuth::invalidate($token);
+
             return response()->json(['message' => 'Logged out successfully']);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json(['error' => 'Failed to log out'], 500);
         }
-    }    
+    }
 
-        // This method will return all users
-        public function index()
-        {
-            $users = User::all(); 
-            return response()->json($users); 
-        }
+    // This method will return all users
+    public function index()
+    {
+        $users = User::all();
+        return response()->json($users);
+    }
 
-        public function totalStudents()
-        {
-            $total = User::count();
-            return response()->json(['total' => $total]);
-        }
+    public function totalStudents()
+    {
+        $total = User::count();
+        return response()->json(['total' => $total]);
+    }
 
-
-        public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
@@ -129,6 +132,7 @@ class UsersController extends Controller
             'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
             'password' => 'sometimes|string|min:8|max:12',
             'role' => 'sometimes|string|in:student,teacher,admin,parent',
+            'class' => 'nullable|string|required_if:role,student', // Add this line
         ]);
 
         if ($validator->fails()) {
@@ -155,6 +159,11 @@ class UsersController extends Controller
         if ($request->has('role')) {
             $user->role = $request->role;
         }
+        if ($request->has('class') && $request->role === 'student') {
+            $user->class = $request->class;
+        } elseif ($request->role !== 'student') {
+            $user->class = null; // Clear class if role is not student
+        }
 
         $user->save();
 
@@ -174,7 +183,7 @@ class UsersController extends Controller
         return response()->json(['message' => 'User deleted successfully']);
     }
 
-        public function getLatestStudents()
+    public function getLatestStudents()
     {
         $students = User::where('role', 'student')->latest()->take(3)->get();
 
@@ -196,5 +205,3 @@ class UsersController extends Controller
         return response()->json(['message' => 'Latest teachers retrieved successfully.', 'teachers' => $teachers], 200);
     }
 }
-
-

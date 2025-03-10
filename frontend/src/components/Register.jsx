@@ -8,6 +8,7 @@ const Register = () => {
     nin: "",
     password: "",
     role: "student",
+    class: "", // Add this line
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -24,7 +25,7 @@ const Register = () => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
       setSuccess("Registration successful! Please log in.");
-      setFormData({ name: "", email: "", nin: "", password: "", role: "student" });
+      setFormData({ name: "", email: "", nin: "", password: "", role: "student", class: "" });
     } catch (error) {
       setError(error.response?.data?.errors || { general: "Something went wrong." });
     }
@@ -71,6 +72,20 @@ const Register = () => {
             ))}
           </select>
         </div>
+        {formData.role === 'student' && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Class</label>
+            <input
+              type="text"
+              name="class"
+              value={formData.class}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-md mt-2"
+              placeholder="Enter your class"
+              required={formData.role === 'student'}
+            />
+          </div>
+        )}
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600"

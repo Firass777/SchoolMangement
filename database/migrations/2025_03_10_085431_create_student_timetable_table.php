@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('student_timetable', function (Blueprint $table) {
+        Schema::create('student_timetables', function (Blueprint $table) {
             $table->id();
             $table->string('class');
             $table->string('day');
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('student_timetable');
+        Schema::dropIfExists('student_timetables');
     }
 };

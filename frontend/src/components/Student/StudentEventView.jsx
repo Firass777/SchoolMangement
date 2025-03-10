@@ -10,7 +10,7 @@ const StudentEventView = () => {
   const [expandedEventId, setExpandedEventId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const eventsPerPage = 4; // Number of events per page
+  const eventsPerPage = 4;
 
   useEffect(() => {
     const fetchEvents = async () => {
