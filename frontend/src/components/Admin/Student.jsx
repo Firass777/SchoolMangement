@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit } from "react-icons/fa";
+import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock } from "react-icons/fa";
 
 function Student() {
   const [studentData, setStudentData] = useState([]);
@@ -57,7 +57,7 @@ function Student() {
         setError("Something went wrong.");
       }
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
     }
   };
 
@@ -86,7 +86,7 @@ function Student() {
         setError("Something went wrong.");
       }
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
     }
   };
 
@@ -105,7 +105,7 @@ function Student() {
     } catch (err) {
       setError("Failed to delete student.");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
     }
   };
 
@@ -178,6 +178,12 @@ function Student() {
                   <span>Dashboard</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/timetableform" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>              
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/students" className="flex items-center space-x-2">
                   <FaUserGraduate />

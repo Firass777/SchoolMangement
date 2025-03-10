@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope, FaClock } from 'react-icons/fa';
 import axios from 'axios';
 
 const AddCourseForm = () => {
@@ -50,6 +50,12 @@ const AddCourseForm = () => {
                   <span>Dashboard</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+               <Link to="/ttimetable" className="flex items-center space-x-2">
+                 <FaClock />
+                 <span>Time-Table</span>
+               </Link>
+             </li>               
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />

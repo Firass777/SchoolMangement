@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope } from "react-icons/fa";
+import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope, FaClock } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -59,6 +59,12 @@ function Teacherdb() {
                   <span>Dashboard</span>
                 </Link>
               </li>
+             <li className="px-6 py-3 hover:bg-green-700">
+               <Link to="/ttimetable" className="flex items-center space-x-2">
+                 <FaClock />
+                 <span>Time-Table</span>
+               </Link>
+             </li>             
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />

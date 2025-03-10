@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaPaperPlane, FaCog, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell, FaSearch } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaPaperPlane, FaCog, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell, FaSearch, FaClock } from 'react-icons/fa';
 
 const AEmails = () => {
   const [emails, setEmails] = useState([]);
@@ -104,6 +104,12 @@ const AEmails = () => {
                 <span>Dashboard</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/timetableform" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>                        
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate />

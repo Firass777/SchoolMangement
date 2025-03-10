@@ -13,6 +13,7 @@ import {
   FaSignOutAlt,
   FaClipboardList,
   FaBell,
+  FaClock,
 } from "react-icons/fa";
 import { Bar, Pie } from "react-chartjs-2";
 import "chart.js/auto";
@@ -88,7 +89,7 @@ function Admindb() {
     ],
   };
 
-  // Prepare data for the revenue chart
+  // Prepare data for the revenue chart 
   const revenueChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
@@ -116,6 +117,12 @@ function Admindb() {
                 <Link to="/admindb" className="flex items-center space-x-2">
                   <FaSchool />
                   <span>Dashboard</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/timetableform" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

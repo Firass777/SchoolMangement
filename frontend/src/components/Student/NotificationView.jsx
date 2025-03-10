@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch, FaClock } from 'react-icons/fa';
 
 const NotificationView = () => {
   const [notifications, setNotifications] = useState([]);
@@ -71,6 +71,12 @@ const NotificationView = () => {
                   <span>Dashboard</span>
                 </Link>
               </li>
+             <li className="px-6 py-3 hover:bg-purple-700">
+               <Link to="/stimetable" className="flex items-center space-x-2">
+                 <FaClock />
+                 <span>Time-Table</span>
+               </Link>
+             </li>             
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
                   <FaChartLine />

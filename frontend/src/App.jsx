@@ -13,6 +13,7 @@ import Reports from './components/Admin/Reports';
 import EventForm from "./components/Admin/EventForm";
 import AEmails from "./components/Admin/AEmails";
 import NotificationForm from "./components/Admin/NotificationForm";
+import TimetableForm from "./components/Admin/TimetableForm";
 
 import Teacherdb from './components/Teacher/Teacherdb'
 import AttendanceForm from "./components/Teacher/AttendanceForm";
@@ -21,6 +22,7 @@ import CourseForm from "./components/Teacher/CourseForm";
 import TeacherEventView from "./components/Teacher/TeacherEventView";
 import TEmails from "./components/Teacher/TEmails";
 import TNotificationView from "./components/Teacher/TNotificationView";
+import TTimetable from "./components/Teacher/TTimetable";
 
 import Studentdb from './components/Student/Studentdb';
 import AttendanceView from "./components/Student/AttendanceView";
@@ -29,6 +31,7 @@ import CourseView from "./components/Student/CourseView";
 import StudentEventView from "./components/Student/StudentEventView";
 import SEmails from "./components/Student/SEmails";
 import NotificationView from "./components/Student/NotificationView";
+import STimetable from "./components/Student/STimetable";
 
 
 import Guardindb from './components/Guardian/Guardiandb';
@@ -77,6 +80,7 @@ function App() {
           <Route path="/eventform" element={<EventForm />} />
           <Route path="/aemails" element={<AEmails />} />
           <Route path="/notificationform" element={<NotificationForm />} />
+          <Route path="/timetableform" element={<TimetableForm />} />
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
@@ -85,6 +89,7 @@ function App() {
           <Route path="/teachereventview" element={<TeacherEventView />} />
           <Route path="/temails" element={<TEmails />} />
           <Route path="/tnotificationview" element={<TNotificationView />} />
+          <Route path="/ttimetable" element={<TTimetable />} />
 
           <Route path="/guardiandb" element={<Guardindb />} />
 
@@ -95,6 +100,7 @@ function App() {
           <Route path="/studenteventview" element={<StudentEventView />} />
           <Route path="/semails" element={<SEmails />} />
           <Route path="/notificationview" element={<NotificationView />} />
+          <Route path="/stimetable" element={<STimetable />} />
           
 
           

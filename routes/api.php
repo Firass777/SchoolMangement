@@ -9,6 +9,14 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TimetableController;
+
+
+Route::get('/student-timetable/{class}', [TimetableController::class, 'getStudentTimetable']);
+Route::post('/student-timetable/add', [TimetableController::class, 'addStudentTimetable']);
+
+Route::get('/teacher-timetable/{email}', [TimetableController::class, 'getTeacherTimetable']);
+Route::post('/teacher-timetable/add', [TimetableController::class, 'addTeacherTimetable']);
 
 Route::post('/notification/send', [NotificationController::class, 'sendNotification']);
 Route::get('/notifications/{recipient}', [NotificationController::class, 'getNotifications']);

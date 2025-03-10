@@ -11,6 +11,7 @@ import {
   FaBell,
   FaSchool ,
   FaClipboardList,
+  FaClock
 } from "react-icons/fa";
 
 const EventForm = () => {
@@ -67,6 +68,12 @@ const EventForm = () => {
                 <span>Dashboard</span>
               </Link>
             </li>
+            <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/timetableform" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate />
