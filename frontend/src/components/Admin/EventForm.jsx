@@ -193,7 +193,7 @@ const EventForm = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 bg-blue-800 text-white rounded hover:bg-purple-700"
+              className="w-full py-2 bg-blue-800 text-white rounded hover:bg-blue-700"
             >
               Add Event
             </button>

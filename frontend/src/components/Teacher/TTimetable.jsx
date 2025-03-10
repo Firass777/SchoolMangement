@@ -10,8 +10,11 @@ import {
   FaBook,
   FaClipboardList,
   FaEnvelope,
-  FaClock
+  FaClock,
+  FaDownload,
 } from "react-icons/fa";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function TTimetable() {
   const [timetable, setTimetable] = useState([]);
@@ -72,6 +75,39 @@ function TTimetable() {
     return acc;
   }, {});
 
+  // Function to generate and download PDF
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text("Teacher Timetable", 14, 22);
+
+    // Prepare data for the table
+    const tableData = [];
+    sortedTimeSlots.forEach((time) => {
+      const row = [time];
+      daysOfWeek.forEach((day) => {
+        const entry = groupedTimetable[day]?.[time];
+        row.push(entry ? `${entry.subject}\n${entry.location}` : "-");
+      });
+      tableData.push(row);
+    });
+
+    // Add table to PDF
+    autoTable(doc, {
+      head: [["Time", ...daysOfWeek]],
+      body: tableData,
+      startY: 30,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [34, 139, 34] }, // Green color for header
+    });
+
+    // Save the PDF
+    doc.save("teacher_timetable.pdf");
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -92,7 +128,7 @@ function TTimetable() {
                 <FaClock />
                 <span>Time-Table</span>
               </Link>
-            </li>            
+            </li>
             <li className="px-6 py-3 hover:bg-green-700">
               <Link to="/teacherstudents" className="flex items-center space-x-2">
                 <FaUserGraduate />
@@ -146,7 +182,16 @@ function TTimetable() {
 
       {/* Main Content */}
       <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Teacher Timetable</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Teacher Timetable</h1>
+          <button
+            onClick={downloadPDF}
+            className="flex items-center bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 transition duration-200"
+          >
+            <FaDownload className="mr-2" />
+            Download PDF
+          </button>
+        </div>
 
         {/* Timetable */}
         <div className="overflow-x-auto">
