@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock  } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaSearch } from 'react-icons/fa';
 import html2pdf from 'html2pdf.js';
 
 const AttendanceView = () => {
   const [attendances, setAttendances] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Function to fetch attendance data and sort it
   useEffect(() => {
@@ -58,6 +59,11 @@ const AttendanceView = () => {
         return 'text-gray-600';
     }
   };
+
+  // Filter attendances based on search term
+  const filteredAttendances = attendances.filter(attendance =>
+    attendance.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -134,8 +140,22 @@ const AttendanceView = () => {
             <p className="text-lg text-gray-600 mt-2">View your attendance records below:</p>
           </div>
 
-          {/* Download Button */}
-          <div className="mb-6 flex justify-end">
+          {/* Search and Download Buttons */}
+          <div className="mb-6 flex justify-between">
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="Search by subject..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-purple-800"
+              />
+              <button
+                className="px-5 py-3 bg-purple-800 text-white rounded-r hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800"
+              >
+                <FaSearch />
+              </button>
+            </div>
             <button
               onClick={handleDownloadPDF}
               className="flex items-center px-4 py-2 bg-purple-800 text-white rounded hover:bg-purple-700"
@@ -147,7 +167,7 @@ const AttendanceView = () => {
 
           {/* Attendance Table */}
           <div id="attendance-table" className="mb-6 p-6 bg-white shadow-md rounded-lg">
-            {attendances.length === 0 ? (
+            {filteredAttendances.length === 0 ? (
               <p className="text-gray-500">No attendance records found.</p>
             ) : (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -161,7 +181,7 @@ const AttendanceView = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {attendances.map((attendance) => (
+                    {filteredAttendances.map((attendance) => (
                       <tr key={attendance.id} className="border-b">
                         <td className="px-6 py-3">{attendance.subject}</td>
                         <td className={`px-6 py-3 ${getStatusColor(attendance.status)}`}>
