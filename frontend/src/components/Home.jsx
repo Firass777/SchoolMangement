@@ -1,10 +1,9 @@
 import React from "react";
+import dashboardImage from "../components/Dashboard.jpg"
 
 const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">
-
-
       {/* Hero Section */}
       <section className="relative py-20">
         <div className="container mx-auto px-4 text-center">
@@ -37,7 +36,7 @@ const Home = () => {
           <div className="mt-20 mx-auto max-w-7xl px-4" data-aos="fade-up">
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl">
               <img 
-                src="/dashboard-preview.png" 
+                src={dashboardImage} 
                 alt="Dashboard Preview" 
                 className="rounded-xl border-2 border-white/20"
               />
