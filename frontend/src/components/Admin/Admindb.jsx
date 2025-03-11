@@ -46,30 +46,30 @@ function Admindb() {
       // Fetch attendance statistics
       const attendanceResponse = await fetch("http://127.0.0.1:8000/api/attendance");
       const attendanceData = await attendanceResponse.json();
-      const presentCount = attendanceData.attendances.filter((a) => a.status === "Present").length;
-      const absentCount = attendanceData.attendances.filter((a) => a.status === "Absent").length;
-      const lateCount = attendanceData.attendances.filter((a) => a.status === "Late").length;
+      const presentCount = attendanceData?.attendances?.filter((a) => a.status === "Present").length || 0;
+      const absentCount = attendanceData?.attendances?.filter((a) => a.status === "Absent").length || 0;
+      const lateCount = attendanceData?.attendances?.filter((a) => a.status === "Late").length || 0;
       setAttendanceStats({ present: presentCount, absent: absentCount, late: lateCount });
 
       // Fetch latest events
       const eventsResponse = await fetch("http://127.0.0.1:8000/api/events/latest");
       const eventsData = await eventsResponse.json();
-      setLatestEvents(eventsData.events);
+      setLatestEvents(eventsData?.events || []);
 
       // Fetch latest students
       const studentsResponse = await fetch("http://127.0.0.1:8000/api/users/latest/students");
       const studentsData = await studentsResponse.json();
-      setLatestStudents(studentsData.students);
+      setLatestStudents(studentsData?.students || []);
 
       // Fetch latest teachers
       const teachersResponse = await fetch("http://127.0.0.1:8000/api/users/latest/teachers");
       const teachersData = await teachersResponse.json();
-      setLatestTeachers(teachersData.teachers);
+      setLatestTeachers(teachersData?.teachers || []);
 
       // Fetch latest courses
       const coursesResponse = await fetch("http://127.0.0.1:8000/api/courses/latest");
       const coursesData = await coursesResponse.json();
-      setLatestCourses(coursesData.courses);
+      setLatestCourses(coursesData?.courses || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
@@ -89,7 +89,7 @@ function Admindb() {
     ],
   };
 
-  // Prepare data for the revenue chart 
+  // Prepare data for the revenue chart
   const revenueChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
@@ -232,24 +232,28 @@ function Admindb() {
           {/* Latest Events */}
           <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
             <h3 className="text-xl font-bold mb-4">Latest Events</h3>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3 text-left">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {latestEvents.map((event, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="p-3">{event.name}</td>
-                    <td className="p-3">{new Date(event.date).toLocaleDateString()}</td>
-                    <td className="p-3">{event.description}</td>
+            {latestEvents.length > 0 ? (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Description</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {latestEvents.map((event, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-3">{event.name}</td>
+                      <td className="p-3">{new Date(event.date).toLocaleDateString()}</td>
+                      <td className="p-3">{event.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-gray-600">No events found.</p>
+            )}
           </div>
 
           {/* Latest Students and Teachers */}
@@ -257,71 +261,83 @@ function Admindb() {
             {/* Latest Students */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
               <h3 className="text-xl font-bold mb-4">Latest Students</h3>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Email</th>
-                    <th className="p-3 text-left">Registered On</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestStudents.map((student, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-3">{student.name}</td>
-                      <td className="p-3">{student.email}</td>
-                      <td className="p-3">{new Date(student.created_at).toLocaleDateString()}</td>
+              {latestStudents.length > 0 ? (
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-200">
+                      <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Email</th>
+                      <th className="p-3 text-left">Registered On</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {latestStudents.map((student, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="p-3">{student.name}</td>
+                        <td className="p-3">{student.email}</td>
+                        <td className="p-3">{new Date(student.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-600">No students found.</p>
+              )}
             </div>
 
             {/* Latest Teachers */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
               <h3 className="text-xl font-bold mb-4">Latest Teachers</h3>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Email</th>
-                    <th className="p-3 text-left">Registered On</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestTeachers.map((teacher, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-3">{teacher.name}</td>
-                      <td className="p-3">{teacher.email}</td>
-                      <td className="p-3">{new Date(teacher.created_at).toLocaleDateString()}</td>
+              {latestTeachers.length > 0 ? (
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-200">
+                      <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Email</th>
+                      <th className="p-3 text-left">Registered On</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {latestTeachers.map((teacher, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="p-3">{teacher.name}</td>
+                        <td className="p-3">{teacher.email}</td>
+                        <td className="p-3">{new Date(teacher.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-600">No teachers found.</p>
+              )}
             </div>
           </div>
 
           {/* Latest Courses */}
           <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
             <h3 className="text-xl font-bold mb-4">Latest Courses</h3>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Class</th>
-                  <th className="p-3 text-left">Subject</th>
-                </tr>
-              </thead>
-              <tbody>
-                {latestCourses.map((course, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="p-3">{course.name}</td>
-                    <td className="p-3">{course.class}</td>
-                    <td className="p-3">{course.subject}</td>
+            {latestCourses.length > 0 ? (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Class</th>
+                    <th className="p-3 text-left">Subject</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {latestCourses.map((course, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-3">{course.name}</td>
+                      <td className="p-3">{course.class}</td>
+                      <td className="p-3">{course.subject}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-gray-600">No courses found.</p>
+            )}
           </div>
         </main>
       </div>

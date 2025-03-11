@@ -1,7 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock } from "react-icons/fa";
+import {
+  FaUserGraduate,
+  FaSchool,
+  FaChalkboardTeacher,
+  FaChartBar,
+  FaCog,
+  FaEnvelope,
+  FaSignOutAlt,
+  FaBell,
+  FaSearch,
+  FaPlus,
+  FaClipboardList,
+  FaTrash,
+  FaEdit,
+  FaClock,
+} from "react-icons/fa";
 
 function Student() {
   const [studentData, setStudentData] = useState([]);
@@ -16,6 +31,7 @@ function Student() {
     nin: "",
     password: "",
     role: "student",
+    class: "", // Add class field
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -47,7 +63,7 @@ function Student() {
       const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
       setSuccess("Student added successfully!");
       setShowAddForm(false);
-      setFormData({ name: "", email: "", nin: "", password: "", role: "student" });
+      setFormData({ name: "", email: "", nin: "", password: "", role: "student", class: "" });
       fetchStudents();
     } catch (err) {
       setLoading(false);
@@ -57,7 +73,7 @@ function Student() {
         setError("Something went wrong.");
       }
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -77,7 +93,7 @@ function Student() {
       const response = await axios.put(`http://127.0.0.1:8000/api/users/${formData.id}`, dataToSend);
       setSuccess("Student updated successfully!");
       setShowUpdateForm(false);
-      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "student" });
+      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "student", class: "" });
       fetchStudents();
     } catch (err) {
       if (err.response && err.response.data.errors) {
@@ -86,7 +102,7 @@ function Student() {
         setError("Something went wrong.");
       }
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -100,12 +116,12 @@ function Student() {
       const response = await axios.delete(`http://127.0.0.1:8000/api/users/${formData.id}`);
       setSuccess("Student deleted successfully!");
       setShowDeleteForm(false);
-      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "student" });
+      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "student", class: "" });
       fetchStudents();
     } catch (err) {
       setError("Failed to delete student.");
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -126,6 +142,7 @@ function Student() {
         nin: student.nin,
         password: "",
         role: student.role,
+        class: student.class || "", // Add class field
       });
       setShowUpdateForm(true);
     }
@@ -144,15 +161,17 @@ function Student() {
         nin: student.nin,
         password: "",
         role: student.role,
+        class: student.class || "", // Add class field
       });
       setShowDeleteForm(true);
     }
   };
 
-  const filteredStudents = studentData.filter((student) =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.id.toString().includes(searchTerm)
+  const filteredStudents = studentData.filter(
+    (student) =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.id.toString().includes(searchTerm)
   );
 
   // Pagination logic
@@ -183,7 +202,7 @@ function Student() {
                   <FaClock />
                   <span>Time-Table</span>
                 </Link>
-              </li>              
+              </li>
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/students" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -253,7 +272,10 @@ function Student() {
 
             {/* Buttons to Show Forms */}
             <div className="flex space-x-3">
-              <button className="bg-green-600 text-white px-4 py-2 rounded flex items-center" onClick={() => setShowAddForm(!showAddForm)}>
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded flex items-center"
+                onClick={() => setShowAddForm(!showAddForm)}
+              >
                 <FaPlus className="mr-2" /> Add Student
               </button>
             </div>
@@ -300,6 +322,17 @@ function Student() {
                   className="w-full p-2 border rounded mb-2"
                   required
                 />
+                {formData.role === "student" && (
+                  <input
+                    type="text"
+                    placeholder="Class"
+                    name="class"
+                    value={formData.class}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded mb-2"
+                    required
+                  />
+                )}
                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
                   {loading ? "Adding..." : "Add"}
                 </button>
@@ -349,6 +382,17 @@ function Student() {
                   onChange={handleChange}
                   className="w-full p-2 border rounded mb-2"
                 />
+                {formData.role === "student" && (
+                  <input
+                    type="text"
+                    placeholder="Class"
+                    name="class"
+                    value={formData.class}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded mb-2"
+                    required
+                  />
+                )}
                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
                   {loading ? "Updating..." : "Update"}
                 </button>
@@ -362,7 +406,9 @@ function Student() {
           {showDeleteForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
               <h2 className="text-2xl font-bold mb-4">Delete Student</h2>
-              <p className="mb-4">Are you sure you want to delete <strong>{formData.name}</strong>?</p>
+              <p className="mb-4">
+                Are you sure you want to delete <strong>{formData.name}</strong>?
+              </p>
               <form onSubmit={handleDeleteSubmit}>
                 <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded" disabled={loading}>
                   {loading ? "Deleting..." : "Delete"}
@@ -388,6 +434,7 @@ function Student() {
                         <th className="px-6 py-3 text-left">Name</th>
                         <th className="px-6 py-3 text-left">Email</th>
                         <th className="px-6 py-3 text-left">NIN</th>
+                        <th className="px-6 py-3 text-left">Class</th>
                         <th className="px-6 py-3 text-left">Actions</th>
                       </tr>
                     </thead>
@@ -398,6 +445,7 @@ function Student() {
                           <td className="px-6 py-3">{student.name}</td>
                           <td className="px-6 py-3">{student.email}</td>
                           <td className="px-6 py-3">{student.nin}</td>
+                          <td className="px-6 py-3">{student.class || "-"}</td>
                           <td className="px-6 py-3">
                             <button
                               className="text-blue-600 hover:text-blue-800 mr-2"
