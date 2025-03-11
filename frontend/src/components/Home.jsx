@@ -1,5 +1,5 @@
 import React from "react";
-import dashboardImage from "../components/Dashboard.jpg"
+import dashboardImage from "../components/Dashboard.jpg";
 
 const Home = () => {
   return (
@@ -9,59 +9,60 @@ const Home = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto" data-aos="fade-up">
             <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight">
-              Transform Your School Management with 
-              <span className="text-blue-400 block mt-4">SchoolManger</span>
+              Welcome to 
+              <span className="text-blue-400 block mt-4">National University</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive school management solution that simplifies attendance tracking, 
-              grade management, and academic reporting - all in one powerful platform.
+              Empowering students, faculty, and staff with a cutting-edge university management system designed to streamline academic processes, enhance communication, and foster excellence in education.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-6">
               <a
-                href="/register"
+                href="/login"
                 className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
-                Start Free Trial
+                Login to Portal
               </a>
               <a
-                href="/demo"
+                href="/about"
                 className="px-8 py-4 border-2 border-blue-600 text-white text-lg rounded-full transition-all duration-300 transform hover:scale-105 hover:bg-blue-600/20"
               >
-                Watch Demo
+                Learn More About Us
               </a>
-            </div>
-          </div>
-          
-          {/* Dashboard Preview */}
-          <div className="mt-20 mx-auto max-w-7xl px-4" data-aos="fade-up">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl">
-              <img 
-                src={dashboardImage} 
-                alt="Dashboard Preview" 
-                className="rounded-xl border-2 border-white/20"
-              />
             </div>
           </div>
         </div>
       </section>
+
+
 
       {/* Stats Section */}
       <section className="py-20 bg-white/5 backdrop-blur-lg">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="p-8" data-aos="zoom-in">
-              <div className="text-4xl font-bold text-blue-400 mb-4">500+</div>
-              <div className="text-gray-300 text-xl">Schools Empowered</div>
+              <div className="text-4xl font-bold text-blue-400 mb-4">50+</div>
+              <div className="text-gray-300 text-xl">Years of Excellence</div>
             </div>
             <div className="p-8" data-aos="zoom-in" data-aos-delay="100">
-              <div className="text-4xl font-bold text-blue-400 mb-4">1M+</div>
-              <div className="text-gray-300 text-xl">Students Managed</div>
+              <div className="text-4xl font-bold text-blue-400 mb-4">25K+</div>
+              <div className="text-gray-300 text-xl">Students Enrolled</div>
             </div>
             <div className="p-8" data-aos="zoom-in" data-aos-delay="200">
               <div className="text-4xl font-bold text-blue-400 mb-4">95%</div>
-              <div className="text-gray-300 text-xl">User Satisfaction</div>
+              <div className="text-gray-300 text-xl">Graduation Rate</div>
             </div>
           </div>
+        </div>
+      </section>
+
+            {/* Dashboard Preview */}
+            <section className="mt-10 mx-auto max-w-7xl px-4" data-aos="fade-up">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl">
+          <img 
+            src={dashboardImage} 
+            alt="University Management System Dashboard" 
+            className="rounded-xl border-2 border-white/20"
+          />
         </div>
       </section>
 
@@ -75,24 +76,24 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                icon: '🏫',
+                icon: '🎓',
                 title: 'Student Management',
-                desc: 'Comprehensive student profiles with academic history, attendance records, and personal details'
+                desc: 'Comprehensive student profiles with academic records, attendance, and personal details.'
               },
               {
                 icon: '📅',
-                title: 'Timetable Scheduling',
-                desc: 'Smart timetable creation and management with conflict detection and room allocation'
+                title: 'Course Scheduling',
+                desc: 'Efficient course scheduling with conflict detection and room allocation.'
               },
               {
                 icon: '📊',
                 title: 'Advanced Analytics',
-                desc: 'Real-time dashboards and predictive analytics for data-driven decisions'
+                desc: 'Real-time dashboards and insights for data-driven decision-making.'
               },
               {
                 icon: '🔒',
                 title: 'Role-based Access',
-                desc: 'Granular permissions system for staff, teachers, and administrators'
+                desc: 'Secure access control for students, faculty, and administrators.'
               }
             ].map((feature, index) => (
               <div 
@@ -116,28 +117,25 @@ const Home = () => {
       <section className="py-20 bg-white/5 backdrop-blur-lg">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-extrabold text-center mb-16" data-aos="fade-up">
-            Trusted by Educational Leaders
+            What Our Community Says
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                text: "SchoolManger revolutionized our administrative workflow. What used to take days now takes minutes!",
+                text: "The university management system has made it so easy to track my academic progress. I love the real-time updates!",
                 name: "Sarah Johnson",
-                role: "School Principal",
-                school: "Greenwood High"
+                role: "Student"
               },
               {
-                text: "The gradebook system is incredibly intuitive. Our teachers love the automation features!",
+                text: "As a professor, the course scheduling system has saved me so much time. It's intuitive and efficient.",
                 name: "Michael Chen",
-                role: "IT Director",
-                school: "Riverside Academy"
+                role: "Professor"
               },
               {
-                text: "Best investment we've made in years. The parent portal has improved communication dramatically.",
+                text: "The analytics dashboard is a game-changer. It helps us make data-driven decisions for our programs.",
                 name: "Emma Wilson",
-                role: "Administrator",
-                school: "Sunrise Elementary"
+                role: "Administrator"
               }
             ].map((testimonial, index) => (
               <div 
@@ -151,7 +149,7 @@ const Home = () => {
                   <div className="w-12 h-12 bg-blue-400/20 rounded-full mr-4"></div>
                   <div>
                     <div className="font-semibold text-blue-400">{testimonial.name}</div>
-                    <div className="text-sm text-gray-400">{testimonial.role} • {testimonial.school}</div>
+                    <div className="text-sm text-gray-400">{testimonial.role}</div>
                   </div>
                 </div>
               </div>
@@ -164,16 +162,16 @@ const Home = () => {
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 shadow-2xl" data-aos="zoom-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Transform Your School?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Join National University?</h2>
             <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto">
-              Join thousands of educational institutions already benefiting from SchoolManger's powerful platform
+              Experience the future of education with our state-of-the-art university management system.
             </p>
             <div className="flex justify-center gap-6">
               <a
-                href="/register"
+                href="/apply"
                 className="px-8 py-4 bg-white text-blue-900 text-lg font-semibold rounded-full transition-all hover:bg-gray-100 hover:scale-105"
               >
-                Start Free Trial
+                Apply Now
               </a>
               <a
                 href="/demo"
@@ -192,37 +190,37 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="text-2xl font-bold mb-4">
-                <span className="text-blue-400">School</span>Manger
+                <span className="text-blue-400">National</span> University
               </div>
-              <p className="text-gray-400">Empowering educators worldwide</p>
+              <p className="text-gray-400">Empowering students for a brighter future.</p>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Product</h4>
+              <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="/features" className="text-gray-400 hover:text-white transition">Features</a></li>
-                <li><a href="/pricing" className="text-gray-400 hover:text-white transition">Pricing</a></li>
-                <li><a href="/security" className="text-gray-400 hover:text-white transition">Security</a></li>
+                <li><a href="/about" className="text-gray-400 hover:text-white transition">About Us</a></li>
+                <li><a href="/admissions" className="text-gray-400 hover:text-white transition">Admissions</a></li>
+                <li><a href="/contact" className="text-gray-400 hover:text-white transition">Contact Us</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="/about" className="text-gray-400 hover:text-white transition">About</a></li>
-                <li><a href="/blog" className="text-gray-400 hover:text-white transition">Blog</a></li>
-                <li><a href="/careers" className="text-gray-400 hover:text-white transition">Careers</a></li>
+                <li><a href="/portal" className="text-gray-400 hover:text-white transition">Student Portal</a></li>
+                <li><a href="/faculty-portal" className="text-gray-400 hover:text-white transition">Faculty Portal</a></li>
+                <li><a href="/calendar" className="text-gray-400 hover:text-white transition">Academic Calendar</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Support</h4>
               <ul className="space-y-2">
-                <li><a href="/contact" className="text-gray-400 hover:text-white transition">Contact</a></li>
-                <li><a href="/docs" className="text-gray-400 hover:text-white transition">Documentation</a></li>
-                <li><a href="/status" className="text-gray-400 hover:text-white transition">System Status</a></li>
+                <li><a href="/help" className="text-gray-400 hover:text-white transition">Help Center</a></li>
+                <li><a href="/faq" className="text-gray-400 hover:text-white transition">FAQs</a></li>
+                <li><a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/10 mt-12 pt-8 text-center text-gray-400">
-            © 2025 SchoolManger. All rights reserved.
+            © 2025 National University. All rights reserved.
           </div>
         </div>
       </footer>
