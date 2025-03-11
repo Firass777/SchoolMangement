@@ -13,6 +13,7 @@
     "aos": "^2.3.4",
     "axios": "^1.7.9",
     "chart.js": "^4.4.8",
+    "framer-motion": "^12.4.12",
     "html2pdf.js": "^0.10.3",
     "jspdf": "^3.0.0",
     "jspdf-autotable": "^5.0.2",
