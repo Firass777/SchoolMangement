@@ -1,5 +1,5 @@
 import { Link, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // Import useState
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -33,18 +33,36 @@ import SEmails from "./components/Student/SEmails";
 import NotificationView from "./components/Student/NotificationView";
 import STimetable from "./components/Student/STimetable";
 
-
 import Guardindb from './components/Guardian/Guardiandb';
 
 function App() {
+  const [scrollY, setScrollY] = useState(0); 
+
   useEffect(() => {
     AOS.init();
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY); 
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
+
+  // Calculate opacity based on scroll position
+  const navbarOpacity = Math.max(0, 1 - scrollY / 1000); 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 overflow-x-hidden flex flex-col" style={{ overflow: 'hidden' }}>
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+      <nav 
+        className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md transition-opacity duration-300"
+        style={{ opacity: navbarOpacity }}
+      >
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <h1 className="text-2xl font-bold text-blue-600">SchoolManager</h1>
           <ul className="flex space-x-6">
@@ -101,9 +119,6 @@ function App() {
           <Route path="/semails" element={<SEmails />} />
           <Route path="/notificationview" element={<NotificationView />} />
           <Route path="/stimetable" element={<STimetable />} />
-          
-
-          
         </Routes>
       </div>
 
