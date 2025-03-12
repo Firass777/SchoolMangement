@@ -132,7 +132,7 @@ class UsersController extends Controller
             'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
             'password' => 'sometimes|string|min:8|max:12',
             'role' => 'sometimes|string|in:student,teacher,admin,parent',
-            'class' => 'nullable|string|required_if:role,student', // Add this line
+            'class' => 'nullable|string|required_if:role,student', 
         ]);
 
         if ($validator->fails()) {

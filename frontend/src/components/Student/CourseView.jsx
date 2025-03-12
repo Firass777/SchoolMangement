@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaClock } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaClock, FaIdCard } from 'react-icons/fa';
 import axios from 'axios';
 
 const CoursesView = () => {
@@ -85,7 +85,13 @@ const CoursesView = () => {
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
-                  <span>Notification</span>
+                  <span>Notifications</span>
+                </Link>
+              </li>
+             <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/seditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">

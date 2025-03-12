@@ -32,6 +32,7 @@ import StudentEventView from "./components/Student/StudentEventView";
 import SEmails from "./components/Student/SEmails";
 import NotificationView from "./components/Student/NotificationView";
 import STimetable from "./components/Student/STimetable";
+import SEditprofile from "./components/Student/SEditProfile" ;
 
 import Guardindb from './components/Guardian/Guardiandb';
 
@@ -119,6 +120,7 @@ function App() {
           <Route path="/semails" element={<SEmails />} />
           <Route path="/notificationview" element={<NotificationView />} />
           <Route path="/stimetable" element={<STimetable />} />
+          <Route path="/seditprofile" element={<SEditprofile />} />
         </Routes>
       </div>
 

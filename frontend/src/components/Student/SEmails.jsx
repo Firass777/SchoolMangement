@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaPaperPlane, FaSearch,FaClock } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaPaperPlane, FaSearch, FaClock, FaIdCard } from 'react-icons/fa';
 
 const SEmails = () => {
   const [emails, setEmails] = useState([]);
@@ -13,7 +13,7 @@ const SEmails = () => {
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('inbox'); // Default view is 'inbox'
+  const [view, setView] = useState('inbox'); 
 
   const userEmail = JSON.parse(localStorage.getItem('user')).email;
 
@@ -34,7 +34,7 @@ const SEmails = () => {
 
         // Filter emails based on the default view (inbox)
         const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails); // Set filtered emails to inbox emails by default
+        setFilteredEmails(inboxEmails); 
 
         setMessage('');
       } catch (error) {
@@ -145,6 +145,12 @@ const SEmails = () => {
                 <span>Notifications</span>
               </Link>
             </li>
+             <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/seditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/logout" className="flex items-center space-x-2">
                 <FaSignOutAlt />

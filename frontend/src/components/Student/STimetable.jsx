@@ -10,6 +10,7 @@ import {
   FaEnvelope,
   FaClock,
   FaDownload,
+  FaIdCard,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -99,7 +100,7 @@ function STimetable() {
       startY: 30,
       theme: "grid",
       styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [128, 0, 128] }, // Purple color for header
+      headStyles: { fillColor: [128, 0, 128] }, 
     });
 
     // Save the PDF
@@ -161,6 +162,12 @@ function STimetable() {
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                </Link>
+              </li>
+             <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/seditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
