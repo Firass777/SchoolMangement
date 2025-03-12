@@ -1,5 +1,5 @@
 import { Link, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react"; // Import useState
+import { useEffect, useState } from "react"; 
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -23,6 +23,7 @@ import TeacherEventView from "./components/Teacher/TeacherEventView";
 import TEmails from "./components/Teacher/TEmails";
 import TNotificationView from "./components/Teacher/TNotificationView";
 import TTimetable from "./components/Teacher/TTimetable";
+import TEditProfile from "./components/Teacher/TEditProfile";
 
 import Studentdb from './components/Student/Studentdb';
 import AttendanceView from "./components/Student/AttendanceView";
@@ -109,6 +110,7 @@ function App() {
           <Route path="/temails" element={<TEmails />} />
           <Route path="/tnotificationview" element={<TNotificationView />} />
           <Route path="/ttimetable" element={<TTimetable />} />
+          <Route path="/teditprofile" element={<TEditProfile />} />
 
           <Route path="/guardiandb" element={<Guardindb />} />
 

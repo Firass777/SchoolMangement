@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBook, FaSignOutAlt, FaClipboardList, FaBell, FaEnvelope, FaPaperPlane, FaSearch, FaClock } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBook, FaSignOutAlt, FaClipboardList, FaBell, FaEnvelope, FaPaperPlane, FaSearch, FaClock,FaIdCard } from 'react-icons/fa';
 
 const TEmails = () => {
   const [emails, setEmails] = useState([]);
@@ -13,11 +13,11 @@ const TEmails = () => {
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('inbox'); // Default view is 'inbox'
+  const [view, setView] = useState('inbox'); 
 
   const userEmail = JSON.parse(localStorage.getItem('user')).email;
 
-  // Fetch emails and filter based on the default view
+ 
   useEffect(() => {
     const fetchEmails = async () => {
       try {
@@ -34,7 +34,7 @@ const TEmails = () => {
 
         // Filter emails based on the default view (inbox)
         const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails); // Set filtered emails to inbox emails by default
+        setFilteredEmails(inboxEmails); 
 
         setMessage('');
       } catch (error) {
@@ -151,6 +151,12 @@ const TEmails = () => {
                 <span>Notifications</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/logout" className="flex items-center space-x-2">
                 <FaSignOutAlt />

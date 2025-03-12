@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -118,6 +118,12 @@ const GradesForm = () => {
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">

@@ -12,6 +12,7 @@ import {
   FaEnvelope,
   FaClock,
   FaDownload,
+  FaIdCard,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -101,7 +102,7 @@ function TTimetable() {
       startY: 30,
       theme: "grid",
       styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [34, 139, 34] }, // Green color for header
+      headStyles: { fillColor: [34, 139, 34] }, 
     });
 
     // Save the PDF
@@ -170,6 +171,12 @@ function TTimetable() {
                 <span>Notifications</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/logout" className="flex items-center space-x-2">
                 <FaSignOutAlt />

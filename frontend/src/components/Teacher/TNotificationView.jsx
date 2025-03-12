@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch, FaChalkboardTeacher, FaClipboardList, FaClock } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch, FaChalkboardTeacher, FaClipboardList, FaClock, FaIdCard } from 'react-icons/fa';
 
 const TNotificationView = () => {
   const [notifications, setNotifications] = useState([]);
@@ -116,6 +116,12 @@ const TNotificationView = () => {
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope, FaClock  } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope, FaClock, FaIdCard  } from 'react-icons/fa';
 
 const TeacherEventView = () => {
   const [events, setEvents] = useState([]);
@@ -127,6 +127,12 @@ const TeacherEventView = () => {
                 <FaBell /> <span>Notifications</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/logout" className="flex items-center space-x-2">
                 <FaSignOutAlt /> <span>Logout</span>
