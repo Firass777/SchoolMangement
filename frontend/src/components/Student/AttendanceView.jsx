@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaSearch,FaIdCard } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaSearch, FaIdCard } from 'react-icons/fa';
 import html2pdf from 'html2pdf.js';
 
 const AttendanceView = () => {
@@ -13,7 +13,10 @@ const AttendanceView = () => {
       const studentData = JSON.parse(localStorage.getItem('user'));
       const studentNIN = studentData?.nin;
 
-      if (!studentNIN) return;
+      if (!studentNIN) {
+        console.error('Student NIN not found in local storage.');
+        return;
+      }
 
       try {
         const response = await fetch(`http://localhost:8000/api/attendance/${studentNIN}`);

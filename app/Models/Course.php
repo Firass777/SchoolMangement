@@ -1,6 +1,5 @@
 <?php
 
-// app/Models/Course.php
 
 namespace App\Models;
 
@@ -16,5 +15,6 @@ class Course extends Model
         'class',
         'subject',
         'file_path',
+        'teacher_nin',
     ];
 }

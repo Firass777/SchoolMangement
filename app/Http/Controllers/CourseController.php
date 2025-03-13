@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Controllers/CourseController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Course;
@@ -17,7 +15,8 @@ class CourseController extends Controller
             'name' => 'required|string',
             'class' => 'required|string',
             'subject' => 'required|string',
-            'file' => 'required|mimes:pdf|max:2048', // Allow only PDF files up to 2MB
+            'file' => 'required|mimes:pdf|max:2048',
+            'teacher_nin' => 'required|string',
         ]);
 
         // Store the file
@@ -29,28 +28,40 @@ class CourseController extends Controller
             'class' => $request->class,
             'subject' => $request->subject,
             'file_path' => $filePath,
+            'teacher_nin' => $request->teacher_nin,
         ]);
 
         return response()->json(['message' => 'Course added successfully!', 'course' => $course], 201);
     }
 
-    // Get courses by class and subject
-    public function getCourses(Request $request)
+    // Get courses by teacher_nin
+    public function getCoursesByTeacherNin($teacherNin)
     {
-        $request->validate([
-            'class' => 'required|string',
-            'subject' => 'required|string',
-        ]);
-
-        $courses = Course::where('class', $request->class)
-            ->where('subject', $request->subject)
-            ->get();
+        $courses = Course::where('teacher_nin', $teacherNin)->get();
 
         if ($courses->isEmpty()) {
-            return response()->json(['message' => 'No courses found.'], 404);
+            return response()->json(['message' => 'No courses found for this teacher.'], 404);
         }
 
         return response()->json(['message' => 'Courses retrieved successfully.', 'courses' => $courses], 200);
+    }
+
+    // Delete a course
+    public function deleteCourse($id)
+    {
+        $course = Course::find($id);
+
+        if (!$course) {
+            return response()->json(['message' => 'Course not found.'], 404);
+        }
+
+        // Delete the file from storage
+        Storage::disk('public')->delete($course->file_path);
+
+        // Delete the course record
+        $course->delete();
+
+        return response()->json(['message' => 'Course deleted successfully.'], 200);
     }
 
     // Download a course file
@@ -69,16 +80,5 @@ class CourseController extends Controller
         }
 
         return response()->download($filePath, $course->name . '.pdf');
-    }
-
-    public function getLatestCourses()
-    {
-        $courses = Course::latest()->take(4)->get();
-
-        if ($courses->isEmpty()) {
-            return response()->json(['message' => 'No courses found.'], 404);
-        }
-
-        return response()->json(['message' => 'Latest courses retrieved successfully.', 'courses' => $courses], 200);
     }
 }

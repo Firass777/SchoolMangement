@@ -15,6 +15,7 @@ class AttendanceController extends Controller
             'status' => 'required|in:Present,Absent,Late',
             'class' => 'required|string',
             'subject' => 'required|string',
+            'teacher_nin' => 'required|string',
         ]);
 
         $attendance = Attendance::create([
@@ -22,15 +23,28 @@ class AttendanceController extends Controller
             'status' => $request->status,
             'class' => $request->class,
             'subject' => $request->subject,
+            'teacher_nin' => $request->teacher_nin,
         ]);
 
         return response()->json(['message' => 'Attendance added successfully!', 'attendance' => $attendance], 201);
     }
 
     // Get all attendance records
-    public function getAllAttendance()
+    public function getAttendance($studentNIN)
     {
-        $attendances = Attendance::all();
+        $attendances = Attendance::where('student_nin', $studentNIN)->get();
+    
+        if ($attendances->isEmpty()) {
+            return response()->json(['message' => 'No attendance records found.'], 404);
+        }
+    
+        return response()->json(['message' => 'Attendance records retrieved successfully.', 'attendances' => $attendances], 200);
+    }
+
+    // Get all attendance records for a teacher
+    public function getAttendanceByTeacherNin($teacherNin)
+    {
+        $attendances = Attendance::where('teacher_nin', $teacherNin)->get();
 
         if ($attendances->isEmpty()) {
             return response()->json(['message' => 'No attendance records found.'], 404);
@@ -39,15 +53,17 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Attendance records retrieved successfully.', 'attendances' => $attendances], 200);
     }
 
-    // Get attendance records for a student
-    public function getAttendance($studentNIN)
+    // Delete an attendance record
+    public function deleteAttendance($id)
     {
-        $attendances = Attendance::where('student_nin', $studentNIN)->get();
+        $attendance = Attendance::find($id);
 
-        if ($attendances->isEmpty()) {
-            return response()->json(['message' => 'No attendance records found.'], 404);
+        if (!$attendance) {
+            return response()->json(['message' => 'Attendance record not found.'], 404);
         }
 
-        return response()->json(['message' => 'Attendance records retrieved successfully.', 'attendances' => $attendances], 200);
+        $attendance->delete();
+
+        return response()->json(['message' => 'Attendance record deleted successfully.'], 200);
     }
 }

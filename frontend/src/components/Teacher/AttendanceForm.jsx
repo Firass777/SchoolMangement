@@ -1,6 +1,5 @@
-// src/components/AttendanceForm.jsx
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope,FaClock , FaIdCard } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaSearch, FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -11,9 +10,16 @@ const AttendanceForm = () => {
   const [subject, setSubject] = useState('');
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showStudents, setShowStudents] = useState(false); 
-  const [showSearch, setShowSearch] = useState(false); 
+  const [showStudents, setShowStudents] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [attendances, setAttendances] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [message, setMessage] = useState('');
+  const attendancesPerPage = 5;
 
+  // Retrieve the logged-in teacher's data from local storage
+  const user = JSON.parse(localStorage.getItem('user'));
+  const teacherNin = user.nin;
 
   // Fetch students
   useEffect(() => {
@@ -29,6 +35,19 @@ const AttendanceForm = () => {
     fetchStudents();
   }, []);
 
+  // Fetch attendances for the logged-in teacher
+  useEffect(() => {
+    const fetchAttendances = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
+        setAttendances(response.data.attendances);
+      } catch (error) {
+        console.error('Error fetching attendances:', error);
+      }
+    };
+    fetchAttendances();
+  }, [teacherNin]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -42,14 +61,31 @@ const AttendanceForm = () => {
         status,
         class: className,
         subject,
+        teacher_nin: teacherNin,
       }),
     });
 
     const data = await response.json();
     if (response.ok) {
-      alert('Attendance added successfully!');
+      setMessage('Attendance added successfully!');
+      // Refresh the attendances list
+      const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
+      setAttendances(updatedAttendances.data.attendances);
     } else {
-      alert(data.message || 'Failed to add attendance.');
+      setMessage(data.message || 'Failed to add attendance.');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8000/api/attendance/delete/${id}`);
+      setMessage('Attendance deleted successfully!');
+      // Refresh the attendances list
+      const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
+      setAttendances(updatedAttendances.data.attendances);
+    } catch (error) {
+      setMessage('Failed to delete attendance.');
+      console.error('Error:', error);
     }
   };
 
@@ -58,6 +94,13 @@ const AttendanceForm = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.id.toString().includes(searchTerm)
   );
+
+  // Pagination logic
+  const indexOfLastAttendance = currentPage * attendancesPerPage;
+  const indexOfFirstAttendance = indexOfLastAttendance - attendancesPerPage;
+  const currentAttendances = attendances.slice(indexOfFirstAttendance, indexOfLastAttendance);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -76,11 +119,11 @@ const AttendanceForm = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>               
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -109,13 +152,13 @@ const AttendanceForm = () => {
                 <Link to="/teachereventview" className="flex items-center space-x-2">
                   <FaClipboardList /> <span>Events</span>
                 </Link>
-              </li>      
-            <li className="px-6 py-3 hover:bg-green-700">
-              <Link to="/temails" className="flex items-center space-x-2">
-                <FaEnvelope />
-                <span>Emails</span>
-              </Link>
-            </li>                         
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/temails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
@@ -163,7 +206,7 @@ const AttendanceForm = () => {
             <button
               onClick={() => {
                 setShowStudents(!showStudents);
-                setShowSearch(!showSearch); 
+                setShowSearch(!showSearch);
               }}
               className="py-2 px-4 ml-4 bg-green-800 text-white rounded hover:bg-green-700"
             >
@@ -191,7 +234,8 @@ const AttendanceForm = () => {
             </div>
           )}
 
-        <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
+          {/* Add Attendance Form */}
+          <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-gray-700">Student NIN:</label>
@@ -244,6 +288,60 @@ const AttendanceForm = () => {
                 Add Attendance
               </button>
             </form>
+            {message && <p className="mt-4 text-green-600">{message}</p>}
+          </div>
+
+          {/* Display Attendances in Table */}
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Attendances</h3>
+            {currentAttendances.length > 0 ? (
+              <table className="w-full table-auto">
+                <thead>
+                  <tr className="bg-green-800 text-white">
+                    <th className="px-4 py-2">Student NIN</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Class</th>
+                    <th className="px-4 py-2">Subject</th>
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentAttendances.map((attendance) => (
+                    <tr key={attendance.id} className="border-b hover:bg-gray-100">
+                      <td className="px-4 py-2">{attendance.student_nin}</td>
+                      <td className="px-4 py-2">{attendance.status}</td>
+                      <td className="px-4 py-2">{attendance.class}</td>
+                      <td className="px-4 py-2">{attendance.subject}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => handleDelete(attendance.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No attendance records found.</p>
+            )}
+
+            {/* Pagination */}
+            <div className="flex justify-center mt-6">
+              {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`mx-1 px-4 py-2 rounded ${
+                    currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </main>
       </div>

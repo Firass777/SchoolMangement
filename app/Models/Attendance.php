@@ -15,6 +15,7 @@ class Attendance extends Model
         'student_nin',
         'status',
         'class',
-        'subject'
+        'subject',
+        'teacher_nin',
     ];
 }
