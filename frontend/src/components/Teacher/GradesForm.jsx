@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaSearch, FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -12,6 +12,14 @@ const GradesForm = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showStudents, setShowStudents] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [grades, setGrades] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [message, setMessage] = useState('');
+  const gradesPerPage = 5;
+
+  // Retrieve the logged-in teacher's data from local storage
+  const user = JSON.parse(localStorage.getItem('user'));
+  const teacherNin = user.nin;
 
   // Fetch students
   useEffect(() => {
@@ -27,6 +35,19 @@ const GradesForm = () => {
     fetchStudents();
   }, []);
 
+  // Fetch grades for the logged-in teacher
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/grades/teacher/${teacherNin}`);
+        setGrades(response.data.grades);
+      } catch (error) {
+        console.error('Error fetching grades:', error);
+      }
+    };
+    fetchGrades();
+  }, [teacherNin]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -40,14 +61,36 @@ const GradesForm = () => {
         subject,
         grade,
         class: className,
+        teacher_nin: teacherNin,
       }),
     });
 
     const data = await response.json();
     if (response.ok) {
-      alert('Grade added successfully!');
+      setMessage('Grade added successfully!');
+      // Refresh the grades list
+      const updatedGrades = await axios.get(`http://localhost:8000/api/grades/teacher/${teacherNin}`);
+      setGrades(updatedGrades.data.grades);
     } else {
-      alert(data.message || 'Failed to add grade.');
+      setMessage(data.message || 'Failed to add grade.');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8000/api/grades/delete/${id}`);
+      setMessage('Grade deleted successfully!');
+      console.log('Grades before deletion:', grades);
+      
+      // Update the local state to remove the deleted grade
+      setGrades(prevGrades => {
+        const updatedGrades = prevGrades.filter(grade => grade.id !== id);
+        console.log('Grades after deletion:', updatedGrades);
+        return updatedGrades;
+      });
+    } catch (error) {
+      setMessage('Failed to delete grade.');
+      console.error('Error:', error);
     }
   };
 
@@ -56,6 +99,13 @@ const GradesForm = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.id.toString().includes(searchTerm)
   );
+
+  // Pagination logic
+  const indexOfLastGrade = currentPage * gradesPerPage;
+  const indexOfFirstGrade = indexOfLastGrade - gradesPerPage;
+  const currentGrades = grades.slice(indexOfFirstGrade, indexOfLastGrade);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -179,7 +229,7 @@ const GradesForm = () => {
                     <span>{student.name} ({student.email})</span>
                     <button
                       onClick={() => setStudentNIN(student.nin)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     >
                       Select
                     </button>
@@ -240,6 +290,60 @@ const GradesForm = () => {
                 Add Grade
               </button>
             </form>
+            {message && <p className="mt-4 text-green-600">{message}</p>}
+          </div>
+
+          {/* Display Grades in Table */}
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Grades List</h3>
+            {currentGrades.length > 0 ? (
+              <table className="w-full table-auto">
+                <thead>
+                  <tr className="bg-green-800 text-white">
+                    <th className="px-4 py-2">Student NIN</th>
+                    <th className="px-4 py-2">Subject</th>
+                    <th className="px-4 py-2">Grade</th>
+                    <th className="px-4 py-2">Class</th>
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentGrades.map((grade) => (
+                    <tr key={grade.id} className="border-b hover:bg-gray-100">
+                      <td className="px-4 py-2">{grade.student_nin}</td>
+                      <td className="px-4 py-2">{grade.subject}</td>
+                      <td className="px-4 py-2">{grade.grade}</td>
+                      <td className="px-4 py-2">{grade.class}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => handleDelete(grade.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No grade records found.</p>
+            )}
+
+            {/* Pagination */}
+            <div className="flex justify-center mt-6">
+              {Array.from({ length: Math.ceil(grades.length / gradesPerPage) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`mx-1 px-4 py-2 rounded ${
+                    currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </main>
       </div>

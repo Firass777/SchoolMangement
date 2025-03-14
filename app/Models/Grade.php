@@ -16,5 +16,6 @@ class Grade extends Model
         'subject',
         'grade',
         'class',
+        'teacher_nin',
     ];
 }

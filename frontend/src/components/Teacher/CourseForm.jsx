@@ -281,7 +281,7 @@ const AddCourseForm = () => {
                       <td className="px-4 py-2">
                         <a
                           href={`http://127.0.0.1:8000/api/courses/download/${course.id}`}
-                          className="text-blue-500 hover:underline mr-2"
+                          className="text-green-500 hover:underline mr-2"
                         >
                           Download
                         </a>

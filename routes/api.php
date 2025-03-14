@@ -34,9 +34,11 @@ Route::get('/courses/teacher/{teacherNin}', [CourseController::class, 'getCourse
 Route::delete('/courses/delete/{id}', [CourseController::class, 'deleteCourse']);
 Route::get('/courses/download/{id}', [CourseController::class, 'downloadCourse']);
 
-Route::post('/grades/add', [GradesController::class, 'addGrade']);
-Route::get('/grades', [GradesController::class, 'getAllGrades']); 
-Route::get('/grades/{studentNIN}', [GradesController::class, 'getGrades']);
+Route::post('grades/add', [GradesController::class, 'addGrade']);
+Route::get('grades', [GradesController::class, 'getAllGrades']);
+Route::get('grades/{studentNIN}', [GradesController::class, 'getGrades']);
+Route::get('grades/teacher/{teacherNin}', [GradesController::class, 'getGradesByTeacherNin']);
+Route::delete('grades/delete/{id}', [GradesController::class, 'deleteGrade']);
 
 Route::post('attendance/add', [AttendanceController::class, 'addAttendance']);
 Route::get('attendance/{studentNIN}', [AttendanceController::class, 'getAttendance']);
