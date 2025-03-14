@@ -16,6 +16,7 @@ import {
   FaArrowLeft,
   FaArrowRight,
   FaPlus,
+  FaFileInvoice,
 } from "react-icons/fa";
 
 const EventForm = () => {
@@ -38,15 +39,15 @@ const EventForm = () => {
 
   const fetchEvents = async () => {
     try {
-      const userRole = "admin"; // Replace this with the actual role (e.g., from localStorage)
+      const userRole = "admin"; 
       const response = await axios.get("http://localhost:8000/api/events", {
-        params: { role: userRole }, // Pass the role as a query parameter
+        params: { role: userRole }, 
       });
-      console.log("API Response:", response.data); // Debugging log
+      console.log("API Response:", response.data); 
       const sortedEvents = response.data.events.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
-      console.log("Sorted Events:", sortedEvents); // Debugging log
+      console.log("Sorted Events:", sortedEvents); 
       setEvents(sortedEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -66,8 +67,8 @@ const EventForm = () => {
       });
 
       setMessage("Event added successfully!");
-      fetchEvents(); // Refresh the event list after adding a new event
-      setShowForm(false); // Collapse the form after submission
+      fetchEvents(); 
+      setShowForm(false); 
     } catch (error) {
       setMessage("Failed to add event.");
       console.error("Error:", error);
@@ -86,13 +87,13 @@ const EventForm = () => {
   const filteredEvents = events.filter((event) =>
     event.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  console.log("Filtered Events:", filteredEvents); // Debugging log
+  console.log("Filtered Events:", filteredEvents); 
 
   // Pagination logic
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-  console.log("Current Events (Pagination):", currentEvents); // Debugging log
+  console.log("Current Events (Pagination):", currentEvents); 
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   return (
@@ -140,6 +141,12 @@ const EventForm = () => {
                 <span>Event Management</span>
               </Link>
             </li>
+            <li className="px-6 py-3 hover:bg-blue-700">
+              <Link to="/documentsform" className="flex items-center space-x-2">
+                <FaFileInvoice />
+                <span>Documents</span>
+              </Link>
+            </li>            
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell />

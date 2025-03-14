@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaCog, FaClock } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaCog, FaClock, FaFileInvoice } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -28,13 +28,10 @@ const NotificationForm = () => {
       }
     } catch (error) {
       if (error.response) {
-        // Server responded with a status code outside 2xx
         setError(error.response.data.message || 'Failed to send notification.');
       } else if (error.request) {
-        // No response received
         setError('No response from the server. Please try again.');
       } else {
-        // Something else went wrong
         setError('An error occurred. Please try again.');
       }
       console.error('Error:', error);
@@ -87,6 +84,12 @@ const NotificationForm = () => {
                   <span>Event Management</span>
                 </Link>
               </li>
+             <li className="px-6 py-3 hover:bg-blue-700">
+               <Link to="/documentsform" className="flex items-center space-x-2">
+                 <FaFileInvoice />
+                 <span>Documents</span>
+               </Link>
+             </li>             
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/notificationform" className="flex items-center space-x-2">
                   <FaBell />

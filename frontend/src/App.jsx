@@ -14,6 +14,7 @@ import EventForm from "./components/Admin/EventForm";
 import AEmails from "./components/Admin/AEmails";
 import NotificationForm from "./components/Admin/NotificationForm";
 import TimetableForm from "./components/Admin/TimetableForm";
+import DocumentsForm from "./components/Admin/DocumentsForm";
 
 import Teacherdb from './components/Teacher/Teacherdb'
 import AttendanceForm from "./components/Teacher/AttendanceForm";
@@ -34,6 +35,7 @@ import SEmails from "./components/Student/SEmails";
 import NotificationView from "./components/Student/NotificationView";
 import STimetable from "./components/Student/STimetable";
 import SEditprofile from "./components/Student/SEditProfile" ;
+import Documents from "./components/Student/Documents";
 
 import Guardindb from './components/Guardian/Guardiandb';
 
@@ -101,6 +103,7 @@ function App() {
           <Route path="/aemails" element={<AEmails />} />
           <Route path="/notificationform" element={<NotificationForm />} />
           <Route path="/timetableform" element={<TimetableForm />} />
+          <Route path="/documentsform" element={<DocumentsForm />} />
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
@@ -123,6 +126,7 @@ function App() {
           <Route path="/notificationview" element={<NotificationView />} />
           <Route path="/stimetable" element={<STimetable />} />
           <Route path="/seditprofile" element={<SEditprofile />} />
+          <Route path="/documents" element={<Documents />} />
         </Routes>
       </div>
 

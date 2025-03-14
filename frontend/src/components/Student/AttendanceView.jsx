@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaSearch, FaIdCard } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaSearch, FaIdCard, FaFileInvoice } from 'react-icons/fa';
 import html2pdf from 'html2pdf.js';
 
 const AttendanceView = () => {
@@ -118,7 +118,12 @@ const AttendanceView = () => {
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
-              </li>               
+              </li>           
+            <li className="px-6 py-3 hover:bg-purple-700">
+              <Link to="/documents" className="flex items-center space-x-2">
+                <FaFileInvoice /> <span>Documents</span>
+              </Link>
+            </li>                  
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />

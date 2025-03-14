@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock } from "react-icons/fa";
+import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice } from "react-icons/fa";
 
 function Teacher() {
   const [teacherData, setTeacherData] = useState([]);
@@ -204,6 +204,12 @@ function Teacher() {
                   <span>Event Management</span>
                 </Link>
               </li>
+             <li className="px-6 py-3 hover:bg-blue-700">
+               <Link to="/documentsform" className="flex items-center space-x-2">
+                 <FaFileInvoice />
+                 <span>Documents</span>
+               </Link>
+             </li>             
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/notificationform" className="flex items-center space-x-2">
                   <FaBell />

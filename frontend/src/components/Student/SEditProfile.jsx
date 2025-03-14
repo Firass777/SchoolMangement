@@ -13,6 +13,7 @@ import {
   FaClock,
   FaEdit,
   FaIdCard,
+  FaFileInvoice,
 } from "react-icons/fa";
 
 function EditProfile() {
@@ -157,6 +158,11 @@ function EditProfile() {
                   <span>Emails</span>
                 </Link>
               </li>
+            <li className="px-6 py-3 hover:bg-purple-700">
+              <Link to="/documents" className="flex items-center space-x-2">
+                <FaFileInvoice /> <span>Documents</span>
+              </Link>
+            </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />

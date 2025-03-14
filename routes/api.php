@@ -10,6 +10,11 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\CertificateController;
+
+
+Route::post('/certificates/upload', [CertificateController::class, 'upload']);
+Route::get('/certificates/student/{student_nin}', [CertificateController::class, 'fetch']);
 
 
 Route::get('/student-timetable/{class}', [TimetableController::class, 'getStudentTimetable']);
