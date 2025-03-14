@@ -1,23 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaSearch, FaEnvelope, FaClock, FaIdCard, FaFileInvoice } from 'react-icons/fa';
+import {
+  FaUserGraduate,
+  FaCalendarAlt,
+  FaChartLine,
+  FaBell,
+  FaSignOutAlt,
+  FaBook,
+  FaSearch,
+  FaEnvelope,
+  FaClock,
+  FaIdCard,
+  FaFileInvoice,
+} from 'react-icons/fa';
 
 const Documents = () => {
   const [certificates, setCertificates] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
   const studentNIN = user.nin;
 
-  console.log('Logged-in Student NIN:', studentNIN); // Log the NIN
+  console.log('Logged-in Student NIN:', studentNIN); 
 
   // Fetch certificates for the logged-in student
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/certificates/student/${studentNIN}`);
-        console.log('API Response:', response.data); // Log the API response
-        setCertificates(response.data.data); // Use response.data.data
-        console.log('Certificates State:', certificates); // Log the state
+        const response = await axios.get('http://localhost:8000/api/certificates');
+        console.log('API Response:', response.data); 
+
+        // Filter certificates for the logged-in student
+        const studentCertificates = response.data.data.filter(
+          (cert) => cert.student_nin === studentNIN
+        );
+
+        setCertificates(studentCertificates);
+        console.log('Certificates State:', studentCertificates); 
       } catch (error) {
         console.error('Error fetching certificates:', error);
       }
@@ -97,7 +115,6 @@ const Documents = () => {
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">My Certificates</h2>
-
 
           {/* Certificates List */}
           {certificates.length > 0 ? (

@@ -10,11 +10,15 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TimetableController;
-use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\CertificatesController;
 
 
-Route::post('/certificates/upload', [CertificateController::class, 'upload']);
-Route::get('/certificates/student/{student_nin}', [CertificateController::class, 'fetch']);
+
+Route::post('/certificates/upload', [CertificatesController::class, 'upload']); 
+Route::get('/certificates', [CertificatesController::class, 'index']); 
+Route::delete('/certificates/delete/{id}', [CertificatesController::class, 'delete']); 
+Route::get('/certificates/edit/{id}', [CertificatesController::class, 'edit']); 
+Route::put('/certificates/update/{id}', [CertificatesController::class, 'update']); 
 
 
 Route::get('/student-timetable/{class}', [TimetableController::class, 'getStudentTimetable']);
