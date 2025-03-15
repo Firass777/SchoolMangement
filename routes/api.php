@@ -11,8 +11,11 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\CertificatesController;
+use App\Http\Controllers\StudentRecordController;
 
-
+Route::post('/student-records', [StudentRecordController::class, 'store']);
+Route::get('/student-records', [StudentRecordController::class, 'index']);
+Route::get('/student-record/{nin}', [StudentRecordController::class, 'show']);
 
 Route::post('/certificates/upload', [CertificatesController::class, 'upload']); 
 Route::get('/certificates', [CertificatesController::class, 'index']); 
@@ -50,7 +53,8 @@ Route::get('grades/teacher/{teacherNin}', [GradesController::class, 'getGradesBy
 Route::delete('grades/delete/{id}', [GradesController::class, 'deleteGrade']);
 
 Route::post('attendance/add', [AttendanceController::class, 'addAttendance']);
-Route::get('attendance/{studentNIN}', [AttendanceController::class, 'getAttendance']);
+Route::get('/attendance', [AttendanceController::class, 'getAttendance']);
+Route::get('/attendance/{studentNIN?}', [AttendanceController::class, 'getAttendance']);
 Route::get('attendance/teacher/{teacherNin}', [AttendanceController::class, 'getAttendanceByTeacherNin']);
 Route::delete('attendance/delete/{id}', [AttendanceController::class, 'deleteAttendance']);
 

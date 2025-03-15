@@ -15,6 +15,7 @@ import {
   FaBell,
   FaClock,
   FaFileInvoice,
+  FaFile,
 } from "react-icons/fa";
 import { Bar, Pie } from "react-chartjs-2";
 import "chart.js/auto";
@@ -154,6 +155,12 @@ function Admindb() {
                 <Link to="/documentsform" className="flex items-center space-x-2">
                   <FaFileInvoice />
                   <span>Documents</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/recordform" className="flex items-center space-x-2">
+                  <FaFile />
+                  <span>Student Record</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

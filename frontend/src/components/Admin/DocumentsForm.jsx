@@ -17,6 +17,7 @@ import {
   FaDownload,
   FaSearch,
   FaPlus,
+  FaFile,
 } from 'react-icons/fa';
 
 const DocumentsForm = () => {
@@ -186,6 +187,12 @@ const DocumentsForm = () => {
                 <span>Documents</span>
               </Link>
             </li>
+            <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/recordform" className="flex items-center space-x-2">
+                  <FaFile />
+                  <span>Student Record</span>
+                </Link>
+            </li>                 
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notifications" className="flex items-center space-x-2">
                 <FaBell />

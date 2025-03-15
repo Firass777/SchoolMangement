@@ -29,15 +29,21 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Attendance added successfully!', 'attendance' => $attendance], 201);
     }
 
-    // Get all attendance records
-    public function getAttendance($studentNIN)
+    // Get all attendance records or records for a specific student
+    public function getAttendance(Request $request, $studentNIN = null)
     {
-        $attendances = Attendance::where('student_nin', $studentNIN)->get();
-    
+        if ($studentNIN) {
+            // Fetch attendance records for a specific student
+            $attendances = Attendance::where('student_nin', $studentNIN)->get();
+        } else {
+            // Fetch all attendance records
+            $attendances = Attendance::all();
+        }
+
         if ($attendances->isEmpty()) {
             return response()->json(['message' => 'No attendance records found.'], 404);
         }
-    
+
         return response()->json(['message' => 'Attendance records retrieved successfully.', 'attendances' => $attendances], 200);
     }
 
