@@ -69,7 +69,7 @@ function EditProfile() {
 
   const fetchStudentRecord = async (nin) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/student-record/${nin}`, {
+      const response = await axios.get(`http://127.0.0.1:8000/api/student-records/${nin}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

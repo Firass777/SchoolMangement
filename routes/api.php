@@ -13,9 +13,11 @@ use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\CertificatesController;
 use App\Http\Controllers\StudentRecordController;
 
-Route::post('/student-records', [StudentRecordController::class, 'store']);
 Route::get('/student-records', [StudentRecordController::class, 'index']);
-Route::get('/student-record/{nin}', [StudentRecordController::class, 'show']);
+Route::post('/student-records', [StudentRecordController::class, 'store']);
+Route::get('/student-records/{nin}', [StudentRecordController::class, 'show']);
+Route::put('/student-records/{id}', [StudentRecordController::class, 'update']);
+Route::delete('/student-records/{id}', [StudentRecordController::class, 'destroy']);
 
 Route::post('/certificates/upload', [CertificatesController::class, 'upload']); 
 Route::get('/certificates', [CertificatesController::class, 'index']); 
