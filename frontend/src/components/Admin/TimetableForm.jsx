@@ -11,13 +11,13 @@ import {
   FaSchool,
   FaClipboardList,
   FaClock,
-  FaFileInvoice ,
+  FaFileInvoice,
   FaFile,
 } from "react-icons/fa";
 
 function TimetableForm() {
   const [formData, setFormData] = useState({
-    type: "student", 
+    type: "student",
     class: "",
     teacher_email: "",
     day: "",
@@ -25,6 +25,16 @@ function TimetableForm() {
     time: "",
     location: "",
   });
+
+  // Dropdown options
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const timeSlots = [
+    "08:30 - 10:00 AM",
+    "10:05 - 11:35 AM",
+    "12:00 - 13:30 PM",
+    "13:35 - 15:00 PM",
+    "15:05 - 17:00 PM",
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,11 +64,11 @@ function TimetableForm() {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/timetableform" className="flex items-center space-x-2">
-                  <FaClock />
-                  <span>Time-Table</span>
-                </Link>
-              </li>            
+              <Link to="/timetableform" className="flex items-center space-x-2">
+                <FaClock />
+                <span>Time-Table</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate />
@@ -88,13 +98,13 @@ function TimetableForm() {
                 <FaFileInvoice />
                 <span>Documents</span>
               </Link>
-            </li>    
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/recordform" className="flex items-center space-x-2">
-                  <FaFile />
-                  <span>Student Record</span>
-                </Link>
-            </li>                         
+              <Link to="/recordform" className="flex items-center space-x-2">
+                <FaFile />
+                <span>Student Record</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell />
@@ -166,16 +176,22 @@ function TimetableForm() {
               </div>
             )}
 
-            {/* Day */}
+            {/* Day Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
-              <input
-                type="text"
+              <select
                 value={formData.day}
                 onChange={(e) => setFormData({ ...formData, day: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-              />
+              >
+                <option value="" disabled>Select a day</option>
+                {daysOfWeek.map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Subject */}
@@ -190,16 +206,22 @@ function TimetableForm() {
               />
             </div>
 
-            {/* Time */}
+            {/* Time Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-              <input
-                type="text"
+              <select
                 value={formData.time}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-              />
+              >
+                <option value="" disabled>Select a time slot</option>
+                {timeSlots.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Location */}
