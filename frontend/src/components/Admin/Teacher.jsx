@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice, FaFile } from "react-icons/fa";
+import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice, FaFile, FaFileExcel } from "react-icons/fa";
+import * as XLSX from "xlsx";
 
 function Teacher() {
   const [teacherData, setTeacherData] = useState([]);
@@ -158,6 +159,14 @@ function Teacher() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+    // Function to export data to Excel
+    const exportToExcel = () => {
+      const worksheet = XLSX.utils.json_to_sheet(filteredteachers);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers");
+      XLSX.writeFile(workbook, "Teachers.xlsx");
+    };
+
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
@@ -264,6 +273,12 @@ function Teacher() {
               <button className="bg-green-600 text-white px-4 py-2 rounded flex items-center" onClick={() => setShowAddForm(!showAddForm)}>
                 <FaPlus className="mr-2" /> Add Teacher
               </button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
+                onClick={exportToExcel}
+              >
+                <FaFileExcel className="mr-2" /> Export to Excel
+              </button>              
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import * as XLSX from "xlsx"; 
 import {
   FaUserGraduate,
   FaSchool,
@@ -16,8 +17,9 @@ import {
   FaTrash,
   FaEdit,
   FaClock,
-  FaFileInvoice ,
+  FaFileInvoice,
   FaFile,
+  FaFileExcel, 
 } from "react-icons/fa";
 
 function Student() {
@@ -33,7 +35,7 @@ function Student() {
     nin: "",
     password: "",
     role: "student",
-    class: "", // Add class field
+    class: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -86,7 +88,6 @@ function Student() {
     setSuccess("");
 
     try {
-      // If password is blank, remove it from the form data
       const dataToSend = { ...formData };
       if (!dataToSend.password) {
         delete dataToSend.password;
@@ -133,10 +134,8 @@ function Student() {
 
   const handleEditClick = (student) => {
     if (showUpdateForm && formData.id === student.id) {
-      // If the form is already open for this student, close it
       setShowUpdateForm(false);
     } else {
-      // Otherwise, open the form and populate it with the student's data
       setFormData({
         id: student.id,
         name: student.name,
@@ -144,7 +143,7 @@ function Student() {
         nin: student.nin,
         password: "",
         role: student.role,
-        class: student.class || "", // Add class field
+        class: student.class || "",
       });
       setShowUpdateForm(true);
     }
@@ -152,10 +151,8 @@ function Student() {
 
   const handleDeleteClick = (student) => {
     if (showDeleteForm && formData.id === student.id) {
-      // If the form is already open for this student, close it
       setShowDeleteForm(false);
     } else {
-      // Otherwise, open the form and populate it with the student's data
       setFormData({
         id: student.id,
         name: student.name,
@@ -163,7 +160,7 @@ function Student() {
         nin: student.nin,
         password: "",
         role: student.role,
-        class: student.class || "", // Add class field
+        class: student.class || "",
       });
       setShowDeleteForm(true);
     }
@@ -176,12 +173,19 @@ function Student() {
       student.id.toString().includes(searchTerm)
   );
 
-  // Pagination logic
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Function to export data to Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredStudents);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    XLSX.writeFile(workbook, "Students.xlsx");
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -229,18 +233,18 @@ function Student() {
                   <span>Event Management</span>
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-blue-700">
-               <Link to="/documentsform" className="flex items-center space-x-2">
-                 <FaFileInvoice />
-                 <span>Documents</span>
-               </Link>
-             </li>   
-            <li className="px-6 py-3 hover:bg-blue-700">
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/documentsform" className="flex items-center space-x-2">
+                  <FaFileInvoice />
+                  <span>Documents</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/recordform" className="flex items-center space-x-2">
                   <FaFile />
                   <span>Student Record</span>
                 </Link>
-            </li>                            
+              </li>
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/notificationform" className="flex items-center space-x-2">
                   <FaBell />
@@ -284,13 +288,19 @@ function Student() {
               />
             </div>
 
-            {/* Buttons to Show Forms */}
+            {/* Buttons to Show Forms and Export to Excel */}
             <div className="flex space-x-3">
               <button
                 className="bg-green-600 text-white px-4 py-2 rounded flex items-center"
                 onClick={() => setShowAddForm(!showAddForm)}
               >
                 <FaPlus className="mr-2" /> Add Student
+              </button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
+                onClick={exportToExcel}
+              >
+                <FaFileExcel className="mr-2" /> Export to Excel
               </button>
             </div>
           </div>
