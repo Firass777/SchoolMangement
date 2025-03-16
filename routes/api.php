@@ -28,9 +28,13 @@ Route::put('/certificates/update/{id}', [CertificatesController::class, 'update'
 
 Route::get('/student-timetable/{class}', [TimetableController::class, 'getStudentTimetable']);
 Route::post('/student-timetable/add', [TimetableController::class, 'addStudentTimetable']);
+Route::delete('/student-timetable/delete/{id}', [TimetableController::class, 'deleteStudentTimetable']);
+Route::put('/student-timetable/update/{id}', [TimetableController::class, 'updateStudentTimetable']);
 
 Route::get('/teacher-timetable/{email}', [TimetableController::class, 'getTeacherTimetable']);
 Route::post('/teacher-timetable/add', [TimetableController::class, 'addTeacherTimetable']);
+Route::delete('/teacher-timetable/delete/{id}', [TimetableController::class, 'deleteTeacherTimetable']);
+Route::put('/teacher-timetable/update/{id}', [TimetableController::class, 'updateTeacherTimetable']);
 
 Route::post('/notification/send', [NotificationController::class, 'sendNotification']);
 Route::get('/notifications/{recipient}', [NotificationController::class, 'getNotifications']);

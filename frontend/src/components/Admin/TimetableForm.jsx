@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaUserGraduate,
@@ -26,7 +26,11 @@ function TimetableForm() {
     location: "",
   });
 
-  // Dropdown options
+  const [timetableData, setTimetableData] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState({ type: "student", value: "" });
+  const [editId, setEditId] = useState(null);
+
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const timeSlots = [
     "08:30 - 10:00 AM",
@@ -38,19 +42,69 @@ function TimetableForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const endpoint = formData.type === "student" ? "/api/student-timetable/add" : "/api/teacher-timetable/add";
+    const endpoint = editId ? 
+      (formData.type === "student" ? `/api/student-timetable/update/${editId}` : `/api/teacher-timetable/update/${editId}`) :
+      (formData.type === "student" ? "/api/student-timetable/add" : "/api/teacher-timetable/add");
+    const method = editId ? "PUT" : "POST";
     const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
     const data = await response.json();
     alert(data.message);
+    fetchTimetable();
+    setEditId(null);
+    setFormData({
+      type: "student",
+      class: "",
+      teacher_email: "",
+      day: "",
+      subject: "",
+      time: "",
+      location: "",
+    });
   };
+
+  const fetchTimetable = async () => {
+    const endpoint = filter.type === "student" ? `/api/student-timetable/${filter.value}` : `/api/teacher-timetable/${filter.value}`;
+    const response = await fetch(`http://127.0.0.1:8000${endpoint}`);
+    const data = await response.json();
+    setTimetableData(data);
+  };
+
+  const handleDelete = async (id) => {
+    const endpoint = filter.type === "student" ? `/api/student-timetable/delete/${id}` : `/api/teacher-timetable/delete/${id}`;
+    const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    alert(data.message);
+    fetchTimetable();
+  };
+
+  const handleEdit = (entry) => {
+    setFormData({
+      type: filter.type,
+      class: entry.class || "",
+      teacher_email: entry.teacher_email || "",
+      day: entry.day,
+      subject: entry.subject,
+      time: entry.time,
+      location: entry.location,
+    });
+    setEditId(entry.id);
+    setShowForm(true);
+  };
+
+  useEffect(() => {
+    if (filter.value) {
+      fetchTimetable();
+    }
+  }, [filter]);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-blue-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -133,117 +187,184 @@ function TimetableForm() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">
         <div className="bg-white shadow-md rounded-lg p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Timetable Form</h1>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="mb-4 py-2 px-4 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            {showForm ? "Hide Form" : "Show Form"}
+          </button>
+
+          {showForm && (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+              </div>
+
+              {formData.type === "student" ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                  <input
+                    type="text"
+                    value={formData.class}
+                    onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Teacher Email</label>
+                  <input
+                    type="email"
+                    value={formData.teacher_email}
+                    onChange={(e) => setFormData({ ...formData, teacher_email: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                <select
+                  value={formData.day}
+                  onChange={(e) => setFormData({ ...formData, day: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>Select a day</option>
+                  {daysOfWeek.map((day) => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <input
+                  type="text"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                <select
+                  value={formData.time}
+                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>Select a time slot</option>
+                  {timeSlots.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                {editId ? "Update Timetable" : "Add Timetable"}
+              </button>
+            </form>
+          )}
+
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Filter Timetable</h2>
+            <div className="flex space-x-4">
               <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={filter.type}
+                onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
               </select>
-            </div>
-
-            {/* Class or Teacher Email */}
-            {formData.type === "student" ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
-                <input
-                  type="text"
-                  value={formData.class}
-                  onChange={(e) => setFormData({ ...formData, class: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Teacher Email</label>
-                <input
-                  type="email"
-                  value={formData.teacher_email}
-                  onChange={(e) => setFormData({ ...formData, teacher_email: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-            )}
-
-            {/* Day Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
-              <select
-                value={formData.day}
-                onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="" disabled>Select a day</option>
-                {daysOfWeek.map((day) => (
-                  <option key={day} value={day}>
-                    {day}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Subject */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
               <input
                 type="text"
-                value={formData.subject}
-                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                value={filter.value}
+                onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={filter.type === "student" ? "Enter Class" : "Enter Email"}
               />
-            </div>
-
-            {/* Time Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-              <select
-                value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+              <button
+                onClick={fetchTimetable}
+                className="py-2 px-4 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition duration-200"
               >
-                <option value="" disabled>Select a time slot</option>
-                {timeSlots.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
+                Filter
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Timetable Data</h2>
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-blue-800 text-white">
+                  <th className="p-3">Day</th>
+                  <th className="p-3">Subject</th>
+                  <th className="p-3">Time</th>
+                  <th className="p-3">Location</th>
+                  <th className="p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {timetableData.map((entry) => (
+                  <tr key={entry.id} className="border-b border-gray-300">
+                    <td className="p-3">{entry.day}</td>
+                    <td className="p-3">{entry.subject}</td>
+                    <td className="p-3">{entry.time}</td>
+                    <td className="p-3">{entry.location}</td>
+                    <td className="p-3">
+                      <button
+                        onClick={() => handleDelete(entry.id)}
+                        className="py-1 px-3 bg-red-600 text-white rounded-lg hover:bg-red-500 transition duration-200"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => handleEdit(entry)}
+                        className="py-1 px-4 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition duration-200"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition duration-200"
-            >
-              Add Timetable
-            </button>
-          </form>
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     </div>
