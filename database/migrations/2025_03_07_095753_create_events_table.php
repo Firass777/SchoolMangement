@@ -1,6 +1,5 @@
 <?php
 
-// database/migrations/xxxx_xx_xx_xxxxxx_create_events_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,11 +11,11 @@ class CreateEventsTable extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Event name
-            $table->date('date'); // Event date
-            $table->text('description'); // Event description
-            $table->string('type'); // Event type (Event, Training, Meeting)
-            $table->json('visible_to'); // Roles that can see the event (e.g., ["student", "teacher"])
+            $table->string('name'); 
+            $table->date('date'); 
+            $table->text('description'); 
+            $table->string('type'); 
+            $table->json('visible_to'); 
             $table->timestamps();
         });
     }

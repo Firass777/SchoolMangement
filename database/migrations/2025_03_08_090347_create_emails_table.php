@@ -12,10 +12,10 @@ class CreateEmailsTable extends Migration
     {
         Schema::create('emails', function (Blueprint $table) {
             $table->id();
-            $table->string('from'); // Sender's email
-            $table->string('to'); // Recipient's email
-            $table->string('title'); // Email title
-            $table->text('description'); // Email content
+            $table->string('from'); 
+            $table->string('to'); 
+            $table->string('title'); 
+            $table->text('description'); 
             $table->timestamps();
         });
     }
