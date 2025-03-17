@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Controllers/EventController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Event;
@@ -44,10 +42,16 @@ class EventController extends Controller
             return response()->json(['message' => 'Role parameter is required.'], 400);
         }
 
-        // Fetch events visible to the user's role or 'all'
-        $events = Event::whereJsonContains('visible_to', $userRole)
-            ->orWhereJsonContains('visible_to', 'all')
-            ->get();
+        // Fetch events
+        if ($userRole === 'admin') {
+            // Admin can see all events
+            $events = Event::all();
+        } else {
+            // Other roles can only see events visible to them or 'all'
+            $events = Event::whereJsonContains('visible_to', $userRole)
+                ->orWhereJsonContains('visible_to', 'all')
+                ->get();
+        }
 
         if ($events->isEmpty()) {
             return response()->json(['message' => 'No events found.'], 404);
@@ -56,14 +60,15 @@ class EventController extends Controller
         return response()->json(['message' => 'Events retrieved successfully.', 'events' => $events], 200);
     }
 
+    // Get the latest events
     public function getLatestEvents()
-{
-    $events = Event::latest()->take(2)->get();
+    {
+        $events = Event::latest()->take(2)->get();
 
-    if ($events->isEmpty()) {
-        return response()->json(['message' => 'No events found.'], 404);
+        if ($events->isEmpty()) {
+            return response()->json(['message' => 'No events found.'], 404);
+        }
+
+        return response()->json(['message' => 'Latest events retrieved successfully.', 'events' => $events], 200);
     }
-
-    return response()->json(['message' => 'Latest events retrieved successfully.', 'events' => $events], 200);
-}
 }

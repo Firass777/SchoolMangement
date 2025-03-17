@@ -40,9 +40,10 @@ const EventForm = () => {
 
   const fetchEvents = async () => {
     try {
-      const userRole = "admin"; 
+      const userData = JSON.parse(localStorage.getItem("user")); 
+      const userRole = userData ? userData.role : "admin"; 
       const response = await axios.get("http://localhost:8000/api/events", {
-        params: { role: userRole }, 
+        params: { role: userRole },
       });
       console.log("API Response:", response.data); 
       const sortedEvents = response.data.events.sort(
@@ -97,6 +98,7 @@ const EventForm = () => {
   console.log("Current Events (Pagination):", currentEvents); 
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -147,13 +149,13 @@ const EventForm = () => {
                 <FaFileInvoice />
                 <span>Documents</span>
               </Link>
-            </li>     
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/recordform" className="flex items-center space-x-2">
-                  <FaFile />
-                  <span>Student Record</span>
-                </Link>
-            </li>                        
+              <Link to="/recordform" className="flex items-center space-x-2">
+                <FaFile />
+                <span>Student Record</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell />
@@ -290,49 +292,49 @@ const EventForm = () => {
               </div>
             </div>
 
-      {/* Event Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg">
-          <thead className="bg-blue-800 text-white">
-            <tr>
-              <th className="px-6 py-3 text-left">Name</th>
-              <th className="px-6 py-3 text-left">Date</th>
-              <th className="px-6 py-3 text-left">Type</th>
-              <th className="px-6 py-3 text-left">Visible To</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentEvents.map((event) => (
-              <tr key={event.id} className="border-b">
-                <td className="px-6 py-4">{event.name}</td>
-                <td className="px-6 py-4">{new Date(event.date).toLocaleDateString()}</td>
-                <td className="px-6 py-4">{event.type}</td>
-                <td className="px-6 py-4">{event.visible_to.join(", ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            {/* Event Table */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white shadow-md rounded-lg">
+                <thead className="bg-blue-800 text-white">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Name</th>
+                    <th className="px-6 py-3 text-left">Date</th>
+                    <th className="px-6 py-3 text-left">Type</th>
+                    <th className="px-6 py-3 text-left">Visible To</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEvents.map((event) => (
+                    <tr key={event.id} className="border-b">
+                      <td className="px-6 py-4">{event.name}</td>
+                      <td className="px-6 py-4">{new Date(event.date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">{event.type}</td>
+                      <td className="px-6 py-4">{event.visible_to.join(", ")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          <FaArrowLeft />
-        </button>
-        <span>Page {currentPage}</span>
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={indexOfLastEvent >= filteredEvents.length}
-          className="px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          <FaArrowRight />
-        </button>
-      </div>
-    </div>
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                <FaArrowLeft />
+              </button>
+              <span>Page {currentPage}</span>
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={indexOfLastEvent >= filteredEvents.length}
+                className="px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>

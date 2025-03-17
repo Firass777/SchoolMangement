@@ -4,26 +4,56 @@ import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBoo
 import axios from 'axios';
 
 const CoursesView = () => {
-  const [classFilter, setClassFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [courses, setCourses] = useState([]);
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch courses based on class (from localStorage) and subject filter
   const fetchCourses = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/api/courses', {
-        params: {
-          class: classFilter,
-          subject: subjectFilter,
-        },
-      });
-
-      setCourses(response.data.courses);
-      setMessage('');
-    } catch (error) {
-      setMessage('No courses found.');
+    if (!subjectFilter.trim()) {
+      setMessage('Please enter a subject to search.');
       setCourses([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      // Get class from localStorage
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const userClass = userData ? userData.class : null;
+
+      if (!userClass) {
+        setMessage('Class information not found. Please log in again.');
+        setCourses([]);
+        return;
+      }
+
+      // Fetch all courses
+      const response = await axios.get('http://localhost:8000/api/courses');
+      const allCourses = response.data.courses;
+
+      // Filter courses based on class and subject
+      const filteredCourses = allCourses.filter(
+        (course) =>
+          course.class === userClass &&
+          course.subject.toLowerCase().includes(subjectFilter.toLowerCase())
+      );
+
+      if (filteredCourses.length === 0) {
+        setMessage('No courses found matching your search.');
+      } else {
+        setMessage('');
+      }
+
+      setCourses(filteredCourses);
+    } catch (error) {
+      setMessage('Failed to fetch courses. Please try again.');
       console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,12 +77,12 @@ const CoursesView = () => {
                   <span>Dashboard</span>
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-purple-700">
-               <Link to="/stimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/stimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
                   <FaChartLine />
@@ -67,33 +97,35 @@ const CoursesView = () => {
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook  />
+                  <FaBook />
                   <span>Courses</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/studenteventview" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Events</span>
-              </Link>
-            </li>   
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/studenteventview" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
+                  <span>Events</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/semails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
-              </li>    
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/documents" className="flex items-center space-x-2">
-                <FaFileInvoice /> <span>Documents</span>
-              </Link>
-            </li>                                    
+              </li>
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/documents" className="flex items-center space-x-2">
+                  <FaFileInvoice />
+                  <span>Documents</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/seditprofile" className="flex items-center space-x-2">
                   <FaIdCard />
                   <span>Profile</span>
@@ -113,33 +145,31 @@ const CoursesView = () => {
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">View Courses</h2>
           <div className="mb-6 p-6 bg-white shadow-md rounded-lg">
-            <div className="mb-4">
-              <label className="block text-gray-700">Class:</label>
-              <input
-                type="text"
-                value={classFilter}
-                onChange={(e) => setClassFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              />
-            </div>
+            {/* Subject Filter */}
             <div className="mb-4">
               <label className="block text-gray-700">Subject:</label>
               <input
                 type="text"
                 value={subjectFilter}
                 onChange={(e) => setSubjectFilter(e.target.value)}
+                placeholder="Enter subject (e.g., Math)"
                 className="w-full p-2 border rounded"
               />
             </div>
+
+            {/* Search Button */}
             <button
               onClick={fetchCourses}
-              className="w-full py-2 bg-purple-800 text-white rounded hover:bg-purple-700"
+              disabled={isLoading}
+              className="w-full py-2 bg-purple-800 text-white rounded hover:bg-purple-700 disabled:bg-gray-400"
             >
-              Search
+              {isLoading ? 'Searching...' : 'Search'}
             </button>
 
+            {/* Message */}
             {message && <p className="mt-4 text-red-600">{message}</p>}
 
+            {/* Courses List */}
             <div className="mt-6">
               {courses.map((course) => (
                 <div key={course.id} className="border-b py-4">
@@ -147,7 +177,7 @@ const CoursesView = () => {
                   <p className="text-gray-600">{course.class} - {course.subject}</p>
                   <button
                     onClick={() => handleDownload(course.id)}
-                    className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    className="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
                   >
                     Download PDF
                   </button>

@@ -34,6 +34,19 @@ class CourseController extends Controller
         return response()->json(['message' => 'Course added successfully!', 'course' => $course], 201);
     }
 
+    // Get all courses
+    public function getAllCourses(Request $request)
+    {
+        // Fetch all courses
+        $courses = Course::all();
+
+        if ($courses->isEmpty()) {
+            return response()->json(['message' => 'No courses found.'], 404);
+        }
+
+        return response()->json(['message' => 'Courses retrieved successfully.', 'courses' => $courses], 200);
+    }
+
     // Get courses by teacher_nin
     public function getCoursesByTeacherNin($teacherNin)
     {

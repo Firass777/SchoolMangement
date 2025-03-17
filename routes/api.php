@@ -46,7 +46,7 @@ Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
 Route::get('/events/latest', [EventController::class, 'getLatestEvents']);
 
-
+Route::get('/courses', [CourseController::class, 'getAllCourses']);
 Route::post('/courses/add', [CourseController::class, 'addCourse']);
 Route::get('/courses/teacher/{teacherNin}', [CourseController::class, 'getCoursesByTeacherNin']);
 Route::delete('/courses/delete/{id}', [CourseController::class, 'deleteCourse']);
