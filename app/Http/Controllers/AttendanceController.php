@@ -72,4 +72,68 @@ class AttendanceController extends Controller
 
         return response()->json(['message' => 'Attendance record deleted successfully.'], 200);
     }
+
+    // Calculate attendance rate for all students
+    public function getAttendanceRate()
+    {
+        // Fetch all attendance records
+        $attendances = Attendance::all();
+
+        if ($attendances->isEmpty()) {
+            return response()->json(['message' => 'No attendance records found.'], 404);
+        }
+
+        // Group attendance records by student_nin
+        $groupedAttendances = $attendances->groupBy('student_nin');
+
+        $totalStudents = $groupedAttendances->count();
+        $totalPresent = 0;
+        $totalRecords = 0;
+
+        // Calculate total present and total records for all students
+        foreach ($groupedAttendances as $studentAttendances) {
+            $totalRecords += $studentAttendances->count();
+            $totalPresent += $studentAttendances->where('status', 'Present')->count();
+        }
+
+        // Calculate attendance rate
+        if ($totalRecords === 0) {
+            return response()->json(['message' => 'No attendance records found.'], 404);
+        }
+
+        $attendanceRate = ($totalPresent / $totalRecords) * 100;
+
+        return response()->json([
+            'message' => 'Attendance rate calculated successfully.',
+            'attendance_rate' => round($attendanceRate, 2),
+        ], 200);
+    }
+
+    public function getDailyAttendanceTrends()
+{
+    // Fetch attendance records for the last 7 days
+    $attendanceTrends = Attendance::where('created_at', '>=', now()->subDays(7))
+        ->selectRaw('DATE(created_at) as date, COUNT(*) as total, SUM(CASE WHEN status = "Present" THEN 1 ELSE 0 END) as present')
+        ->groupBy('date')
+        ->orderBy('date', 'asc')
+        ->get();
+
+    if ($attendanceTrends->isEmpty()) {
+        return response()->json(['message' => 'No attendance records found for the last 7 days.'], 404);
+    }
+
+    // Format data for the chart
+    $labels = [];
+    $data = [];
+    foreach ($attendanceTrends as $trend) {
+        $labels[] = $trend->date;
+        $data[] = $trend->total > 0 ? round(($trend->present / $trend->total) * 100, 2) : 0;
+    }
+
+    return response()->json([
+        'message' => 'Daily attendance trends retrieved successfully.',
+        'labels' => $labels,
+        'data' => $data,
+    ], 200);
+}
 }

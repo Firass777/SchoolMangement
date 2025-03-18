@@ -78,4 +78,18 @@ class GradesController extends Controller
 
         return response()->json(['message' => 'Grade record deleted successfully.'], 200);
     }
-}
+
+    // Get all grade records with student names
+    public function getAllGradesWithNames()
+    {
+        $grades = Grade::join('users', 'grades.student_nin', '=', 'users.nin')
+            ->select('grades.*', 'users.name as student_name')
+            ->get();
+
+        if ($grades->isEmpty()) {
+            return response()->json(['message' => 'No grade records found.'], 404);
+        }
+
+        return response()->json(['message' => 'Grade records retrieved successfully.', 'grades' => $grades], 200);
+    }
+    }

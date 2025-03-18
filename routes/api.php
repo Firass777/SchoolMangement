@@ -45,6 +45,12 @@ Route::get('/emails', [EmailController::class, 'getEmails']);
 Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
 Route::get('/events/latest', [EventController::class, 'getLatestEvents']);
+Route::get('/events/last-month', [EventController::class, 'getLastMonthEvents']);
+Route::get('/events/upcoming', [EventController::class, 'getUpcomingEvents']);
+Route::get('/events/count/all', [EventController::class, 'getAllEventsCount']);
+Route::get('/events/count/upcoming', [EventController::class, 'getUpcomingEventsCount']);
+Route::get('events/monthly', [EventController::class, 'getMonthlyEvents']);
+
 
 Route::get('/courses', [CourseController::class, 'getAllCourses']);
 Route::post('/courses/add', [CourseController::class, 'addCourse']);
@@ -57,13 +63,15 @@ Route::get('grades', [GradesController::class, 'getAllGrades']);
 Route::get('grades/{studentNIN}', [GradesController::class, 'getGrades']);
 Route::get('grades/teacher/{teacherNin}', [GradesController::class, 'getGradesByTeacherNin']);
 Route::delete('grades/delete/{id}', [GradesController::class, 'deleteGrade']);
+Route::get('grades-with-names', [GradesController::class, 'getAllGradesWithNames']);
 
-Route::post('attendance/add', [AttendanceController::class, 'addAttendance']);
-Route::get('/attendance', [AttendanceController::class, 'getAttendance']);
+
+Route::post('/attendance/add', [AttendanceController::class, 'addAttendance']);
 Route::get('/attendance/{studentNIN?}', [AttendanceController::class, 'getAttendance']);
-Route::get('attendance/teacher/{teacherNin}', [AttendanceController::class, 'getAttendanceByTeacherNin']);
-Route::delete('attendance/delete/{id}', [AttendanceController::class, 'deleteAttendance']);
-
+Route::get('/attendance/teacher/{teacherNin}', [AttendanceController::class, 'getAttendanceByTeacherNin']);
+Route::delete('/attendance/{id}', [AttendanceController::class, 'deleteAttendance']);
+Route::get('/attendance-rate', [AttendanceController::class, 'getAttendanceRate']);
+Route::get('/daily-attendance-trends', [AttendanceController::class, 'getDailyAttendanceTrends']);
 
 Route::get('/users/latest/students', [UsersController::class, 'getLatestStudents']);
 Route::get('/users/latest/teachers', [UsersController::class, 'getLatestTeachers']);
