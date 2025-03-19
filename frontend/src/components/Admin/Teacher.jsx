@@ -224,7 +224,13 @@ function Teacher() {
                   <FaFile />
                   <span>Student Record</span>
                 </Link>
-            </li>                            
+            </li>      
+            <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/teacherrecord" className="flex items-center space-x-2">
+                  <FaFile />
+                  <span>Teacher Record</span>
+                </Link>
+              </li>                      
               <li className="px-6 py-3 hover:bg-blue-700">
                 <Link to="/notificationform" className="flex items-center space-x-2">
                   <FaBell />
