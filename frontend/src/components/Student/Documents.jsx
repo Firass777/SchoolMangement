@@ -8,7 +8,7 @@ import {
   FaBell,
   FaSignOutAlt,
   FaBook,
-  FaSearch,
+  FaMoneyCheck,
   FaEnvelope,
   FaClock,
   FaIdCard,
@@ -57,6 +57,12 @@ const Documents = () => {
                 <FaUserGraduate /> <span>Dashboard</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/spayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck />
+                  <span>Payment</span>
+                </Link>
+              </li>            
             <li className="px-6 py-3 hover:bg-purple-700">
               <Link to="/stimetable" className="flex items-center space-x-2">
                 <FaClock /> <span>Time-Table</span>

@@ -13,12 +13,19 @@ use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\CertificatesController;
 use App\Http\Controllers\StudentRecordController;
 use App\Http\Controllers\TeacherRecordController;
+use App\Http\Controllers\PaymentController;
+
+Route::post('/create-payment', [PaymentController::class, 'create']);
+Route::post('/stripe-webhook', [PaymentController::class, 'handleWebhook']);
+Route::get('/get-payments', [PaymentController::class, 'getPayments']);
+Route::get('/get-all-payments', [PaymentController::class, 'getAllPayments']);
 
 Route::get('/teacher-records', [TeacherRecordController::class, 'index']);
 Route::post('/teacher-records', [TeacherRecordController::class, 'store']);
 Route::get('/teacher-records/{nin}', [TeacherRecordController::class, 'show']);
 Route::put('/teacher-records/{id}', [TeacherRecordController::class, 'update']);
 Route::delete('/teacher-records/{id}', [TeacherRecordController::class, 'destroy']);
+Route::get('/teacher-statistics', [TeacherRecordController::class, 'getTeacherStatistics']);
 
 Route::get('/student-records', [StudentRecordController::class, 'index']);
 Route::post('/student-records', [StudentRecordController::class, 'store']);

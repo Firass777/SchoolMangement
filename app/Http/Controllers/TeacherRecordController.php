@@ -96,4 +96,45 @@ class TeacherRecordController extends Controller
         $record->delete();
         return response()->json(['message' => 'Record deleted successfully']);
     }
+
+public function getTeacherStatistics()
+{
+    $teachers = TeacherRecord::all();
+
+    $genderCount = ['male' => 0, 'female' => 0];
+    $subjectCount = [];
+    $classCount = [];
+
+    foreach ($teachers as $teacher) {
+        // Count gender
+        if ($teacher->gender === 'Male') $genderCount['male']++;
+        if ($teacher->gender === 'Female') $genderCount['female']++;
+
+        // Count subjects
+        $subjects = explode(',', $teacher->subjects_assigned);
+        foreach ($subjects as $subject) {
+            $subject = trim($subject);
+            if (!isset($subjectCount[$subject])) {
+                $subjectCount[$subject] = 0;
+            }
+            $subjectCount[$subject]++;
+        }
+
+        // Count classes
+        $classes = explode(',', $teacher->class_section_allocation);
+        foreach ($classes as $class) {
+            $class = trim($class);
+            if (!isset($classCount[$class])) {
+                $classCount[$class] = 0;
+            }
+            $classCount[$class]++;
+        }
+    }
+
+    return response()->json([
+        'gender' => $genderCount,
+        'subjects' => $subjectCount,
+        'classes' => $classCount,
+    ]);
+}
 }

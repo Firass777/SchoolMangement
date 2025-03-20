@@ -12,6 +12,7 @@ import {
   FaDownload,
   FaIdCard,
   FaFileInvoice ,
+  FaMoneyCheck,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -124,6 +125,12 @@ function STimetable() {
                   <span>Dashboard</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/spayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck />
+                  <span>Payment</span>
+                </Link>
+              </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/stimetable" className="flex items-center space-x-2">
                   <FaClock />

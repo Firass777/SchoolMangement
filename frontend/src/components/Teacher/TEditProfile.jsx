@@ -28,11 +28,12 @@ function TEditProfile() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); 
+  const [isEditing, setIsEditing] = useState(false);
+  const [teacherRecord, setTeacherRecord] = useState(null);
 
   // Fetch the logged-in teacher's data from localStorage
   useEffect(() => {
-    const fetchStudentData = () => {
+    const fetchTeacherData = () => {
       try {
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
@@ -47,6 +48,11 @@ function TEditProfile() {
             password: "",
             role: loggedInUser.role,
           });
+
+          // Fetch teacher record if NIN is available
+          if (loggedInUser.nin) {
+            fetchTeacherRecord(loggedInUser.nin);
+          }
         } else {
           setError("Logged-in user not found in localStorage");
         }
@@ -56,8 +62,22 @@ function TEditProfile() {
       }
     };
 
-    fetchStudentData();
+    fetchTeacherData();
   }, []);
+
+  const fetchTeacherRecord = async (nin) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/teacher-records/${nin}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setTeacherRecord(response.data);
+    } catch (err) {
+      console.error("Error fetching teacher record:", err);
+      setError("There is no teacher record");
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -92,7 +112,7 @@ function TEditProfile() {
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setFormData({ ...formData, password: "" });
-      setIsEditing(false); 
+      setIsEditing(false);
     } catch (err) {
       if (err.response && err.response.data.errors) {
         setError(err.response.data.errors.email || "Failed to update profile.");
@@ -120,12 +140,12 @@ function TEditProfile() {
                   <span>Dashboard</span>
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -154,13 +174,13 @@ function TEditProfile() {
                 <Link to="/teachereventview" className="flex items-center space-x-2">
                   <FaClipboardList /> <span>Events</span>
                 </Link>
-              </li>          
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/temails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
-              </li>                  
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
@@ -186,72 +206,82 @@ function TEditProfile() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Profile</h2>
-          <div className="p-6 bg-white shadow-md rounded-md mb-6">
-            {/* Display User Data */}
-            {!isEditing && (
+
+          {/* User Information Section */}
+          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">User Information</h3>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                <FaEdit />
+                <span>{isEditing ? "Cancel Editing" : "Edit Profile"}</span>
+              </button>
+            </div>
+
+            {!isEditing ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-800">User Information</h3>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                  >
-                    <FaEdit />
-                    <span>Edit Profile</span>
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  <p><span className="font-semibold">Name:</span> {formData.name}</p>
-                  <p><span className="font-semibold">Email:</span> {formData.email}</p>
-                  <p><span className="font-semibold">National ID Number (NIN):</span> {formData.nin}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-600 font-semibold">Name</p>
+                    <p className="text-gray-800">{formData.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 font-semibold">Email</p>
+                    <p className="text-gray-800">{formData.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 font-semibold">National ID Number (NIN)</p>
+                    <p className="text-gray-800">{formData.nin}</p>
+                  </div>
                 </div>
               </div>
-            )}
-
-            {/* Edit Form */}
-            {isEditing && (
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label className="block text-gray-700">Name:</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded mb-2"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700">Email:</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded mb-2"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700">National ID Number (NIN):</label>
-                  <input
-                    type="text"
-                    name="nin"
-                    value={formData.nin}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded mb-2"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700">New Password (leave blank to keep current):</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded mb-2"
-                  />
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-600 font-semibold">Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 font-semibold">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 font-semibold">National ID Number (NIN)</label>
+                    <input
+                      type="text"
+                      name="nin"
+                      value={formData.nin}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 font-semibold">New Password (leave blank to keep current)</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <button
@@ -271,11 +301,80 @@ function TEditProfile() {
                 </div>
               </form>
             )}
-
-            {/* Error and Success Messages */}
-            {error && <div className="text-red-500 mt-3">{error}</div>}
-            {success && <div className="text-green-500 mt-3">{success}</div>}
           </div>
+
+          {/* Teacher Record Section */}
+          {teacherRecord && (
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Teacher Record</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-600 font-semibold">Full Name</p>
+                  <p className="text-gray-800">{teacherRecord.full_name}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Date of Birth</p>
+                  <p className="text-gray-800">{teacherRecord.date_of_birth}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Gender</p>
+                  <p className="text-gray-800">{teacherRecord.gender}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Contact Number</p>
+                  <p className="text-gray-800">{teacherRecord.contact_number}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Email Address</p>
+                  <p className="text-gray-800">{teacherRecord.email_address}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Address</p>
+                  <p className="text-gray-800">{teacherRecord.address}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Nationality</p>
+                  <p className="text-gray-800">{teacherRecord.nationality}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Emergency Contact Name</p>
+                  <p className="text-gray-800">{teacherRecord.emergency_contact_name}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Emergency Contact Number</p>
+                  <p className="text-gray-800">{teacherRecord.emergency_contact_number}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Department</p>
+                  <p className="text-gray-800">{teacherRecord.department}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Subjects Assigned</p>
+                  <p className="text-gray-800">{teacherRecord.subjects_assigned}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Class & Section Allocation</p>
+                  <p className="text-gray-800">{teacherRecord.class_section_allocation}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Date of Joining</p>
+                  <p className="text-gray-800">{teacherRecord.date_of_joining}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Employment Type</p>
+                  <p className="text-gray-800">{teacherRecord.employment_type}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Attendance & Leave Records</p>
+                  <p className="text-gray-800">{teacherRecord.attendance_leave_records}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error and Success Messages */}
+          {error && <div className="mt-6 p-4 bg-red-100 text-red-600 rounded">{error}</div>}
+          {success && <div className="mt-6 p-4 bg-green-100 text-green-600 rounded">{success}</div>}
         </main>
       </div>
     </div>

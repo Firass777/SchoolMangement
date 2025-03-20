@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaEnvelope, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -27,13 +27,28 @@ const AdminReports = () => {
   const [allEventsCount, setAllEventsCount] = useState(0);
   const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
   const [monthlyEventsData, setMonthlyEventsData] = useState({ labels: [], data: [] });
+  const [teacherStats, setTeacherStats] = useState({
+    gender: { male: 0, female: 0 },
+    subjects: {},
+    classes: {},
+  });
+  const [teacherSubjectChartData, setTeacherSubjectChartData] = useState({
+    labels: [],
+    datasets: [{ data: [], backgroundColor: [] }],
+  });
+  const [teacherClassChartData, setTeacherClassChartData] = useState({
+    labels: [],
+    datasets: [{ data: [], backgroundColor: '#3b82f6' }],
+  });
 
   useEffect(() => {
     fetchDashboardData();
     fetchLastMonthEvents();
     fetchUpcomingEvents();
     fetchEventCounts();
-    fetchMonthlyEvents(); 
+    fetchMonthlyEvents();
+    fetchTeacherStatistics();
+    fetchTeacherChartData();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -153,6 +168,90 @@ const AdminReports = () => {
     }
   };
 
+  const fetchTeacherStatistics = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/teacher-records');
+      const teachers = response.data.data;
+
+      const genderCount = { male: 0, female: 0 };
+      const subjectCount = {};
+      const classCount = {};
+
+      teachers.forEach((teacher) => {
+        // Count gender
+        if (teacher.gender === 'Male') genderCount.male++;
+        if (teacher.gender === 'Female') genderCount.female++;
+
+        // Count subjects
+        const subjects = teacher.subjects_assigned.split(',').map(s => s.trim());
+        subjects.forEach((subject) => {
+          if (!subjectCount[subject]) subjectCount[subject] = 0;
+          subjectCount[subject]++;
+        });
+
+        // Count classes
+        const classes = teacher.class_section_allocation.split(',').map(c => c.trim());
+        classes.forEach((cls) => {
+          if (!classCount[cls]) classCount[cls] = 0;
+          classCount[cls]++;
+        });
+      });
+
+      setTeacherStats({
+        gender: genderCount,
+        subjects: subjectCount,
+        classes: classCount,
+      });
+    } catch (error) {
+      console.error('Error fetching teacher statistics:', error);
+    }
+  };
+
+  const fetchTeacherChartData = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/teacher-records');
+      const teachers = response.data.data;
+
+      const subjectCount = {};
+      const classCount = {};
+
+      teachers.forEach((teacher) => {
+        // Count subjects
+        const subjects = teacher.subjects_assigned.split(',').map(s => s.trim());
+        subjects.forEach((subject) => {
+          if (!subjectCount[subject]) subjectCount[subject] = 0;
+          subjectCount[subject]++;
+        });
+
+        // Count classes
+        const classes = teacher.class_section_allocation.split(',').map(c => c.trim());
+        classes.forEach((cls) => {
+          if (!classCount[cls]) classCount[cls] = 0;
+          classCount[cls]++;
+        });
+      });
+
+      const subjectLabels = Object.keys(subjectCount);
+      const subjectData = Object.values(subjectCount);
+      const subjectColors = subjectLabels.map(() => `#${Math.floor(Math.random() * 16777215).toString(16)}`);
+
+      setTeacherSubjectChartData({
+        labels: subjectLabels,
+        datasets: [{ data: subjectData, backgroundColor: subjectColors }],
+      });
+
+      const classLabels = Object.keys(classCount);
+      const classData = Object.values(classCount);
+
+      setTeacherClassChartData({
+        labels: classLabels,
+        datasets: [{ data: classData, backgroundColor: '#3b82f6' }],
+      });
+    } catch (error) {
+      console.error('Error fetching teacher chart data:', error);
+    }
+  };
+
   const fetchLastMonthEvents = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/api/events/last-month');
@@ -202,24 +301,6 @@ const AdminReports = () => {
         label: 'Students',
         data: [genderData.male, genderData.female],
         backgroundColor: ['#3b82f6', '#ec4899'],
-      },
-    ],
-  };
-
-  const teacherSubjectData = {
-    labels: ['Math', 'Science', 'English', 'History', 'Arts', 'Physical Education'],
-    datasets: [
-      {
-        label: 'Teachers',
-        data: [15, 10, 10, 10, 10, 10],
-        backgroundColor: [
-          '#3b82f6',
-          '#ec4899',
-          '#f59e0b',
-          '#10b981',
-          '#8b5cf6',
-          '#ef4444',
-        ],
       },
     ],
   };
@@ -320,11 +401,11 @@ const AdminReports = () => {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/teacherrecord" className="flex items-center space-x-2">
-                  <FaFile />
-                  <span>Teacher Record</span>
-                </Link>
-              </li>
+              <Link to="/teacherrecord" className="flex items-center space-x-2">
+                <FaFile />
+                <span>Teacher Record</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notifications" className="flex items-center space-x-2">
                 <FaBell />
@@ -384,8 +465,6 @@ const AdminReports = () => {
               <p className="text-3xl font-bold">{upcomingEventsCount}</p>
             </div>
           </div>
-
-
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center">
@@ -487,31 +566,119 @@ const AdminReports = () => {
 
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 className="text-xl font-bold mb-4">Teacher Statistics</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold">Gender Distribution</h3>
-                <p>Male: 40</p>
-                <p>Female: 35</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-2">Gender Distribution</h3>
+                <div className="space-y-2">
+                  <p className="text-sm">Male: {teacherStats.gender.male}</p>
+                  <p className="text-sm">Female: {teacherStats.gender.female}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">Subject-wise Distribution</h3>
-                <Pie data={teacherSubjectData} />
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-2">Subjects Distribution</h3>
+                <div className="space-y-2">
+                  {Object.entries(teacherStats.subjects).map(([subject, count]) => (
+                    <p key={subject} className="text-sm">
+                      {subject}: {count}
+                    </p>
+                  ))}
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">Attendance Rate</h3>
-                <p>Overall: 95%</p>
-                <p>This Month: 94%</p>
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-2">Class Allocation</h3>
+                <div className="space-y-2">
+                  {Object.entries(teacherStats.classes).map(([className, count]) => (
+                    <p key={className} className="text-sm">
+                      {className}: {count}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold mb-4">Teacher Subject Distribution</h2>
+              <div style={{ width: '100%', height: '300px' }}>
+                <Doughnut
+                  data={{
+                    labels: teacherSubjectChartData.labels,
+                    datasets: [
+                      {
+                        data: teacherSubjectChartData.datasets[0].data,
+                        backgroundColor: teacherSubjectChartData.datasets[0].backgroundColor,
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold mb-4">Teacher Class Allocation</h2>
+              <div style={{ width: '100%', height: '300px' }}>
+                <Line
+                  data={{
+                    labels: teacherClassChartData.labels,
+                    datasets: [
+                      {
+                        label: 'Teachers per Class',
+                        data: teacherClassChartData.datasets[0].data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6',
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        title: {
+                          display: true,
+                          text: 'Number of Teachers',
+                        },
+                      },
+                      x: {
+                        title: {
+                          display: true,
+                          text: 'Class',
+                        },
+                      },
+                    },
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-xl font-bold mb-4">Monthly Events (This Year)</h2>
               <Bar data={monthlyEventsChartData} />
             </div>
-
 
             <div>
               <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -521,31 +688,31 @@ const AdminReports = () => {
 
               <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                        <h3 className="text-lg font-semibold">{event.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          <FaCalendarAlt className="inline-block mr-2" />
-                          {new Date(event.date).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <FaMapMarkerAlt className="inline-block mr-2" />
-                          {event.location}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <FaClipboardList className="inline-block mr-2" />
-                          {event.type}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <FaEye className="inline-block mr-2" />
-                          Visible to: {event.visible_to.join(', ')}
-                        </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {upcomingEvents.map((event) => (
+                    <div key={event.id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                      <h3 className="text-lg font-semibold">{event.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        <FaCalendarAlt className="inline-block mr-2" />
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <FaMapMarkerAlt className="inline-block mr-2" />
+                        {event.location}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <FaClipboardList className="inline-block mr-2" />
+                        {event.type}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <FaEye className="inline-block mr-2" />
+                        Visible to: {event.visible_to.join(', ')}
+                      </p>
                     </div>
-                 ))}
+                  ))}
                 </div>
               </div>
-             </div>
+            </div>
           </div>
         </div>
       </main>
@@ -553,4 +720,4 @@ const AdminReports = () => {
   );
 };
 
-export default AdminReports;  
+export default AdminReports;
