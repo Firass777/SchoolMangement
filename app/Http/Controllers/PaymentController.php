@@ -30,7 +30,7 @@ class PaymentController extends Controller
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => 'http://localhost:5173/spayment',
+            'success_url' => 'http://localhost:5173/receipt',
             'cancel_url' => 'http://localhost:5173/error',
             'client_reference_id' => $request->user_id,
         ]);
@@ -43,7 +43,7 @@ class PaymentController extends Controller
         $payload = @file_get_contents('php://input');
         $sig_header = $request->header('Stripe-Signature');
         $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
-
+    
         try {
             $event = \Stripe\Webhook::constructEvent(
                 $payload, $sig_header, $endpoint_secret
@@ -51,19 +51,30 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
-
+    
         if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
             
-            Payment::create([
+            $payment = Payment::create([
                 'user_id' => $session->client_reference_id,
                 'stripe_payment_id' => $session->payment_intent,
                 'amount' => $session->amount_total / 100,
                 'currency' => strtoupper($session->currency),
                 'status' => $session->payment_status,
             ]);
+    
+            // Save payment details in local storage (for demo purposes)
+            // In a real app, you would fetch this data from the database
+            $paymentDetails = [
+                'user_id' => $session->client_reference_id,
+                'amount' => $session->amount_total / 100,
+                'created_at' => $payment->created_at,
+                'stripe_payment_id' => $session->payment_intent,
+                'status' => $session->payment_status,
+            ];
+            // You can use a queue or another method to update the frontend
         }
-
+    
         return response()->json(['status' => 'success']);
     }
 

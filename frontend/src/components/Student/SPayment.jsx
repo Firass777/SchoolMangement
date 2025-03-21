@@ -69,26 +69,38 @@ const Spayment = () => {
       alert('Please log in to make a payment.');
       return;
     }
-
+  
     if (!amount || isNaN(amount) || amount <= 0) {
       alert('Please enter a valid amount.');
       return;
     }
-
+  
     try {
       const response = await fetch('http://localhost:8000/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           user_id: user.id,
           amount: amount,
         }),
       });
-      
+  
       const { url } = await response.json();
+      
+      // Save payment details in local storage
+      const paymentDetails = {
+        user_id: user.id,
+        amount: amount,
+        created_at: new Date().toISOString(),
+        stripe_payment_id: 'temp_id', // Replace with actual ID after payment
+        status: 'pending',
+      };
+      localStorage.setItem('latestPayment', JSON.stringify(paymentDetails));
+  
+      // Redirect to payment URL
       window.location.href = url;
     } catch (error) {
       console.error('Payment error:', error);
@@ -187,7 +199,7 @@ const Spayment = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/logout" className="flex items-center space-x-2">
+                <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />
                   <span>Logout</span>
                 </Link>

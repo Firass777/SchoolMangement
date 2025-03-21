@@ -203,7 +203,7 @@ function EditProfile() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/logout" className="flex items-center space-x-2">
+                <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />
                   <span>Logout</span>
                 </Link>

@@ -39,6 +39,7 @@ import STimetable from "./components/Student/STimetable";
 import SEditprofile from "./components/Student/SEditProfile" ;
 import Documents from "./components/Student/Documents";
 import SPayment from "./components/Student/SPayment";
+import Receipt from "./components/Student/Receipt";
 
 import Guardindb from './components/Guardian/Guardiandb';
 
@@ -133,6 +134,7 @@ function App() {
           <Route path="/seditprofile" element={<SEditprofile />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/spayment" element={<SPayment />} />
+          <Route path="/receipt" element={<Receipt />} />
 
         </Routes>
       </div>
