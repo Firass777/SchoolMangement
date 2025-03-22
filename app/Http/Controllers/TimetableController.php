@@ -111,4 +111,35 @@ class TimetableController extends Controller
         }
         return response()->json(['message' => 'Timetable not found!'], 404);
     }
+
+    public function getNextClass($email)
+    {
+        $now = now();
+        $currentDay = $now->format('l');
+        $currentTime = $now->format('H:i:s');
+
+        $timetable = TeacherTimetable::where('teacher_email', $email)
+            ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+            ->orderBy('time')
+            ->get();
+
+        $nextClass = null;
+        $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        $currentDayIndex = array_search($currentDay, $daysOfWeek);
+
+        foreach ($timetable as $class) {
+            $classDayIndex = array_search($class->day, $daysOfWeek);
+            if ($classDayIndex > $currentDayIndex || 
+            ($classDayIndex == $currentDayIndex && $class->time > $currentTime)) {
+                $nextClass = $class;
+                break;
+            }
+        }
+
+        if (!$nextClass && !$timetable->isEmpty()) {
+            $nextClass = $timetable->first();
+        }
+
+        return response()->json(['nextClass' => $nextClass], 200);
+    }
 }

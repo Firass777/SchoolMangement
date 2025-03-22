@@ -45,6 +45,7 @@ Route::post('/student-timetable/add', [TimetableController::class, 'addStudentTi
 Route::delete('/student-timetable/delete/{id}', [TimetableController::class, 'deleteStudentTimetable']);
 Route::put('/student-timetable/update/{id}', [TimetableController::class, 'updateStudentTimetable']);
 
+Route::get('/timetable/next-class/{email}', [TimetableController::class, 'getNextClass']);
 Route::get('/teacher-timetable/{email}', [TimetableController::class, 'getTeacherTimetable']);
 Route::post('/teacher-timetable/add', [TimetableController::class, 'addTeacherTimetable']);
 Route::delete('/teacher-timetable/delete/{id}', [TimetableController::class, 'deleteTeacherTimetable']);
@@ -58,6 +59,7 @@ Route::get('/emails', [EmailController::class, 'getEmails']);
 
 Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
+Route::get('/events/latest-for-teacher', [EventController::class, 'getLatestEventsForTeacher']);
 Route::get('/events/latest', [EventController::class, 'getLatestEvents']);
 Route::get('/events/last-month', [EventController::class, 'getLastMonthEvents']);
 Route::get('/events/upcoming', [EventController::class, 'getUpcomingEvents']);
@@ -72,6 +74,10 @@ Route::get('/courses/teacher/{teacherNin}', [CourseController::class, 'getCourse
 Route::delete('/courses/delete/{id}', [CourseController::class, 'deleteCourse']);
 Route::get('/courses/download/{id}', [CourseController::class, 'downloadCourse']);
 
+
+Route::get('/grades/last-7-days/{teacherNin}', [GradesController::class, 'getLast7DaysGrades']);
+Route::get('/grades/average/{teacherNin}', [GradesController::class, 'getAverageGradeByTeacher']);
+Route::get('/grades/monthly-average/{teacherNin}', [GradesController::class, 'getMonthlyAverageGrades']);
 Route::post('grades/add', [GradesController::class, 'addGrade']);
 Route::get('grades', [GradesController::class, 'getAllGrades']);
 Route::get('grades/{studentNIN}', [GradesController::class, 'getGrades']);
@@ -80,6 +86,9 @@ Route::delete('grades/delete/{id}', [GradesController::class, 'deleteGrade']);
 Route::get('grades-with-names', [GradesController::class, 'getAllGradesWithNames']);
 
 
+Route::get('/attendance/students-count/{teacherNin}', [AttendanceController::class, 'getStudentsCountByTeacher']);
+Route::get('/attendance/rate/{teacherNin}', [AttendanceController::class, 'getAttendanceRateByTeacher']);
+Route::get('/attendance/last-7-days/{teacherNin}', [AttendanceController::class, 'getLast7DaysAttendance']);
 Route::post('/attendance/add', [AttendanceController::class, 'addAttendance']);
 Route::get('/attendance/{studentNIN?}', [AttendanceController::class, 'getAttendance']);
 Route::get('/attendance/teacher/{teacherNin}', [AttendanceController::class, 'getAttendanceByTeacherNin']);

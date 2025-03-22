@@ -61,6 +61,24 @@ class EventController extends Controller
         return response()->json(['message' => 'Events retrieved successfully.', 'events' => $events], 200);
     }
 
+    // Get the latest 3 events for a teacher
+    public function getLatestEventsForTeacher(Request $request)
+        {
+            $userRole = 'teacher'; 
+            // Fetch the latest 3 events visible to the teacher or 'all'
+            $events = Event::whereJsonContains('visible_to', $userRole)
+                ->orWhereJsonContains('visible_to', 'all')
+                ->orderBy('date', 'desc')
+                ->take(3)
+                ->get();
+
+            if ($events->isEmpty()) {
+                return response()->json(['message' => 'No events found.'], 404);
+            }
+
+            return response()->json(['message' => 'Latest events retrieved successfully.', 'events' => $events], 200);
+        }
+
     // Get the latest events
     public function getLatestEvents()
     {

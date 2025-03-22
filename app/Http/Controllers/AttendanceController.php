@@ -48,14 +48,24 @@ class AttendanceController extends Controller
     }
 
     // Get all attendance records for a teacher
-    public function getAttendanceByTeacherNin($teacherNin)
+    public function getAttendanceByTeacherNin($teacherNin, Request $request)
     {
-        $attendances = Attendance::where('teacher_nin', $teacherNin)->get();
-
+        $limit = $request->query('limit');
+    
+        $query = Attendance::where('teacher_nin', $teacherNin)
+            ->orderBy('created_at', 'desc'); 
+    
+        // Apply the limit if provided
+        if ($limit) {
+            $query->take($limit);
+        }
+    
+        $attendances = $query->get();
+    
         if ($attendances->isEmpty()) {
             return response()->json(['message' => 'No attendance records found.'], 404);
         }
-
+    
         return response()->json(['message' => 'Attendance records retrieved successfully.', 'attendances' => $attendances], 200);
     }
 
@@ -73,30 +83,28 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Attendance record deleted successfully.'], 200);
     }
 
-    // Calculate attendance rate for all students
     public function getAttendanceRate()
     {
-        // Fetch all attendance records
         $attendances = Attendance::all();
 
         if ($attendances->isEmpty()) {
             return response()->json(['message' => 'No attendance records found.'], 404);
         }
 
-        // Group attendance records by student_nin
+
         $groupedAttendances = $attendances->groupBy('student_nin');
 
         $totalStudents = $groupedAttendances->count();
         $totalPresent = 0;
         $totalRecords = 0;
 
-        // Calculate total present and total records for all students
+
         foreach ($groupedAttendances as $studentAttendances) {
             $totalRecords += $studentAttendances->count();
             $totalPresent += $studentAttendances->where('status', 'Present')->count();
         }
 
-        // Calculate attendance rate
+
         if ($totalRecords === 0) {
             return response()->json(['message' => 'No attendance records found.'], 404);
         }
@@ -110,30 +118,88 @@ class AttendanceController extends Controller
     }
 
     public function getDailyAttendanceTrends()
-{
-    // Fetch attendance records for the last 7 days
-    $attendanceTrends = Attendance::where('created_at', '>=', now()->subDays(7))
-        ->selectRaw('DATE(created_at) as date, COUNT(*) as total, SUM(CASE WHEN status = "Present" THEN 1 ELSE 0 END) as present')
-        ->groupBy('date')
-        ->orderBy('date', 'asc')
-        ->get();
+        {
 
-    if ($attendanceTrends->isEmpty()) {
-        return response()->json(['message' => 'No attendance records found for the last 7 days.'], 404);
+            $attendanceTrends = Attendance::where('created_at', '>=', now()->subDays(7))
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as total, SUM(CASE WHEN status = "Present" THEN 1 ELSE 0 END) as present')
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+
+            if ($attendanceTrends->isEmpty()) {
+                return response()->json(['message' => 'No attendance records found for the last 7 days.'], 404);
+            }
+
+
+            $labels = [];
+            $data = [];
+            foreach ($attendanceTrends as $trend) {
+                $labels[] = $trend->date;
+                $data[] = $trend->total > 0 ? round(($trend->present / $trend->total) * 100, 2) : 0;
+            }
+
+            return response()->json([
+                'message' => 'Daily attendance trends retrieved successfully.',
+                'labels' => $labels,
+                'data' => $data,
+            ], 200);
+        }
+
+        public function getStudentsCountByTeacher($teacherNin)
+        {
+            $count = Attendance::where('teacher_nin', $teacherNin)
+                ->distinct('student_nin')
+                ->count('student_nin');
+
+            return response()->json(['count' => $count], 200);
+        }
+
+        public function getAttendanceRateByTeacher($teacherNin)
+        {
+            $attendances = Attendance::where('teacher_nin', $teacherNin)->get();
+            
+            $total = $attendances->count();
+            $present = $attendances->where('status', 'Present')->count();
+            
+            $rate = $total > 0 ? ($present / $total) * 100 : 0;
+
+            return response()->json(['attendance_rate' => round($rate, 2)], 200);
+        }
+
+    public function getLast7DaysAttendance($teacherNin)
+    {
+
+        $attendanceTrends = Attendance::where('teacher_nin', $teacherNin)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as total, SUM(CASE WHEN status = "Present" THEN 1 ELSE 0 END) as present')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        if ($attendanceTrends->isEmpty()) {
+            return response()->json(['labels' => [], 'data' => []], 200);
+        }
+
+
+        $labels = [];
+        $data = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $labels[] = $date;
+
+            $trend = $attendanceTrends->firstWhere('date', $date);
+            if ($trend) {
+                $data[] = $trend->total > 0 ? round(($trend->present / $trend->total) * 100, 2) : 0;
+            } else {
+                $data[] = 0;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Last 7 days attendance trends retrieved successfully.',
+            'labels' => $labels,
+            'data' => $data,
+        ], 200);
     }
-
-    // Format data for the chart
-    $labels = [];
-    $data = [];
-    foreach ($attendanceTrends as $trend) {
-        $labels[] = $trend->date;
-        $data[] = $trend->total > 0 ? round(($trend->present / $trend->total) * 100, 2) : 0;
-    }
-
-    return response()->json([
-        'message' => 'Daily attendance trends retrieved successfully.',
-        'labels' => $labels,
-        'data' => $data,
-    ], 200);
-}
 }

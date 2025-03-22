@@ -2,46 +2,119 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard } from "react-icons/fa";
+import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaBell } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 function Teacherdb() {
+  const [stats, setStats] = useState({ students: 0, attendance: 0, grades: 0 });
+  const [barData, setBarData] = useState({ labels: [], datasets: [] });
+  const [lineData, setLineData] = useState({ labels: [], datasets: [] });
+  const [recentAttendance, setRecentAttendance] = useState([]);
+  const [nextClass, setNextClass] = useState(null);
+  const [latestEvents, setLatestEvents] = useState([]);
+  const [error, setError] = useState(null);
+  const user = JSON.parse(localStorage.getItem('user'));
+
   useEffect(() => {
     AOS.init({ duration: 1000 });
+    fetchData();
   }, []);
 
-  const [students] = useState(30);
-  const [attendance] = useState("95%");
-  const [grades] = useState("A");
+  const fetchData = async () => {
+    try {
+      setError(null);
 
-  const barData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        label: "Student Attendance",
-        backgroundColor: "#4F46E5",
-        borderColor: "#4F46E5",
-        borderWidth: 1,
-        hoverBackgroundColor: "#4338CA",
-        hoverBorderColor: "#4338CA",
-        data: [90, 95, 92, 96, 94, 98],
-      },
-    ],
+      // Fetch stats
+      const statsRes = await Promise.all([
+        fetch(`http://127.0.0.1:8000/api/attendance/students-count/${user.nin}`),
+        fetch(`http://127.0.0.1:8000/api/attendance/rate/${user.nin}`),
+        fetch(`http://127.0.0.1:8000/api/grades/average/${user.nin}`)
+      ]);
+
+      const [studentsData, attendanceData, gradesData] = await Promise.all(
+        statsRes.map(async (res) => {
+          const text = await res.text();
+          console.log("Raw response:", text);
+          if (!res.ok) {
+            throw new Error(`Failed to fetch data: ${res.statusText}`);
+          }
+          return JSON.parse(text);
+        })
+      );
+
+      setStats({
+        students: studentsData.count,
+        attendance: attendanceData.attendance_rate,
+        grades: gradesData.average_grade
+      });
+
+      // Fetch last 7 days attendance for the chart
+      const attendanceRes = await fetch(`http://127.0.0.1:8000/api/attendance/last-7-days/${user.nin}`);
+      const attendanceChart = await attendanceRes.json();
+
+      setBarData({
+        labels: attendanceChart.labels,
+        datasets: [{
+          label: "Student Attendance",
+          backgroundColor: "#4F46E5",
+          borderColor: "#4F46E5",
+          borderWidth: 1,
+          data: attendanceChart.data
+        }]
+      });
+
+      // Fetch last 7 days grades for the chart
+      const gradesRes = await fetch(`http://127.0.0.1:8000/api/grades/last-7-days/${user.nin}`);
+      const gradesChart = await gradesRes.json();
+
+      setLineData({
+        labels: gradesChart.labels,
+        datasets: [{
+          label: "Class Performance",
+          backgroundColor: "#10B981",
+          borderColor: "#10B981",
+          borderWidth: 2,
+          data: gradesChart.data
+        }]
+      });
+
+      // Fetch recent attendance (last 3 records)
+      const recentRes = await fetch(`http://127.0.0.1:8000/api/attendance/teacher/${user.nin}?limit=3`);
+      const recentData = await recentRes.json();
+      setRecentAttendance(recentData.attendances);
+
+      // Fetch next class
+      const timetableRes = await fetch(`http://127.0.0.1:8000/api/timetable/next-class/${user.email}`);
+      const timetableData = await timetableRes.json();
+      setNextClass(timetableData.nextClass || { subject: 'No Classes Yet', day: '', time: '', location: '' });
+
+      // Fetch latest events for the teacher
+      const eventsRes = await fetch(`http://127.0.0.1:8000/api/events/latest-for-teacher`);
+      const eventsData = await eventsRes.json();
+      setLatestEvents(eventsData.events);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.message);
+    }
   };
 
-  const lineData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        label: "Class Performance",
-        backgroundColor: "#10B981",
-        borderColor: "#10B981",
-        borderWidth: 2,
-        data: [75, 80, 85, 90],
-      },
-    ],
-  };
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-red-100 p-4 rounded-lg">
+          <h2 className="text-red-600 font-bold">Error</h2>
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={fetchData}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -59,12 +132,12 @@ function Teacherdb() {
                   <span>Dashboard</span>
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -93,13 +166,13 @@ function Teacherdb() {
                 <Link to="/teachereventview" className="flex items-center space-x-2">
                   <FaClipboardList /> <span>Events</span>
                 </Link>
-              </li>          
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/temails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
-              </li>                  
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
@@ -113,7 +186,7 @@ function Teacherdb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/logout" className="flex items-center space-x-2">
+                <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />
                   <span>Logout</span>
                 </Link>
@@ -123,7 +196,7 @@ function Teacherdb() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
+        <main className="flex-1 p-6 overflow-y-auto min-h-screen">
           {/* Header */}
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Welcome, Teacher!</h2>
@@ -131,26 +204,39 @@ function Teacherdb() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaUserGraduate className="text-green-600 text-4xl mr-4" />
               <div>
-                <h3 className="text-2xl font-semibold">{students}</h3>
+                <h3 className="text-2xl font-semibold">{stats.students}</h3>
                 <p className="text-gray-600">Total Students</p>
               </div>
             </div>
             <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaCalendarAlt className="text-green-600 text-4xl mr-4" />
               <div>
-                <h3 className="text-2xl font-semibold">{attendance}</h3>
+                <h3 className="text-2xl font-semibold">{stats.attendance}%</h3>
                 <p className="text-gray-600">Attendance Rate</p>
               </div>
             </div>
             <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaChartLine className="text-yellow-500 text-4xl mr-4" />
               <div>
-                <h3 className="text-2xl font-semibold">{grades}</h3>
+                <h3 className="text-2xl font-semibold">{stats.grades}</h3>
                 <p className="text-gray-600">Average Grade</p>
+              </div>
+            </div>
+            <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
+              <FaChalkboardTeacher className="text-green-600 text-4xl mr-4" />
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Next Class</h3>
+                <p className="text-gray-600">{nextClass?.subject || 'No Classes Yet'}</p>
+                {nextClass?.time && (
+                  <>
+                    <p className="text-sm text-gray-500">{nextClass.day} {nextClass.time}</p>
+                    <p className="text-sm text-gray-500">{nextClass.location}</p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -174,35 +260,54 @@ function Teacherdb() {
             </div>
           </div>
 
-          {/* Table Section */}
-          <div className="bg-white p-6 shadow-lg rounded-lg mb-6" data-aos="fade-up">
-            <h3 className="text-xl font-bold mb-4">Recent Attendance</h3>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="p-3 text-left">Student</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="p-3">Student 1</td>
-                  <td className="p-3">Jan 5, 2025</td>
-                  <td className="p-3 text-green-600 font-semibold">Present</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-3">Student 2</td>
-                  <td className="p-3">Feb 12, 2025</td>
-                  <td className="p-3 text-red-600 font-semibold">Absent</td>
-                </tr>
-                <tr>
-                  <td className="p-3">Student 3</td>
-                  <td className="p-3">Mar 20, 2025</td>
-                  <td className="p-3 text-green-600 font-semibold">Present</td>
-                </tr>
-              </tbody>
-            </table>
+          {/* Recent Attendance and Latest Events Section */}
+          <div className="flex flex-col sm:flex-row sm:space-x-6 mb-6">
+            {/* Recent Attendance Table */}
+            <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full mb-6 sm:mb-0" data-aos="fade-up">
+              <h3 className="text-xl font-bold mb-4">Recent Attendance</h3>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-3 text-left">Student</th>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentAttendance.map((att, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-3">{att.student_name || 'Student'}</td>
+                      <td className="p-3">{new Date(att.created_at).toLocaleDateString()}</td>
+                      <td className={`p-3 font-semibold ${
+                        att.status === 'Present' ? 'text-green-600' : 
+                        att.status === 'Absent' ? 'text-red-600' : 'text-yellow-600'
+                      }`}>
+                        {att.status}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Latest Events Section */}
+            <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full" data-aos="fade-up">
+              <h3 className="text-xl font-bold mb-4">Latest Events</h3>
+              {latestEvents.length === 0 ? (
+                <p className="text-gray-500">No events found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {latestEvents.map((event, index) => (
+                    <div key={index} className="border-b pb-4">
+                      <h4 className="text-lg font-semibold">{event.name}</h4>
+                      <p className="text-sm text-gray-600">{event.description}</p>
+                      <p className="text-sm text-gray-500">{new Date(event.date).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-500">{event.type}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>

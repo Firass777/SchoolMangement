@@ -92,4 +92,107 @@ class GradesController extends Controller
 
         return response()->json(['message' => 'Grade records retrieved successfully.', 'grades' => $grades], 200);
     }
+
+    public function getAverageGradeByTeacher($teacherNin)
+    {
+        $grades = Grade::where('teacher_nin', $teacherNin)->get();
+    
+        if ($grades->isEmpty()) {
+            return response()->json(['average_grade' => 'N/A'], 200);
+        }
+    
+        $total = 0;
+        $count = 0;
+    
+        foreach ($grades as $grade) {
+            switch ($grade->grade) {
+                case 'A':
+                    $total += 4;
+                    break;
+                case 'B':
+                    $total += 3;
+                    break;
+                case 'C':
+                    $total += 2;
+                    break;
+                case 'D':
+                    $total += 1;
+                    break;
+                default:
+                    $total += 0;
+                    break;
+            }
+            $count++;
+        }
+    
+        $average = $count > 0 ? $total / $count : 0;
+    
+        $letterGrade = 'N/A';
+        if ($average >= 3.5) {
+            $letterGrade = 'A';
+        } elseif ($average >= 2.5) {
+            $letterGrade = 'B';
+        } elseif ($average >= 1.5) {
+            $letterGrade = 'C';
+        } elseif ($average >= 0.5) {
+            $letterGrade = 'D';
+        }
+    
+        return response()->json(['average_grade' => $letterGrade], 200);
     }
+
+    public function getLast7DaysGrades($teacherNin)
+{
+    $grades = Grade::where('teacher_nin', $teacherNin)
+        ->where('created_at', '>=', now()->subDays(7))
+        ->get();
+
+    if ($grades->isEmpty()) {
+        return response()->json(['labels' => [], 'data' => []], 200);
+    }
+
+    $groupedGrades = $grades->groupBy(function ($grade) {
+        return $grade->created_at->format('Y-m-d');
+    });
+
+    $labels = [];
+    $data = [];
+
+    for ($i = 6; $i >= 0; $i--) {
+        $date = now()->subDays($i)->format('Y-m-d');
+        $labels[] = $date;
+
+        if (isset($groupedGrades[$date])) {
+            $total = 0;
+            $count = 0;
+
+            foreach ($groupedGrades[$date] as $grade) {
+                switch ($grade->grade) {
+                    case 'A':
+                        $total += 4;
+                        break;
+                    case 'B':
+                        $total += 3;
+                        break;
+                    case 'C':
+                        $total += 2;
+                        break;
+                    case 'D':
+                        $total += 1;
+                        break;
+                    default:
+                        $total += 0;
+                        break;
+                }
+                $count++;
+            }
+
+            $data[] = $count > 0 ? round($total / $count, 2) : 0;
+        } else {
+            $data[] = 0;
+        }
+    }
+
+    return response()->json(['labels' => $labels, 'data' => $data], 200);
+}
+}
