@@ -49,19 +49,19 @@ const Home = () => {
           <div className="flex space-x-6">
             <a
               href="/login"
-              className="text-gray-300 hover:text-white font-medium transition"
+              className="text-gray-500 hover:text-black font-medium transition"
             >
               Login
             </a>
             <a
               href="/register"
-              className="text-gray-300 hover:text-white font-medium transition"
+              className="text-gray-500 hover:text-black font-medium transition"
             >
               Register
             </a>
             <a
-              href="/about"
-              className="text-gray-300 hover:text-white font-medium transition"
+              href="/aboutus"
+              className="text-gray-500 hover:text-black font-medium transition"
             >
               About Us
             </a>
@@ -88,7 +88,7 @@ const Home = () => {
                 Login to Portal
               </a>
               <a
-                href="/about"
+                href="/aboutus"
                 className="px-8 py-4 border-2 border-blue-600 text-white text-lg rounded-full transition-all duration-300 transform hover:scale-105 hover:bg-blue-600/20"
               >
                 Learn More About Us
@@ -294,7 +294,7 @@ const Home = () => {
               <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="/about" className="text-gray-400 hover:text-white transition">
+                  <a href="/aboutus" className="text-gray-400 hover:text-white transition">
                     About Us
                   </a>
                 </li>

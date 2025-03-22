@@ -5,6 +5,8 @@ import "aos/dist/aos.css";
 
 import Home from './components/Home';
 import Login from './components/Login';
+import AboutUs from "./components/Aboutus";
+
 import Register from './components/Register';
 import Admindb from './components/Admin/Admindb';
 import Student from './components/Admin/Student';  
@@ -108,6 +110,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/aboutus" element={<AboutUs />} />
+
+
           <Route path="/admindb" element={<Admindb />} />
           <Route path="/students" element={<Student />} /> 
           <Route path="/teachers" element={<Teacher />} /> 
