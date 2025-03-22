@@ -55,7 +55,6 @@ function App() {
 
     window.addEventListener("scroll", handleScroll);
 
-
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
@@ -72,7 +71,17 @@ function App() {
         style={{ opacity: navbarOpacity }}
       >
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
-          <h1 className="text-2xl font-bold text-blue-600">SchoolManager</h1>
+          {/* Logo and SchoolManager Header */}
+          <div className="flex items-center space-x-2">
+            <img 
+              src="src/images/logo.jpg" 
+              alt="School Logo" 
+              className="h-12 w-12" // Adjust size as needed
+            />
+            <h1 className="text-2xl font-bold text-blue-600">National University</h1>
+          </div>
+
+          {/* Navigation Links */}
           <ul className="flex space-x-6">
             <li>
               <Link to="/" className="text-gray-700 hover:text-blue-500 font-medium">
@@ -135,13 +144,12 @@ function App() {
           <Route path="/documents" element={<Documents />} />
           <Route path="/spayment" element={<SPayment />} />
           <Route path="/receipt" element={<Receipt />} />
-
         </Routes>
       </div>
 
       {/* Footer Section */}
       <footer className="py-6 bg-gray-800 text-white text-center mt-auto">
-        <p>&copy; 2025 SchoolManager. All Rights Reserved.</p>
+        <p>&copy; 2025 National University. All Rights Reserved.</p>
       </footer>
     </div>
   );

@@ -51,7 +51,7 @@ const Receipt = () => {
       <div id="receipt" className="bg-white shadow-lg rounded-lg p-8 w-full max-w-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src="src/components/Student/logo.JPG" alt="School Logo" className="h-25" />
+          <img src="src/images/logo.JPG" alt="School Logo" className="h-25" />
         </div>
 
         {/* Receipt Header */}
@@ -88,7 +88,7 @@ const Receipt = () => {
         {/* Signature */}
         <div className="mt-8 flex justify-end">
           <div className="text-center">
-            <img src="src/components/Student/signature.png" alt="Signature" className="h-20" />
+            <img src="src/images/signature.png" alt="Signature" className="h-20" />
             <p className="text-sm text-gray-600 mt-2">Authorized Signature</p>
           </div>
         </div>

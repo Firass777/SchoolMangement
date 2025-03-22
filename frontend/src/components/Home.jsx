@@ -1,15 +1,80 @@
 import React from "react";
-import dashboardImage from "../components/Dashboard.jpg";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import studentDashboardImage from "../images/Studentdb.jpg"; 
+import teacherDashboardImage from "../images/Teacherdb.jpg"; 
+import logo from "../images/logo.jpg"; 
 
 const Home = () => {
+  // Slider settings
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 1500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    pauseOnHover: true,
+    arrows: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          arrows: false,
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-lg shadow-md">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          {/* Logo and University Name */}
+          <div className="flex items-center space-x-4">
+            <img
+              src={logo}
+              alt="University Logo"
+              className="h-12 w-12 rounded-full border-2 border-white/20"
+            />
+            <h1 className="text-2xl font-bold text-white">
+              <span className="text-blue-400">National</span> University
+            </h1>
+          </div>
+
+          {/* Navigation Links */}
+          <div className="flex space-x-6">
+            <a
+              href="/login"
+              className="text-gray-300 hover:text-white font-medium transition"
+            >
+              Login
+            </a>
+            <a
+              href="/register"
+              className="text-gray-300 hover:text-white font-medium transition"
+            >
+              Register
+            </a>
+            <a
+              href="/about"
+              className="text-gray-300 hover:text-white font-medium transition"
+            >
+              About Us
+            </a>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative py-20">
+      <section className="relative py-32">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto" data-aos="fade-up">
             <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight">
-              Welcome to 
+              Welcome to{" "}
               <span className="text-blue-400 block mt-4">National University</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -33,8 +98,6 @@ const Home = () => {
         </div>
       </section>
 
-
-
       {/* Stats Section */}
       <section className="py-20 bg-white/5 backdrop-blur-lg">
         <div className="container mx-auto px-4">
@@ -55,14 +118,37 @@ const Home = () => {
         </div>
       </section>
 
-            {/* Dashboard Preview */}
-            <section className="mt-10 mx-auto max-w-7xl px-4" data-aos="fade-up">
+      {/* Dashboard Preview Section */}
+      <section className="mt-10 mx-auto max-w-7xl px-4" data-aos="fade-up">
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl">
-          <img 
-            src={dashboardImage} 
-            alt="University Management System Dashboard" 
-            className="rounded-xl border-2 border-white/20"
-          />
+          <h2 className="text-3xl font-extrabold text-center mb-8 text-white">
+            Explore Our Dashboards
+          </h2>
+          <Slider {...sliderSettings}>
+            {/* Student Dashboard Slide */}
+            <div className="p-4">
+              <img
+                src={studentDashboardImage}
+                alt="Student Dashboard"
+                className="rounded-xl border-2 border-white/20 w-full h-auto"
+              />
+              <p className="text-center text-gray-300 mt-4 text-lg">
+                Student Dashboard - Track your academic progress and manage your courses.
+              </p>
+            </div>
+
+            {/* Teacher Dashboard Slide */}
+            <div className="p-4">
+              <img
+                src={teacherDashboardImage}
+                alt="Teacher Dashboard"
+                className="rounded-xl border-2 border-white/20 w-full h-auto"
+              />
+              <p className="text-center text-gray-300 mt-4 text-lg">
+                Teacher Dashboard - Manage classes, attendance, and grades efficiently.
+              </p>
+            </div>
+          </Slider>
         </div>
       </section>
 
@@ -72,31 +158,30 @@ const Home = () => {
           <h2 className="text-4xl font-extrabold text-center mb-16" data-aos="fade-up">
             Powerful Features for Modern Education
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                icon: '🎓',
-                title: 'Student Management',
-                desc: 'Comprehensive student profiles with academic records, attendance, and personal details.'
+                icon: "🎓",
+                title: "Student Management",
+                desc: "Comprehensive student profiles with academic records, attendance, and personal details.",
               },
               {
-                icon: '📅',
-                title: 'Course Scheduling',
-                desc: 'Efficient course scheduling with conflict detection and room allocation.'
+                icon: "📅",
+                title: "Course Scheduling",
+                desc: "Efficient course scheduling with conflict detection and room allocation.",
               },
               {
-                icon: '📊',
-                title: 'Advanced Analytics',
-                desc: 'Real-time dashboards and insights for data-driven decision-making.'
+                icon: "📊",
+                title: "Advanced Analytics",
+                desc: "Real-time dashboards and insights for data-driven decision-making.",
               },
               {
-                icon: '🔒',
-                title: 'Role-based Access',
-                desc: 'Secure access control for students, faculty, and administrators.'
-              }
+                icon: "🔒",
+                title: "Role-based Access",
+                desc: "Secure access control for students, faculty, and administrators.",
+              },
             ].map((feature, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white/10 backdrop-blur-lg p-8 rounded-xl hover:bg-white/20 transition-all duration-300 group"
                 data-aos="fade-up"
@@ -119,26 +204,25 @@ const Home = () => {
           <h2 className="text-4xl font-extrabold text-center mb-16" data-aos="fade-up">
             What Our Community Says
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 text: "The university management system has made it so easy to track my academic progress. I love the real-time updates!",
                 name: "Sarah Johnson",
-                role: "Student"
+                role: "Student",
               },
               {
                 text: "As a professor, the course scheduling system has saved me so much time. It's intuitive and efficient.",
                 name: "Michael Chen",
-                role: "Professor"
+                role: "Professor",
               },
               {
                 text: "The analytics dashboard is a game-changer. It helps us make data-driven decisions for our programs.",
                 name: "Emma Wilson",
-                role: "Administrator"
-              }
+                role: "Administrator",
+              },
             ].map((testimonial, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white/10 p-8 rounded-xl border border-white/20 hover:border-blue-400/50 transition-all"
                 data-aos="fade-up"
@@ -161,8 +245,13 @@ const Home = () => {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 shadow-2xl" data-aos="zoom-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Join National University?</h2>
+          <div
+            className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 shadow-2xl"
+            data-aos="zoom-in"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">
+              Ready to Join National University?
+            </h2>
             <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto">
               Experience the future of education with our state-of-the-art university management system.
             </p>
@@ -189,33 +278,76 @@ const Home = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <div className="text-2xl font-bold mb-4">
-                <span className="text-blue-400">National</span> University
+              <div className="flex items-center space-x-4">
+                <img
+                  src={logo}
+                  alt="University Logo"
+                  className="h-12 w-12 rounded-full border-2 border-white/20"
+                />
+                <div className="text-2xl font-bold">
+                  <span className="text-blue-400">National</span> University
+                </div>
               </div>
-              <p className="text-gray-400">Empowering students for a brighter future.</p>
+              <p className="text-gray-400 mt-4">Empowering students for a brighter future.</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="/about" className="text-gray-400 hover:text-white transition">About Us</a></li>
-                <li><a href="/admissions" className="text-gray-400 hover:text-white transition">Admissions</a></li>
-                <li><a href="/contact" className="text-gray-400 hover:text-white transition">Contact Us</a></li>
+                <li>
+                  <a href="/about" className="text-gray-400 hover:text-white transition">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="/admissions" className="text-gray-400 hover:text-white transition">
+                    Admissions
+                  </a>
+                </li>
+                <li>
+                  <a href="/contact" className="text-gray-400 hover:text-white transition">
+                    Contact Us
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="/portal" className="text-gray-400 hover:text-white transition">Student Portal</a></li>
-                <li><a href="/faculty-portal" className="text-gray-400 hover:text-white transition">Faculty Portal</a></li>
-                <li><a href="/calendar" className="text-gray-400 hover:text-white transition">Academic Calendar</a></li>
+                <li>
+                  <a href="/portal" className="text-gray-400 hover:text-white transition">
+                    Student Portal
+                  </a>
+                </li>
+                <li>
+                  <a href="/faculty-portal" className="text-gray-400 hover:text-white transition">
+                    Faculty Portal
+                  </a>
+                </li>
+                <li>
+                  <a href="/calendar" className="text-gray-400 hover:text-white transition">
+                    Academic Calendar
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Support</h4>
               <ul className="space-y-2">
-                <li><a href="/help" className="text-gray-400 hover:text-white transition">Help Center</a></li>
-                <li><a href="/faq" className="text-gray-400 hover:text-white transition">FAQs</a></li>
-                <li><a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+                <li>
+                  <a href="/help" className="text-gray-400 hover:text-white transition">
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a href="/faq" className="text-gray-400 hover:text-white transition">
+                    FAQs
+                  </a>
+                </li>
+                <li>
+                  <a href="/privacy" className="text-gray-400 hover:text-white transition">
+                    Privacy Policy
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
