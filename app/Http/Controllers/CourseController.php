@@ -15,7 +15,7 @@ class CourseController extends Controller
             'name' => 'required|string',
             'class' => 'required|string',
             'subject' => 'required|string',
-            'file' => 'required|mimes:pdf|max:2048',
+            'file' => 'required|mimes:pdf|max:8192',
             'teacher_nin' => 'required|string',
         ]);
 

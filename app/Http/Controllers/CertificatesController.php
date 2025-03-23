@@ -15,7 +15,7 @@ class CertificatesController extends Controller
             'student_nin' => 'required|string',
             'year' => 'required|string',
             'inscription_pdf' => 'nullable|file|mimes:pdf',
-            'attendance_pdf' => 'nullable|file|mimes:pdf',
+            'attendance_pdf' => 'nullable|file|mimes:pdf', 
             'success_pdf' => 'nullable|file|mimes:pdf',
         ]);
 
