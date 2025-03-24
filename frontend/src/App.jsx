@@ -20,7 +20,6 @@ import DocumentsForm from "./components/Admin/DocumentsForm";
 import RecordForm from "./components/Admin/RecordForm";
 import TeacherRecord from "./components/Admin/TeacherRecord";
 
-import PredictionComponent from "./components/Student/PredictComponent";
 
 import Teacherdb from './components/Teacher/Teacherdb'
 import AttendanceForm from "./components/Teacher/AttendanceForm";
@@ -151,7 +150,6 @@ function App() {
           <Route path="/documents" element={<Documents />} />
           <Route path="/spayment" element={<SPayment />} />
           <Route path="/receipt" element={<Receipt />} />
-          <Route path="/predict" element={<PredictionComponent />} />
 
         </Routes>
       </div>
