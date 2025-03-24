@@ -14,6 +14,9 @@ use App\Http\Controllers\CertificatesController;
 use App\Http\Controllers\StudentRecordController;
 use App\Http\Controllers\TeacherRecordController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PredictionController;
+
+Route::get('/predict', [PredictionController::class, 'predict']);
 
 Route::post('/create-payment', [PaymentController::class, 'create']);
 Route::post('/stripe-webhook', [PaymentController::class, 'handleWebhook']);
