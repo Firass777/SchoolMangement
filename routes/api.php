@@ -15,6 +15,14 @@ use App\Http\Controllers\StudentRecordController;
 use App\Http\Controllers\TeacherRecordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PredictionController;
+use App\Http\Controllers\DocumentController;
+
+Route::get('/documents', [DocumentController::class, 'index']);
+Route::post('/documents', [DocumentController::class, 'upload']);
+Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
+Route::delete('/documents/{id}', [DocumentController::class, 'delete']);
+
+
 
 Route::get('/predict', [PredictionController::class, 'predict']);
 

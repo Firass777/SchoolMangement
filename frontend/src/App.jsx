@@ -19,6 +19,7 @@ import TimetableForm from "./components/Admin/TimetableForm";
 import DocumentsForm from "./components/Admin/DocumentsForm";
 import RecordForm from "./components/Admin/RecordForm";
 import TeacherRecord from "./components/Admin/TeacherRecord";
+import DocumentManager from "./components/Admin/DocumentManager";
 
 
 import Teacherdb from './components/Teacher/Teacherdb'
@@ -79,7 +80,7 @@ function App() {
             <img 
               src="src/images/logo.jpg" 
               alt="School Logo" 
-              className="h-12 w-12" // Adjust size as needed
+              className="h-12 w-12" 
             />
             <h1 className="text-2xl font-bold text-blue-600">National University</h1>
           </div>
@@ -125,6 +126,7 @@ function App() {
           <Route path="/documentsform" element={<DocumentsForm />} />
           <Route path="/recordform" element={<RecordForm />} />
           <Route path="/teacherrecord" element={<TeacherRecord />} />
+          <Route path="/dm" element={<DocumentManager />} />
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
