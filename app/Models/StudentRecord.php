@@ -27,6 +27,7 @@ class StudentRecord extends Model
         'transfer_certificate',
         'admission_status',
         'scholarship',
+        'payment_amount',
         'emergency_contact_name',
         'emergency_contact_relationship',
         'emergency_contact_number',

@@ -17,6 +17,7 @@ import {
   FaEdit,
   FaTrash,
   FaSearch,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 function RecordForm() {
@@ -38,6 +39,7 @@ function RecordForm() {
     transfer_certificate: false,
     admission_status: "",
     scholarship: false,
+    payment_amount: 0,
     emergency_contact_name: "",
     emergency_contact_relationship: "",
     emergency_contact_number: "",
@@ -88,14 +90,12 @@ function RecordForm() {
     try {
       let response;
       if (formData.id) {
-        // Update existing record
         response = await axios.put(
           `http://127.0.0.1:8000/api/student-records/${formData.id}`,
           formData
         );
         setSuccess("Record updated successfully!");
       } else {
-        // Create new record
         response = await axios.post(
           "http://127.0.0.1:8000/api/student-records",
           formData
@@ -103,7 +103,6 @@ function RecordForm() {
         setSuccess("Student record submitted successfully!");
       }
   
-      // Reset form and fetch updated records
       setFormData({
         full_name: "",
         student_nin: "",
@@ -122,6 +121,7 @@ function RecordForm() {
         transfer_certificate: false,
         admission_status: "",
         scholarship: false,
+        payment_amount: 0,
         emergency_contact_name: "",
         emergency_contact_relationship: "",
         emergency_contact_number: "",
@@ -141,6 +141,7 @@ function RecordForm() {
       console.error(err);
     }
   };
+
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://127.0.0.1:8000/api/student-records/${id}`);
@@ -168,7 +169,6 @@ function RecordForm() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-blue-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -257,7 +257,6 @@ function RecordForm() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
         <div className="bg-white shadow-md rounded-md p-6">
           <div className="flex justify-between items-center mb-4">
@@ -275,7 +274,6 @@ function RecordForm() {
 
           {showForm && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Student Information */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Student Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -362,7 +360,6 @@ function RecordForm() {
                 </div>
               </div>
 
-              {/* Parent/Guardian Information */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Parent/Guardian Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -440,7 +437,6 @@ function RecordForm() {
                 </div>
               </div>
 
-              {/* Academic Information */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Academic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -489,10 +485,21 @@ function RecordForm() {
                       className="p-2 border rounded"
                     />
                   </div>
+                  <div>
+                    <label className="block text-gray-700">Payment Amount ($):</label>
+                    <input
+                      type="number"
+                      name="payment_amount"
+                      value={formData.payment_amount || 0}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Emergency Contact */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Emergency Contact</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -532,7 +539,6 @@ function RecordForm() {
                 </div>
               </div>
 
-              {/* Additional Information */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Additional Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -577,7 +583,6 @@ function RecordForm() {
                 </div>
               </div>
 
-              {/* Admin Details */}
               <div>
                 <h3 className="text-xl font-semibold mb-2">Admin Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -647,6 +652,7 @@ function RecordForm() {
                   <th className="p-3 text-left">Full Name</th>
                   <th className="p-3 text-left">Student NIN</th>
                   <th className="p-3 text-left">Grade/Class</th>
+                  <th className="p-3 text-left">Payment Due</th>
                   <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -656,6 +662,7 @@ function RecordForm() {
                     <td className="p-3">{record.full_name}</td>
                     <td className="p-3">{record.student_nin}</td>
                     <td className="p-3">{record.grade_class}</td>
+                    <td className="p-3">${record.payment_amount}</td>
                     <td className="p-3">
                       <button
                         onClick={() => handleEdit(record)}

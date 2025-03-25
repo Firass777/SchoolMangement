@@ -8,7 +8,7 @@ import {
 import { Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-  import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement,
   Title, Tooltip, Legend, ArcElement);
@@ -26,7 +26,7 @@ const DashboardCard = ({ title, value, icon: Icon, color }) => (
 const StudentDB = () => {
   const [attendance, setAttendance] = useState([]);
   const [grades, setGrades] = useState([]);
-  const [payments, setPayments] = useState({ total: 1500, pending: 500 });
+  const [payments, setPayments] = useState({ total: 0, pending: 0, amountDue: 0 });
   const [prediction, setPrediction] = useState('Loading...');
   const studentData = JSON.parse(localStorage.getItem('user'));
   const studentNIN = studentData?.nin;
@@ -42,10 +42,24 @@ const StudentDB = () => {
         setPrediction('Prediction unavailable');
       }
     };
-    fetchPrediction();
-  }, [studentNIN]);
 
-  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/payment-summary?user_id=${studentData.id}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setPayments({ 
+            total: data.total_paid,
+            pending: data.pending_payments,
+            amountDue: data.amount_due
+          });
+        }
+      } catch (error) {
+        console.error('Payment fetch error:', error);
+      }
+    };
+
     const fetchAttendance = async () => {
       if (!studentNIN) return;
 
@@ -64,10 +78,6 @@ const StudentDB = () => {
       }
     };
 
-    fetchAttendance();
-  }, [studentNIN]);
-
-  useEffect(() => {
     const fetchGrades = async () => {
       if (!studentNIN) return;
 
@@ -86,14 +96,19 @@ const StudentDB = () => {
       }
     };
 
+    fetchPrediction();
+    if (studentData?.id) {
+      fetchPayments();
+    }
+    fetchAttendance();
     fetchGrades();
-  }, [studentNIN]);
+  }, [studentNIN, studentData]);
 
   const attendanceChartData = {
     labels: ['Present', 'Absent', 'Late'],
     datasets: [
       {
-        label: 'Attendance',
+        label: 'Attendance Status',
         data: [
           attendance.filter((a) => a.status === 'Present').length,
           attendance.filter((a) => a.status === 'Absent').length,
@@ -130,6 +145,22 @@ const StudentDB = () => {
         fill: true,
       },
     ],
+  };
+
+  const attendanceChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Attendance Status',
+        font: {
+          size: 16,
+        },
+      },
+    },
   };
 
   const gradesChartOptions = {
@@ -263,111 +294,116 @@ const StudentDB = () => {
         </aside>
 
         <main className="flex-1 p-6 overflow-auto min-h-screen">
-            <motion.main
-              className="flex-1 p-6 overflow-auto min-h-screen"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-             >
-              <motion.div className="mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
-                <h2 className="text-3xl font-bold text-gray-800">Welcome to Your Dashboard</h2>
-                <p className="text-lg text-gray-600 mt-2">Here's an overview of your performance:</p>
-              </motion.div>
+          <motion.main
+            className="flex-1 p-6 overflow-auto min-h-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div className="mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
+              <h2 className="text-3xl font-bold text-gray-800">Welcome to Your Dashboard</h2>
+              <p className="text-lg text-gray-600 mt-2">Here's an overview of your performance:</p>
+            </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                {[{
-                  title: "Total Payments", value: `$${payments.total}`, icon: FaMoneyBillWave,
-                  color: "bg-gradient-to-r from-purple-800 via-purple-500 to-green-400 text-white"
-                }, {
-                  title: "Pending Payments", value: `$${payments.pending}`, icon: FaRegClock,
-                  color: "bg-gradient-to-r from-purple-800 via-purple-500 to-yellow-300 text-white"
-                }, {
-                  title: "Performance Prediction", value: prediction, icon: FaMagic,
-                  color: prediction === "Likely to Pass"
-                    ? "bg-gradient-to-r from-green-600 via-green-500 to-red-400 text-white"
-                    : "bg-gradient-to-r from-red-600 via-red-500 to-green-400 text-white"
-                }].map((card, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: index * 0.2 }}
-                  >
-                    <DashboardCard {...card} />
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <motion.div
-                  className="p-6 bg-white shadow-md rounded-lg"
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Attendance Overview</h3>
-                  <div className="w-full h-96 flex items-center justify-center">
-                    <Pie data={attendanceChartData} options={gradesChartOptions} />
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  className="p-6 bg-white shadow-md rounded-lg"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
-                  <div className="w-full h-96">
-                    <Line data={gradesChartData} options={gradesChartOptions} />
-                  </div>
-                </motion.div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {[{
-                title: "Recent Attendance", data: attendance,
-                headers: ["Subject", "Status", "Class", "Date"]
+                title: "Total Payments", 
+                value: `$${payments.total.toFixed(2)}`, 
+                icon: FaMoneyBillWave,
+                color: "bg-gradient-to-r from-purple-800 via-purple-500 to-green-400 text-white"
               }, {
-                title: "Recent Grades", data: grades,
-                headers: ["Subject", "Grade", "Class", "Date"]
-              }].map((section, index) => (
+                title: "Amount Due", 
+                value: `$${payments.amountDue.toFixed(2)}`, 
+                icon: FaRegClock,
+                  color: "bg-gradient-to-r from-purple-600 via-purple-500 to-yellow-300 text-white"
+              }, {
+                title: "Performance Prediction", 
+                value: prediction, 
+                icon: FaMagic,
+                color: prediction === "Likely to Pass"
+                  ? "bg-gradient-to-r from-green-600 via-green-500 to-red-400 text-white"
+                  : "bg-gradient-to-r from-red-600 via-red-500 to-green-400 text-white"
+              }].map((card, index) => (
                 <motion.div
                   key={index}
-                  className="mb-6 p-6 bg-white shadow-md rounded-lg"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.2 }}
                 >
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">{section.title}</h3>
-                  {section.data.length === 0 ? (
-                    <p className="text-gray-500">No records found.</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full table-auto">
-                        <thead className="bg-purple-800 text-white">
-                          <tr>
-                            {section.headers.map((header, idx) => (
-                              <th key={idx} className="px-6 py-3 text-left">{header}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {section.data.slice(0, 2).map((record) => (
-                            <tr key={record.id} className="border-b">
-                              <td className="px-6 py-3">{record.subject}</td>
-                              <td className="px-6 py-3">{record.status || record.grade}</td>
-                              <td className="px-6 py-3">{record.class}</td>
-                              <td className="px-6 py-3">{new Date(record.created_at).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <DashboardCard {...card} />
                 </motion.div>
               ))}
-            </motion.main>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <motion.div
+                className="p-6 bg-white shadow-md rounded-lg"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Attendance Overview</h3>
+                <div className="w-full h-96 flex items-center justify-center">
+                  <Pie data={attendanceChartData} options={attendanceChartOptions} />
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="p-6 bg-white shadow-md rounded-lg"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
+                <div className="w-full h-96">
+                  <Line data={gradesChartData} options={gradesChartOptions} />
+                </div>
+              </motion.div>
+            </div>
+
+            {[{
+              title: "Recent Attendance", data: attendance,
+              headers: ["Subject", "Status", "Class", "Date"]
+            }, {
+              title: "Recent Grades", data: grades,
+              headers: ["Subject", "Grade", "Class", "Date"]
+            }].map((section, index) => (
+              <motion.div
+                key={index}
+                className="mb-6 p-6 bg-white shadow-md rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+              >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">{section.title}</h3>
+                {section.data.length === 0 ? (
+                  <p className="text-gray-500">No records found.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full table-auto">
+                      <thead className="bg-purple-800 text-white">
+                        <tr>
+                          {section.headers.map((header, idx) => (
+                            <th key={idx} className="px-6 py-3 text-left">{header}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {section.data.slice(0, 2).map((record) => (
+                          <tr key={record.id} className="border-b">
+                            <td className="px-6 py-3">{record.subject}</td>
+                            <td className="px-6 py-3">{record.status || record.grade}</td>
+                            <td className="px-6 py-3">{record.class}</td>
+                            <td className="px-6 py-3">{new Date(record.created_at).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </motion.main>
         </main>
       </div>
     </div>

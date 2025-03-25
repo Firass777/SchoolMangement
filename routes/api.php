@@ -30,6 +30,7 @@ Route::post('/create-payment', [PaymentController::class, 'create']);
 Route::post('/stripe-webhook', [PaymentController::class, 'handleWebhook']);
 Route::get('/get-payments', [PaymentController::class, 'getPayments']);
 Route::get('/get-all-payments', [PaymentController::class, 'getAllPayments']);
+Route::get('/payment-summary', [PaymentController::class, 'getPaymentSummary']);
 
 Route::get('/teacher-records', [TeacherRecordController::class, 'index']);
 Route::post('/teacher-records', [TeacherRecordController::class, 'store']);

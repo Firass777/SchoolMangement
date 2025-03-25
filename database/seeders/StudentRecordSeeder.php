@@ -1,7 +1,5 @@
 <?php
 
-
-
 namespace Database\Seeders;
 
 use App\Models\StudentRecord;
@@ -30,6 +28,7 @@ class StudentRecordSeeder extends Seeder
                 'emergency_contact_number' => '123-456-7890',
                 'added_by_admin' => 'admin@gmail.com',
                 'date_of_entry' => '2023-09-01',
+                'payment_amount' => 4500.00,
             ],
             [
                 'full_name' => 'Sofia',
@@ -49,8 +48,8 @@ class StudentRecordSeeder extends Seeder
                 'emergency_contact_number' => '987-654-3210',
                 'added_by_admin' => 'admin@gmail.com',
                 'date_of_entry' => '2023-09-01',
+                'payment_amount' => 3500.00,
             ],
-
         ];
 
         foreach ($records as $record) {

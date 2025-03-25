@@ -30,6 +30,7 @@ return new class extends Migration
             $table->boolean('transfer_certificate')->default(false);
             $table->enum('admission_status', ['New Admission', 'Transfer', 'Returning Student']);
             $table->boolean('scholarship')->default(false);
+            $table->decimal('payment_amount', 10, 2)->default(0);
             $table->string('emergency_contact_name');
             $table->string('emergency_contact_relationship');
             $table->string('emergency_contact_number');

@@ -15,6 +15,7 @@ import {
   FaIdCard,
   FaFileInvoice,
   FaMoneyCheck,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 function EditProfile() {
@@ -377,11 +378,19 @@ function EditProfile() {
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Previous School</p>
-                  <p className="text-gray-800">{studentRecord.previous_school}</p>
+                  <p className="text-gray-800">{studentRecord.previous_school || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Admission Status</p>
                   <p className="text-gray-800">{studentRecord.admission_status}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Scholarship</p>
+                  <p className="text-gray-800">{studentRecord.scholarship ? "Yes" : "No"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Payment Amount</p>
+                  <p className="text-gray-800 ">${studentRecord.payment_amount}</p>
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Emergency Contact Name</p>
@@ -393,7 +402,7 @@ function EditProfile() {
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Medical Conditions</p>
-                  <p className="text-gray-800">{studentRecord.medical_conditions}</p>
+                  <p className="text-gray-800">{studentRecord.medical_conditions || "None"}</p>
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Special Needs</p>
@@ -401,7 +410,7 @@ function EditProfile() {
                 </div>
                 <div>
                   <p className="text-gray-600 font-semibold">Extracurricular Interests</p>
-                  <p className="text-gray-800">{studentRecord.extracurricular_interests}</p>
+                  <p className="text-gray-800">{studentRecord.extracurricular_interests || "None specified"}</p>
                 </div>
               </div>
             </div>

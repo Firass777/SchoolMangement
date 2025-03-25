@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use App\Models\Payment;
+use App\Models\StudentRecord;
 
 class PaymentController extends Controller
 {
@@ -13,10 +14,7 @@ class PaymentController extends Controller
     {
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
-        // Get the amount from the request (in dollars)
         $amount = $request->amount;
-
-        // Convert the amount to cents (Stripe requires amounts in cents)
         $amountInCents = $amount * 100;
 
         $session = Session::create([
@@ -63,8 +61,6 @@ class PaymentController extends Controller
                 'status' => $session->payment_status,
             ]);
     
-            // Save payment details in local storage (for demo purposes)
-            // In a real app, you would fetch this data from the database
             $paymentDetails = [
                 'user_id' => $session->client_reference_id,
                 'amount' => $session->amount_total / 100,
@@ -72,7 +68,6 @@ class PaymentController extends Controller
                 'stripe_payment_id' => $session->payment_intent,
                 'status' => $session->payment_status,
             ];
-            // You can use a queue or another method to update the frontend
         }
     
         return response()->json(['status' => 'success']);
@@ -100,18 +95,47 @@ class PaymentController extends Controller
     {
         $user_id = $request->user_id;
     
-        // Fetch all payments for the user
         $payments = Payment::where('user_id', $user_id)
             ->orderBy('created_at', 'desc')
             ->get();
     
-        // Calculate total payments 
         $totalPayments = (float) Payment::where('user_id', $user_id)
             ->sum('amount');
     
         return response()->json([
             'payments' => $payments,
             'totalPayments' => $totalPayments, 
+        ]);
+    }
+
+    public function getPaymentSummary(Request $request)
+    {
+        $user_id = $request->user_id;
+        
+        $studentRecord = StudentRecord::where('student_nin', function($query) use ($user_id) {
+            $query->select('nin')
+                  ->from('users')
+                  ->where('id', $user_id);
+        })->first();
+
+        if (!$studentRecord) {
+            return response()->json([
+                'error' => 'Student record not found'
+            ], 404);
+        }
+
+        $payments = Payment::where('user_id', $user_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalPaid = (float) $payments->sum('amount');
+        $amountDue = max(0, $studentRecord->payment_amount - $totalPaid);
+
+        return response()->json([
+            'total_paid' => $totalPaid,
+            'amount_due' => $amountDue,
+            'payment_amount' => $studentRecord->payment_amount,
+            'pending_payments' => $payments->where('status', 'pending')->sum('amount')
         ]);
     }
 }
