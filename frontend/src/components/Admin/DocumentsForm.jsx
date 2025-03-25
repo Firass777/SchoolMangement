@@ -18,6 +18,10 @@ import {
   FaSearch,
   FaPlus,
   FaFile,
+  FaUpload,
+  FaSpinner,
+  FaTimes,
+
 } from 'react-icons/fa';
 
 const DocumentsForm = () => {
@@ -27,49 +31,61 @@ const DocumentsForm = () => {
   const [inscriptionFile, setInscriptionFile] = useState(null);
   const [attendanceFile, setAttendanceFile] = useState(null);
   const [successFile, setSuccessFile] = useState(null);
-  const [message, setMessage] = useState('');
   const [certificates, setCertificates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [showForm, setShowForm] = useState(false); 
+  const [showCertForm, setShowCertForm] = useState(false);
+  const [showDocForm, setShowDocForm] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploadedBy] = useState(localStorage.getItem('userName') || 'Admin');
+  const [activeTab, setActiveTab] = useState('documents');
   const certificatesPerPage = 5;
+  const docsPerPage = 7;
+  const [docCurrentPage, setDocCurrentPage] = useState(1);
 
-  // Refs for file inputs
-  const inscriptionFileRef = useRef(null);
-  const attendanceFileRef = useRef(null);
-  const successFileRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const formRef = useRef(null);
+  const certFormRef = useRef(null);
 
-  // Fetch all students with the role 'student'
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/users');
-        const studentsData = response.data.filter((user) => user.role === 'student');
-        setStudents(studentsData);
+        const usersRes = await axios.get('http://localhost:8000/api/users');
+        setStudents(usersRes.data.filter(user => user.role === 'student'));
+
+        const certRes = await axios.get('http://localhost:8000/api/certificates');
+        setCertificates(certRes.data.data);
+
+        const docsRes = await axios.get('http://localhost:8000/api/documents');
+        processDocuments(docsRes.data.documents);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        setMessage({ text: 'Failed to load data', type: 'error' });
       }
     };
-    fetchStudents();
+    fetchInitialData();
   }, []);
 
-  // Fetch all certificates
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/certificates');
-        setCertificates(response.data.data);
-      } catch (error) {
-        console.error('Error fetching certificates:', error);
-      }
-    };
-    fetchCertificates();
-  }, []);
+  const processDocuments = (docs) => {
+    setDocuments(docs.map(doc => ({
+      ...doc,
+      prediction: doc.prediction || { status: 'processing', category: null, confidence: null }
+    })));
+  };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const fetchDocuments = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/documents');
+      processDocuments(response.data.documents);
+    } catch (error) {
+      setMessage({ text: 'Failed to load documents', type: 'error' });
+    }
+  };
+
+  const handleCertificateUpload = async (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append('student_nin', selectedStudentNIN);
     formData.append('year', year);
@@ -78,67 +94,138 @@ const DocumentsForm = () => {
     if (successFile) formData.append('success_pdf', successFile);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/certificates/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      setMessage('Certificates uploaded successfully!');
-      setShowForm(false); // Hide the form after submission
-
-      // Reset form fields
+      setLoading(true);
+      await axios.post('http://localhost:8000/api/certificates/upload', formData);
+      setMessage({ text: 'Certificates uploaded successfully!', type: 'success' });
+      setShowCertForm(false);
       setSelectedStudentNIN('');
       setYear('');
       setInscriptionFile(null);
       setAttendanceFile(null);
       setSuccessFile(null);
-
-      // Reset file inputs
-      if (inscriptionFileRef.current) inscriptionFileRef.current.value = '';
-      if (attendanceFileRef.current) attendanceFileRef.current.value = '';
-      if (successFileRef.current) successFileRef.current.value = '';
-
-      // Refresh the certificates list
+      certFormRef.current.reset();
       const updatedCertificates = await axios.get('http://localhost:8000/api/certificates');
       setCertificates(updatedCertificates.data.data);
     } catch (error) {
-      setMessage('Failed to upload certificates.');
-      console.error('Error:', error);
+      setMessage({ text: error.response?.data?.message || 'Upload failed', type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle delete certificate
-  const handleDelete = async (id) => {
+  const handleDocumentUpload = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      setMessage({ text: 'Please select a file', type: 'error' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('uploaded_by', uploadedBy);
+
+      await axios.post('http://localhost:8000/api/documents', formData);
+      setMessage({ text: 'Document uploaded successfully!', type: 'success' });
+      setFile(null);
+      setShowDocForm(false);
+      fileInputRef.current.value = '';
+      fetchDocuments();
+    } catch (error) {
+      setMessage({ text: error.response?.data?.message || 'Upload failed', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCertificate = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this certificate?')) return;
     try {
       await axios.delete(`http://localhost:8000/api/certificates/delete/${id}`);
-      setMessage('Certificate deleted successfully!');
-      // Refresh the certificates list
+      setMessage({ text: 'Certificate deleted', type: 'success' });
       const updatedCertificates = await axios.get('http://localhost:8000/api/certificates');
       setCertificates(updatedCertificates.data.data);
     } catch (error) {
-      setMessage('Failed to delete certificate.');
-      console.error('Error:', error);
+      setMessage({ text: 'Delete failed', type: 'error' });
     }
   };
 
-  // Handle search
+  const handleDeleteDocument = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    try {
+      await axios.delete(`http://localhost:8000/api/documents/${id}`);
+      setMessage({ text: 'Document deleted', type: 'success' });
+      fetchDocuments();
+    } catch (error) {
+      setMessage({ text: 'Delete failed', type: 'error' });
+    }
+  };
+
+  const renderStatusBadge = (doc) => {
+    const status = doc.prediction?.confidence === 0 ? 'uncertain' : 
+                 doc.prediction?.status || 'processing';
+    const confidence = doc.prediction?.confidence;
+    const category = doc.prediction?.category;
+
+    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
+
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        return (
+          <div className="flex items-center gap-1">
+            <span className={`${baseClasses} bg-green-100 text-green-800`}>
+              {category}
+            </span>
+            <span className="text-sm text-gray-600">
+              ({Math.round(confidence)}%)
+            </span>
+          </div>
+        );
+      case 'pending':
+      case 'uncertain':  
+        return (
+          <div className="flex items-center gap-1">
+            <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+              {status === 'uncertain' ? 'Uncertain' : 'Needs Review'}
+            </span>
+            <span className="text-sm text-gray-600">
+              ({Math.round(confidence)}%)
+            </span>
+          </div>
+        );
+      default:
+        return (
+          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
+            Processing...
+          </span>
+        );
+    }
+  };
+
   const filteredCertificates = certificates.filter(
-    (cert) =>
-      cert.student_nin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cert.year.toLowerCase().includes(searchQuery.toLowerCase())
+    cert => cert.student_nin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    cert.year.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
+  const filteredDocuments = documents.filter(doc =>
+    doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (doc.prediction?.category?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   const indexOfLastCertificate = currentPage * certificatesPerPage;
   const indexOfFirstCertificate = indexOfLastCertificate - certificatesPerPage;
   const currentCertificates = filteredCertificates.slice(indexOfFirstCertificate, indexOfLastCertificate);
 
-  // Change page
+  const indexOfLastDoc = docCurrentPage * docsPerPage;
+  const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
+  const currentDocuments = filteredDocuments.slice(indexOfFirstDoc, indexOfLastDoc);
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginateDocs = (pageNumber) => setDocCurrentPage(pageNumber);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-blue-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -181,24 +268,24 @@ const DocumentsForm = () => {
                 <span>Event Management</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 bg-blue-700">
               <Link to="/documentsform" className="flex items-center space-x-2">
                 <FaFileInvoice />
                 <span>Documents</span>
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/recordform" className="flex items-center space-x-2">
-                  <FaFile />
-                  <span>Student Record</span>
-                </Link>
+              <Link to="/recordform" className="flex items-center space-x-2">
+                <FaFile />
+                <span>Student Record</span>
+              </Link>
             </li>  
             <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/teacherrecord" className="flex items-center space-x-2">
-                  <FaFile />
-                  <span>Teacher Record</span>
-                </Link>
-              </li>               
+              <Link to="/teacherrecord" className="flex items-center space-x-2">
+                <FaFile />
+                <span>Teacher Record</span>
+              </Link>
+            </li>               
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/notifications" className="flex items-center space-x-2">
                 <FaBell />
@@ -227,204 +314,359 @@ const DocumentsForm = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Certificates</h1>
-
-          {/* Toggle Form Button */}
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="mb-6 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <FaPlus />
-            <span>{showForm ? 'Hide Form' : 'Add Certificates'}</span>
-          </button>
-
-          {/* Upload Form */}
-          {showForm && (
-            <div className="mb-8">
-              <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                <label className="block text-gray-700 font-medium mb-2">Select Student:</label>
-                <select
-                  value={selectedStudentNIN}
-                  onChange={(e) => setSelectedStudentNIN(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select a student</option>
-                  {students.map((student) => (
-                    <option key={student.nin} value={student.nin}>
-                      {student.name} ({student.nin})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                <label className="block text-gray-700 font-medium mb-2">Year:</label>
-                <input
-                  type="text"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter year (e.g., 2023)"
-                  required
-                />
-              </div>
-
-              <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                <label className="block text-gray-700 font-medium mb-2">Inscription Certificate (PDF):</label>
-                <input
-                  type="file"
-                  onChange={(e) => setInscriptionFile(e.target.files[0])}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  accept=".pdf"
-                  ref={inscriptionFileRef}
-                />
-              </div>
-
-              <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                <label className="block text-gray-700 font-medium mb-2">Attendance Certificate (PDF):</label>
-                <input
-                  type="file"
-                  onChange={(e) => setAttendanceFile(e.target.files[0])}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  accept=".pdf"
-                  ref={attendanceFileRef}
-                />
-              </div>
-
-              <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                <label className="block text-gray-700 font-medium mb-2">Success Certificate (PDF):</label>
-                <input
-                  type="file"
-                  onChange={(e) => setSuccessFile(e.target.files[0])}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  accept=".pdf"
-                  ref={successFileRef}
-                />
-              </div>
-
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-800">Document Management</h1>
+            <div className="flex gap-1 bg-white p-1 rounded-full shadow-md">
               <button
-                onClick={handleSubmit}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => setActiveTab('certificates')}
+                className={`px-6 py-2 rounded-full text-sm font-medium ${
+                  activeTab === 'certificates' 
+                    ? 'bg-blue-600 text-white shadow-inner'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
-                Upload Certificates
+                Certificates
               </button>
+              <button
+                onClick={() => setActiveTab('documents')}
+                className={`px-6 py-2 rounded-full text-sm font-medium ${
+                  activeTab === 'documents'
+                    ? 'bg-blue-600 text-white shadow-inner'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Document Classification
+              </button>
+            </div>
+          </div>
 
-              {message && (
-                <div className="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700">
-                  <p>{message}</p>
-                </div>
-              )}
+          {message.text && (
+            <div className={`mb-6 p-4 rounded-lg ${
+              message.type === 'error' 
+                ? 'bg-red-100 text-red-700 border-l-4 border-red-500' 
+                : 'bg-green-100 text-green-700 border-l-4 border-green-500'
+            }`}>
+              {message.text}
             </div>
           )}
 
-          {/* Show All Certificates */}
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">All Certificates</h2>
-
-            {/* Search Bar */}
-            <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-              <div className="flex items-center">
-                <FaSearch className="text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search by student NIN or year..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full p-2 ml-2 outline-none"
-                />
+          {activeTab === 'certificates' ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => setShowCertForm(!showCertForm)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  {showCertForm ? <FaTimes /> : <FaPlus />}
+                  {showCertForm ? 'Close Form' : 'Add Certificates'}
+                </button>
+                <div className="relative w-64">
+                  <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search certificates..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Certificates Table */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-blue-800 text-white">
-                  <tr>
-                    <th className="px-6 py-3">Student NIN</th>
-                    <th className="px-6 py-3">Year</th>
-                    <th className="px-6 py-3">Inscription</th>
-                    <th className="px-6 py-3">Attendance</th>
-                    <th className="px-6 py-3">Success</th>
-                    <th className="px-6 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentCertificates.map((cert) => (
-                    <tr key={cert.id} className="border-b hover:bg-gray-100">
-                      <td className="px-6 py-4">{cert.student_nin}</td>
-                      <td className="px-6 py-4">{cert.year}</td>
-                      <td className="px-6 py-4 text-center">
-                        {cert.inscription_pdf && (
-                          <a
-                            href={`http://localhost:8000/storage/${cert.inscription_pdf}`}
-                            download
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <FaDownload className="inline-block" />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {cert.attendance_pdf && (
-                          <a
-                            href={`http://localhost:8000/storage/${cert.attendance_pdf}`}
-                            download
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <FaDownload className="inline-block" />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {cert.success_pdf && (
-                          <a
-                            href={`http://localhost:8000/storage/${cert.success_pdf}`}
-                            download
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <FaDownload className="inline-block" />
-                          </a>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDelete(cert.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <FaTrash className="inline-block" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {filteredCertificates.length > certificatesPerPage && (
-              <div className="mt-6 flex justify-center space-x-2">
-                {Array.from({ length: Math.ceil(filteredCertificates.length / certificatesPerPage) }).map(
-                  (_, index) => (
+              {showCertForm && (
+                <div className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
+                  <form ref={certFormRef} onSubmit={handleCertificateUpload} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Student:</label>
+                      <select
+                        value={selectedStudentNIN}
+                        onChange={(e) => setSelectedStudentNIN(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">Select student</option>
+                        {students.map((student) => (
+                          <option key={student.nin} value={student.nin}>
+                            {student.name} ({student.nin})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year:</label>
+                      <input
+                        type="text"
+                        value={year}
+                        onChange={(e) => setYear(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter year"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Inscription PDF:</label>
+                      <input
+                        type="file"
+                        onChange={(e) => setInscriptionFile(e.target.files[0])}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        accept=".pdf"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Attendance PDF:</label>
+                      <input
+                        type="file"
+                        onChange={(e) => setAttendanceFile(e.target.files[0])}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        accept=".pdf"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Success PDF:</label>
+                      <input
+                        type="file"
+                        onChange={(e) => setSuccessFile(e.target.files[0])}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        accept=".pdf"
+                      />
+                    </div>
                     <button
-                      key={index + 1}
-                      onClick={() => paginate(index + 1)}
-                      className={`px-4 py-2 ${
-                        currentPage === index + 1
-                          ? 'bg-blue-800 text-white'
-                          : 'bg-white text-blue-800'
-                      } rounded-lg shadow-md hover:shadow-lg transition-shadow`}
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
                     >
-                      {index + 1}
+                      {loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Upload Certificates'}
                     </button>
-                  )
+                  </form>
+                </div>
+              )}
+
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-blue-800 text-white">
+                    <tr>
+                      <th className="px-6 py-3 text-left">Student NIN</th>
+                      <th className="px-6 py-3 text-left">Year</th>
+                      <th className="px-6 py-3 text-center">Inscription</th>
+                      <th className="px-6 py-3 text-center">Attendance</th>
+                      <th className="px-6 py-3 text-center">Success</th>
+                      <th className="px-6 py-3 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentCertificates.length > 0 ? (
+                      currentCertificates.map((cert) => (
+                        <tr key={cert.id} className="border-b hover:bg-gray-50">
+                          <td className="px-6 py-4">{cert.student_nin}</td>
+                          <td className="px-6 py-4">{cert.year}</td>
+                          <td className="px-6 py-4 text-center">
+                            {cert.inscription_pdf && (
+                              <a
+                                href={`http://localhost:8000/storage/${cert.inscription_pdf}`}
+                                download
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <FaDownload />
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {cert.attendance_pdf && (
+                              <a
+                                href={`http://localhost:8000/storage/${cert.attendance_pdf}`}
+                                download
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <FaDownload />
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {cert.success_pdf && (
+                              <a
+                                href={`http://localhost:8000/storage/${cert.success_pdf}`}
+                                download
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <FaDownload />
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleDeleteCertificate(cert.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="p-4 text-center text-gray-500">
+                          No certificates found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredCertificates.length > certificatesPerPage && (
+                <div className="mt-4 flex justify-center space-x-2">
+                  {Array.from({ length: Math.ceil(filteredCertificates.length / certificatesPerPage) }).map(
+                    (_, index) => (
+                      <button
+                        key={index + 1}
+                        onClick={() => paginate(index + 1)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === index + 1
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-blue-800 border border-blue-200'
+                        }`}
+                      >
+                        {index + 1}
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowDocForm(!showDocForm)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  {showDocForm ? <FaTimes /> : <FaUpload />}
+                  {showDocForm ? 'Close Form' : 'Upload Document'}
+                </button>
+              </div>
+
+              {showDocForm && (
+                <div className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
+                  <form ref={formRef} onSubmit={handleDocumentUpload} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Uploader: <span className="font-semibold">{uploadedBy}</span>
+                      </label>
+                      <input
+                        type="file"
+                        onChange={(e) => setFile(e.target.files[0])}
+                        className="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        accept=".pdf"
+                        ref={fileInputRef}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+                    >
+                      {loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Upload Document'}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  Document Classification{' '}
+                  <span className="text-sm font-bold bg-purple-100 text-purple-800 px-2 py-1 rounded-md">
+                    [IA-Powered]
+                  </span>
+                </h2>
+                
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search documents..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-blue-800 text-white">
+                      <tr>
+                        <th className="p-3 text-left">File Name</th>
+                        <th className="p-3 text-left">Status</th>
+                        <th className="p-3 text-left">Uploaded By</th>
+                        <th className="p-3 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {currentDocuments.length > 0 ? (
+                        currentDocuments.map((doc) => (
+                          <tr key={doc.id} className="hover:bg-gray-50">
+                            <td className="p-3 max-w-xs truncate">{doc.file_name}</td>
+                            <td className="p-3">
+                              {renderStatusBadge(doc)}
+                            </td>
+                            <td className="p-3">{doc.uploaded_by}</td>
+                            <td className="p-3">
+                              <div className="flex space-x-4">
+                                <a
+                                  href={`http://localhost:8000/api/documents/${doc.id}/download`}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  download
+                                >
+                                  <FaDownload />
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteDocument(doc.id)}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="p-4 text-center text-gray-500">
+                            No documents found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {filteredDocuments.length > docsPerPage && (
+                  <div className="mt-4 flex justify-center space-x-2">
+                    {Array.from({ length: Math.ceil(filteredDocuments.length / docsPerPage) }).map(
+                      (_, index) => (
+                        <button
+                          key={index + 1}
+                          onClick={() => paginateDocs(index + 1)}
+                          className={`px-3 py-1 rounded ${
+                            docCurrentPage === index + 1
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white text-blue-800 border border-blue-200'
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      )
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

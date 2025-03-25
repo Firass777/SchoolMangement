@@ -19,7 +19,6 @@ import TimetableForm from "./components/Admin/TimetableForm";
 import DocumentsForm from "./components/Admin/DocumentsForm";
 import RecordForm from "./components/Admin/RecordForm";
 import TeacherRecord from "./components/Admin/TeacherRecord";
-import DocumentManager from "./components/Admin/DocumentManager";
 
 
 import Teacherdb from './components/Teacher/Teacherdb'
@@ -126,7 +125,6 @@ function App() {
           <Route path="/documentsform" element={<DocumentsForm />} />
           <Route path="/recordform" element={<RecordForm />} />
           <Route path="/teacherrecord" element={<TeacherRecord />} />
-          <Route path="/dm" element={<DocumentManager />} />
 
           <Route path="/teacherdb" element={<Teacherdb />} />
           <Route path="/attendanceform" element={<AttendanceForm />} />
