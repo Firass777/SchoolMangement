@@ -17,18 +17,25 @@ import {
   FaFileInvoice,
   FaFile,
 } from "react-icons/fa";
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 function Admindb() {
   const [students, setStudents] = useState(0);
   const [teachers, setTeachers] = useState(0);
-  const [revenue] = useState("$250,000");
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, absent: 0, late: 0 });
   const [latestEvents, setLatestEvents] = useState([]);
   const [latestStudents, setLatestStudents] = useState([]);
   const [latestTeachers, setLatestTeachers] = useState([]);
   const [latestCourses, setLatestCourses] = useState([]);
+  const [paymentStats, setPaymentStats] = useState({
+    totalPaid: 0,
+    totalUnpaid: 0,
+    latestPayments: []
+  });
+  const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+  const [weeklyRevenue, setWeeklyRevenue] = useState([]);
 
   useEffect(() => {
     AOS.init({ duration: 1000 });
@@ -37,47 +44,87 @@ function Admindb() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch users (students and teachers)
-      const usersResponse = await fetch("http://127.0.0.1:8000/api/users");
+      const [
+        usersResponse,
+        attendanceResponse,
+        eventsResponse,
+        studentsResponse,
+        teachersResponse,
+        coursesResponse,
+        paymentsResponse,
+        studentRecordsResponse,
+        monthlyRevenueResponse,
+        weeklyRevenueResponse
+      ] = await Promise.all([
+        fetch("http://127.0.0.1:8000/api/users"),
+        fetch("http://127.0.0.1:8000/api/attendance"),
+        fetch("http://127.0.0.1:8000/api/events/latest"),
+        fetch("http://127.0.0.1:8000/api/users/latest/students"),
+        fetch("http://127.0.0.1:8000/api/users/latest/teachers"),
+        fetch("http://127.0.0.1:8000/api/courses/latest"),
+        fetch("http://127.0.0.1:8000/api/get-all-payments"),
+        fetch("http://127.0.0.1:8000/api/student-records"),
+        fetch("http://127.0.0.1:8000/api/payments-by-month"),
+        fetch("http://127.0.0.1:8000/api/payments-by-week")
+      ]);
+
       const usersData = await usersResponse.json();
       const studentCount = usersData.filter((user) => user.role === "student").length;
       const teacherCount = usersData.filter((user) => user.role === "teacher").length;
       setStudents(studentCount);
       setTeachers(teacherCount);
 
-      // Fetch attendance statistics
-      const attendanceResponse = await fetch("http://127.0.0.1:8000/api/attendance");
       const attendanceData = await attendanceResponse.json();
       const presentCount = attendanceData?.attendances?.filter((a) => a.status === "Present").length || 0;
       const absentCount = attendanceData?.attendances?.filter((a) => a.status === "Absent").length || 0;
       const lateCount = attendanceData?.attendances?.filter((a) => a.status === "Late").length || 0;
       setAttendanceStats({ present: presentCount, absent: absentCount, late: lateCount });
 
-      // Fetch latest events
-      const eventsResponse = await fetch("http://127.0.0.1:8000/api/events/latest");
       const eventsData = await eventsResponse.json();
       setLatestEvents(eventsData?.events || []);
 
-      // Fetch latest students
-      const studentsResponse = await fetch("http://127.0.0.1:8000/api/users/latest/students");
       const studentsData = await studentsResponse.json();
       setLatestStudents(studentsData?.students || []);
 
-      // Fetch latest teachers
-      const teachersResponse = await fetch("http://127.0.0.1:8000/api/users/latest/teachers");
       const teachersData = await teachersResponse.json();
       setLatestTeachers(teachersData?.teachers || []);
 
-      // Fetch latest courses
-      const coursesResponse = await fetch("http://127.0.0.1:8000/api/courses/latest");
       const coursesData = await coursesResponse.json();
       setLatestCourses(coursesData?.courses || []);
+
+      const paymentsData = await paymentsResponse.json();
+      const studentRecordsData = await studentRecordsResponse.json();
+      const monthlyRevenueData = await monthlyRevenueResponse.json();
+      const weeklyRevenueData = await weeklyRevenueResponse.json();
+
+      // Calculate total revenue from student records (sum of all payment_amount)
+      const totalPaymentAmount = studentRecordsData.data.reduce((sum, record) => {
+        const amount = parseFloat(record.payment_amount) || 0;
+        return sum + amount;
+      }, 0);
+      setTotalRevenue(totalPaymentAmount);
+
+      // Calculate payment stats
+      const totalPaid = parseFloat(paymentsData.totalPayments) || 0;
+      const totalUnpaid = Math.max(0, totalPaymentAmount - totalPaid);
+      
+      // Get latest 4 payments
+      const latestPayments = paymentsData.payments?.slice(0, 4) || [];
+      
+      setPaymentStats({
+        totalPaid,
+        totalUnpaid,
+        latestPayments
+      });
+
+      setMonthlyRevenue(monthlyRevenueData.months || []);
+      setWeeklyRevenue(weeklyRevenueData.weeks?.slice(0, 4) || []);
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
   };
 
-  // Prepare data for the attendance chart
   const attendanceChartData = {
     labels: ["Present", "Absent", "Late"],
     datasets: [
@@ -91,16 +138,30 @@ function Admindb() {
     ],
   };
 
-  // Prepare data for the revenue chart
-  const revenueChartData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  const monthlyRevenueChartData = {
+    labels: monthlyRevenue.map(item => item.month),
     datasets: [
       {
-        label: "Revenue",
-        data: [50000, 75000, 60000, 90000, 80000, 120000],
-        backgroundColor: "rgba(153, 102, 255, 0.6)",
-        borderColor: "rgba(153, 102, 255, 1)",
+        label: "Monthly Revenue ($)",
+        data: monthlyRevenue.map(item => item.amount),
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
+        tension: 0.1
+      },
+    ],
+  };
+
+  const weeklyRevenueChartData = {
+    labels: weeklyRevenue.map(item => `Week ${item.week}`),
+    datasets: [
+      {
+        label: "Weekly Revenue ($)",
+        data: weeklyRevenue.map(item => item.amount),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+        tension: 0.1
       },
     ],
   };
@@ -108,7 +169,6 @@ function Admindb() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-blue-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -197,15 +257,12 @@ function Admindb() {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
-          {/* Header */}
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Welcome, Admin!</h2>
             <p className="text-gray-600">Manage your school efficiently.</p>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaUserGraduate className="text-blue-600 text-4xl mr-4" />
@@ -224,32 +281,95 @@ function Admindb() {
             <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaMoneyBillWave className="text-yellow-500 text-4xl mr-4" />
               <div>
-                <h3 className="text-2xl font-semibold">{revenue}</h3>
-                <p className="text-gray-600">Annual Revenue</p>
+                <h3 className="text-2xl font-semibold">${totalRevenue.toLocaleString()}</h3>
+                <p className="text-gray-600">Total Revenue</p>
               </div>
             </div>
           </div>
 
-          {/* Charts Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="col-span-2 bg-white p-6 shadow-lg rounded-lg">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="text-lg font-semibold text-blue-800">Total Paid</h4>
+                  <p className="text-2xl font-bold">${paymentStats.totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <h4 className="text-lg font-semibold text-red-800">Total Unpaid</h4>
+                  <p className="text-2xl font-bold">${paymentStats.totalUnpaid.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="h-64">
+                <Line 
+                  data={monthlyRevenueChartData} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'Monthly Revenue',
+                        font: {
+                          size: 16
+                        }
+                      },
+                    },
+                  }} 
+                />
+              </div>
+            </div>
+            <div className="bg-white p-6 shadow-lg rounded-lg">
+              <h4 className="text-lg font-semibold mb-4">Latest Payments</h4>
+              {paymentStats.latestPayments.length > 0 ? (
+                <div className="space-y-3">
+                  {paymentStats.latestPayments.map((payment, index) => (
+                    <div key={index} className="border-b pb-2">
+                      <p className="font-medium">${payment.amount.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(payment.created_at).toLocaleDateString()}
+                      </p>
+                      <p className={`text-sm ${
+                        payment.status === 'paid' ? 'text-green-600' : 'text-yellow-600'
+                      } capitalize`}>
+                        {payment.status}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600">No payments found</p>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Attendance Chart */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
               <h3 className="text-xl font-bold mb-4">Attendance Overview</h3>
               <div className="h-64 flex items-center justify-center">
                 <Pie data={attendanceChartData} />
               </div>
             </div>
-
-            {/* Revenue Chart */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h3 className="text-xl font-bold mb-4">Revenue Trends</h3>
+              <h3 className="text-xl font-bold mb-4">Weekly Revenue</h3>
               <div className="h-64 flex items-center justify-center">
-                <Bar data={revenueChartData} />
+                <Bar 
+                  data={weeklyRevenueChartData} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'Weekly Revenue (Last 4 Weeks)',
+                        font: {
+                          size: 16
+                        }
+                      },
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Latest Events */}
           <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
             <h3 className="text-xl font-bold mb-4">Latest Events</h3>
             {latestEvents.length > 0 ? (
@@ -276,9 +396,7 @@ function Admindb() {
             )}
           </div>
 
-          {/* Latest Students and Teachers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Latest Students */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
               <h3 className="text-xl font-bold mb-4">Latest Students</h3>
               {latestStudents.length > 0 ? (
@@ -305,7 +423,6 @@ function Admindb() {
               )}
             </div>
 
-            {/* Latest Teachers */}
             <div className="bg-white p-6 shadow-lg rounded-lg">
               <h3 className="text-xl font-bold mb-4">Latest Teachers</h3>
               {latestTeachers.length > 0 ? (
@@ -333,7 +450,6 @@ function Admindb() {
             </div>
           </div>
 
-          {/* Latest Courses */}
           <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
             <h3 className="text-xl font-bold mb-4">Latest Courses</h3>
             {latestCourses.length > 0 ? (

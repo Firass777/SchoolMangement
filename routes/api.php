@@ -32,6 +32,10 @@ Route::get('/get-payments', [PaymentController::class, 'getPayments']);
 Route::get('/get-all-payments', [PaymentController::class, 'getAllPayments']);
 Route::get('/payment-summary', [PaymentController::class, 'getPaymentSummary']);
 
+Route::get('/payments-by-month', [PaymentController::class, 'getPaymentsByMonth']);
+Route::get('/payments-by-week', [PaymentController::class, 'getPaymentsByWeek']);
+Route::get('/get-all-payments', [PaymentController::class, 'getAllPaymentsAdmin']);
+
 Route::get('/teacher-records', [TeacherRecordController::class, 'index']);
 Route::post('/teacher-records', [TeacherRecordController::class, 'store']);
 Route::get('/teacher-records/{nin}', [TeacherRecordController::class, 'show']);
@@ -83,6 +87,7 @@ Route::get('events/monthly', [EventController::class, 'getMonthlyEvents']);
 Route::get('/courses', [CourseController::class, 'getAllCourses']);
 Route::post('/courses/add', [CourseController::class, 'addCourse']);
 Route::get('/courses/teacher/{teacherNin}', [CourseController::class, 'getCoursesByTeacherNin']);
+Route::get('/courses/latest', [CourseController::class, 'getLatestCourses']);
 Route::delete('/courses/delete/{id}', [CourseController::class, 'deleteCourse']);
 Route::get('/courses/download/{id}', [CourseController::class, 'downloadCourse']);
 

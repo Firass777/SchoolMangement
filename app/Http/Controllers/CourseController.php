@@ -59,6 +59,21 @@ class CourseController extends Controller
         return response()->json(['message' => 'Courses retrieved successfully.', 'courses' => $courses], 200);
     }
 
+    // Get latest 2 courses
+    public function getLatestCourses()
+    {
+        $courses = Course::latest()->take(2)->get();
+
+        if ($courses->isEmpty()) {
+            return response()->json(['message' => 'No courses found.'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Latest courses retrieved successfully.',
+            'courses' => $courses
+        ], 200);
+    }
+
     // Delete a course
     public function deleteCourse($id)
     {
