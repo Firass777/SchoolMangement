@@ -31,6 +31,20 @@ class EventSeeder extends Seeder
                 'type' => 'Training',
                 'visible_to' => ['student'], 
             ],
+            [
+                'name' => 'Science Fair',
+                'date' => '2025-07-10',
+                'description' => 'Showcase of student science projects.',
+                'type' => 'Event',
+                'visible_to' => ['student', 'teacher', 'parent'],
+            ],
+            [
+                'name' => 'Parent-Teacher Meeting',
+                'date' => '2025-09-30',
+                'description' => 'Discuss student progress with teachers.',
+                'type' => 'Meeting',
+                'visible_to' => ['parent'],
+            ],
         ];
 
         foreach ($events as $event) {

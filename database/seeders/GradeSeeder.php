@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use App\Models\Grade;
@@ -39,37 +38,48 @@ class GradeSeeder extends Seeder
                 'class' => '10',
                 'teacher_nin' => '12345678902',
             ],
-
-
             [
                 'student_nin' => '12345678901',
                 'subject' => 'Mathematics',
                 'grade' => 'C',
-                'class' => '11',
+                'class' => '9',
                 'teacher_nin' => '12345678903', 
             ],
             [
                 'student_nin' => '12345678901',
                 'subject' => 'English',
                 'grade' => 'B',
-                'class' => '11',
+                'class' => '9',
                 'teacher_nin' => '12345678903',
             ],
             [
                 'student_nin' => '12345678901',
                 'subject' => 'React',
                 'grade' => 'A',
-                'class' => '11',
+                'class' => '9',
                 'teacher_nin' => '12345678903', 
             ],
             [
                 'student_nin' => '12345678901',
                 'subject' => 'IoT',
                 'grade' => 'A',
-                'class' => '11',
+                'class' => '9',
                 'teacher_nin' => '12345678903',
             ],
-
+            [
+                'student_nin' => '12345678904',
+                'subject' => 'Mathematics',
+                'grade' => 'B',
+                'class' => '11',
+                'teacher_nin' => '12345678902',
+            ],
+            [
+                'student_nin' => '12345678905',
+                'subject' => 'Science',
+                'grade' => 'A',
+                'class' => '12',
+                'teacher_nin' => '12345678902',
+            ],
         ];
 
         foreach ($grades as $grade) {

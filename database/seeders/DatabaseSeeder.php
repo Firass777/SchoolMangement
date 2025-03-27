@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             TeacherTimetableSeeder::class,
             CertificateSeeder::class,
             StudentRecordSeeder::class,
+            TeacherRecordSeeder::class,
         ]);
     }
 }

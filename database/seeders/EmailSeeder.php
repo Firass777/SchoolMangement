@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use App\Models\Email;
@@ -23,7 +22,6 @@ class EmailSeeder extends Seeder
                 'title' => 'Homework Assignment',
                 'description' => 'Please complete the assignment by Friday.',
             ],
-
             [
                 'from' => 'admin@gmail.com',
                 'to' => 'teacher@gmail.com',
@@ -36,7 +34,18 @@ class EmailSeeder extends Seeder
                 'title' => 'Courses request',
                 'description' => 'Hello , sir please upload the last course we had to the platform thanks',
             ],
-
+            [
+                'from' => 'teacher1@gmail.com',
+                'to' => 'student@gmail.com',
+                'title' => 'Test Results',
+                'description' => 'Your test results are available. Please check your portal',
+            ],
+            [
+                'from' => 'parent@gmail.com',
+                'to' => 'admin@gmail.com',
+                'title' => 'Transport Query',
+                'description' => 'When will the bus routes for next semester be announced?',
+            ],
         ];
 
         foreach ($emails as $email) {

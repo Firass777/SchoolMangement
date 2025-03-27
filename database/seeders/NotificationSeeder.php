@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use App\Models\Notification;
@@ -21,7 +20,6 @@ class NotificationSeeder extends Seeder
                 'title' => 'Event Reminder',
                 'description' => 'Don\'t forget the school assembly tomorrow.',
             ],
-
             [
                 'to' => 'student1@gmail.com',
                 'title' => 'Time Table updated',
@@ -32,19 +30,26 @@ class NotificationSeeder extends Seeder
                 'title' => 'Class Cancled',
                 'description' => 'French teacher is absent ! class is cancled today',
             ],
-
             [
                 'to' => 'teacher@gmail.com',
                 'title' => 'Meeting Reminder',
                 'description' => 'This is a reminder for tomorrow meeting',
             ],
-
             [
                 'to' => 'teacher1@gmail.com',
                 'title' => 'Time Table updated',
                 'description' => 'Your Class on Monday is moved to Friday morning please check your time table',
             ],
-
+            [
+                'to' => 'admin@gmail.com',
+                'title' => 'New Registration',
+                'description' => 'A new student has registered for the school.',
+            ],
+            [
+                'to' => 'parent@gmail.com',
+                'title' => 'Fee Payment',
+                'description' => 'Your tuition fee payment is due next week.',
+            ],
         ];
 
         foreach ($notifications as $notification) {
