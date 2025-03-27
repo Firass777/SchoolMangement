@@ -12,21 +12,21 @@ class EventSeeder extends Seeder
         $events = [
             [
                 'name' => 'School Assembly',
-                'date' => '2023-12-15',
+                'date' => '2025-05-15',
                 'description' => 'Monthly school assembly for all students.',
                 'type' => 'Event',
                 'visible_to' => ['student', 'teacher'],
             ],
             [
                 'name' => 'Teacher Training',
-                'date' => '2023-12-20',
+                'date' => '2025-08-20',
                 'description' => 'Training session for all teachers.',
                 'type' => 'Training',
                 'visible_to' => ['teacher'], 
             ],
             [
                 'name' => 'Students Meetings',
-                'date' => '2023-12-20',
+                'date' => '2025-03-20',
                 'description' => 'Meeting for all students.',
                 'type' => 'Training',
                 'visible_to' => ['student'], 

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaEnvelope, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye } from 'react-icons/fa';
+import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaEnvelope, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import axios from 'axios';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 const AdminReports = () => {
   const [students, setStudents] = useState(0);
@@ -40,36 +42,78 @@ const AdminReports = () => {
     labels: [],
     datasets: [{ data: [], backgroundColor: '#3b82f6' }],
   });
+  const [paymentStats, setPaymentStats] = useState({
+    totalPaid: 0,
+    totalUnpaid: 0,
+    latestPayments: [],
+    monthlyRevenue: [],
+    weeklyRevenue: []
+  });
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchLastMonthEvents();
-    fetchUpcomingEvents();
-    fetchEventCounts();
-    fetchMonthlyEvents();
-    fetchTeacherStatistics();
-    fetchTeacherChartData();
+    AOS.init({
+      duration: 1000,
+      once: true
+    });
+    fetchAllData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchAllData = async () => {
     try {
-      const usersResponse = await axios.get('http://127.0.0.1:8000/api/users');
+      setLoading(true);
+      const [
+        usersResponse,
+        attendanceResponse,
+        studentRecordsResponse,
+        attendanceDataResponse,
+        dailyTrendsResponse,
+        gradesResponse,
+        lastMonthEventsResponse,
+        upcomingEventsResponse,
+        eventCountsResponse,
+        monthlyEventsResponse,
+        teacherResponse,
+        paymentsResponse,
+        studentRecordsForRevenueResponse,
+        monthlyRevenueResponse,
+        weeklyRevenueResponse
+      ] = await Promise.all([
+        axios.get('http://127.0.0.1:8000/api/users'),
+        axios.get('http://127.0.0.1:8000/api/attendance-rate'),
+        axios.get('http://127.0.0.1:8000/api/student-records'),
+        axios.get('http://127.0.0.1:8000/api/attendance'),
+        axios.get('http://127.0.0.1:8000/api/daily-attendance-trends'),
+        axios.get('http://127.0.0.1:8000/api/grades-with-names'),
+        axios.get('http://127.0.0.1:8000/api/events/last-month').catch(() => ({ data: { events: [] }})),
+        axios.get('http://127.0.0.1:8000/api/events/upcoming').catch(() => ({ data: { events: [] }})),
+        axios.get('http://127.0.0.1:8000/api/events/count/all').catch(() => ({ data: { count: 0 }})),
+        axios.get('http://127.0.0.1:8000/api/events/monthly').catch(() => ({ data: { labels: [], data: [] }})),
+        axios.get('http://127.0.0.1:8000/api/teacher-records'),
+        axios.get('http://127.0.0.1:8000/api/get-all-payments'),
+        axios.get('http://127.0.0.1:8000/api/student-records'),
+        axios.get('http://127.0.0.1:8000/api/payments-by-month'),
+        axios.get('http://127.0.0.1:8000/api/payments-by-week')
+      ]);
+
+      // Process users data
       const usersData = usersResponse.data;
       const studentCount = usersData.filter((user) => user.role === 'student').length;
       const teacherCount = usersData.filter((user) => user.role === 'teacher').length;
       setStudents(studentCount);
       setTeachers(teacherCount);
 
-      const attendanceResponse = await axios.get('http://127.0.0.1:8000/api/attendance-rate');
+      // Process attendance data
       setAttendanceRate(attendanceResponse.data.attendance_rate);
 
-      const studentRecordsResponse = await axios.get('http://127.0.0.1:8000/api/student-records');
+      // Process student records
       const records = studentRecordsResponse.data.data;
-
       const maleCount = records.filter((record) => record.gender === 'Male').length;
       const femaleCount = records.filter((record) => record.gender === 'Female').length;
       setGenderData({ male: maleCount, female: femaleCount });
 
+      // Process class distribution
       const classCounts = {};
       const classGenderCounts = {};
       records.forEach((record) => {
@@ -94,9 +138,8 @@ const AdminReports = () => {
       setClassDistribution(classCounts);
       setClassGenderDistribution(classGenderCounts);
 
-      const attendanceDataResponse = await axios.get('http://127.0.0.1:8000/api/attendance');
+      // Process attendance data
       const attendanceData = attendanceDataResponse.data.attendances || [];
-
       const classAttendanceRates = {};
       attendanceData.forEach((attendance) => {
         const className = `Class ${attendance.class}`;
@@ -114,18 +157,16 @@ const AdminReports = () => {
         const { present, total } = classAttendanceRates[className];
         classAttendancePercentages[className] = total > 0 ? ((present / total) * 100).toFixed(2) : 0;
       });
-
       setClassAttendance(classAttendancePercentages);
 
-      const dailyTrendsResponse = await axios.get('http://127.0.0.1:8000/api/daily-attendance-trends');
+      // Process daily attendance trends
       setDailyAttendanceTrends({
         labels: dailyTrendsResponse.data.labels,
         data: dailyTrendsResponse.data.data,
       });
 
-      const gradesResponse = await axios.get('http://127.0.0.1:8000/api/grades-with-names');
+      // Process grades data
       const grades = gradesResponse.data.grades;
-
       const averageGrades = {};
       const topGrades = {};
       const weakGraders = {};
@@ -163,34 +204,34 @@ const AdminReports = () => {
         weakGraders,
         schoolAverage,
       });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    }
-  };
 
-  const fetchTeacherStatistics = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/teacher-records');
-      const teachers = response.data.data;
+      // Process events data
+      setLastMonthEvents(lastMonthEventsResponse.data.events || []);
+      setUpcomingEvents(upcomingEventsResponse.data.events || []);
+      setAllEventsCount(eventCountsResponse.data.count || 0);
+      setUpcomingEventsCount(upcomingEventsResponse.data.events?.length || 0);
+      setMonthlyEventsData({
+        labels: monthlyEventsResponse.data.labels || [],
+        data: monthlyEventsResponse.data.data || [],
+      });
 
+      // Process teacher data
+      const teachers = teacherResponse.data.data;
       const genderCount = { male: 0, female: 0 };
       const subjectCount = {};
       const classCount = {};
 
       teachers.forEach((teacher) => {
-        // Count gender
         if (teacher.gender === 'Male') genderCount.male++;
         if (teacher.gender === 'Female') genderCount.female++;
 
-        // Count subjects
-        const subjects = teacher.subjects_assigned.split(',').map(s => s.trim());
+        const subjects = teacher.subjects_assigned?.split(',').map(s => s.trim()) || [];
         subjects.forEach((subject) => {
           if (!subjectCount[subject]) subjectCount[subject] = 0;
           subjectCount[subject]++;
         });
 
-        // Count classes
-        const classes = teacher.class_section_allocation.split(',').map(c => c.trim());
+        const classes = teacher.class_section_allocation?.split(',').map(c => c.trim()) || [];
         classes.forEach((cls) => {
           if (!classCount[cls]) classCount[cls] = 0;
           classCount[cls]++;
@@ -201,34 +242,6 @@ const AdminReports = () => {
         gender: genderCount,
         subjects: subjectCount,
         classes: classCount,
-      });
-    } catch (error) {
-      console.error('Error fetching teacher statistics:', error);
-    }
-  };
-
-  const fetchTeacherChartData = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/teacher-records');
-      const teachers = response.data.data;
-
-      const subjectCount = {};
-      const classCount = {};
-
-      teachers.forEach((teacher) => {
-        // Count subjects
-        const subjects = teacher.subjects_assigned.split(',').map(s => s.trim());
-        subjects.forEach((subject) => {
-          if (!subjectCount[subject]) subjectCount[subject] = 0;
-          subjectCount[subject]++;
-        });
-
-        // Count classes
-        const classes = teacher.class_section_allocation.split(',').map(c => c.trim());
-        classes.forEach((cls) => {
-          if (!classCount[cls]) classCount[cls] = 0;
-          classCount[cls]++;
-        });
       });
 
       const subjectLabels = Object.keys(subjectCount);
@@ -247,50 +260,36 @@ const AdminReports = () => {
         labels: classLabels,
         datasets: [{ data: classData, backgroundColor: '#3b82f6' }],
       });
-    } catch (error) {
-      console.error('Error fetching teacher chart data:', error);
-    }
-  };
 
-  const fetchLastMonthEvents = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/events/last-month');
-      setLastMonthEvents(response.data.events);
-    } catch (error) {
-      console.error('Error fetching last month events:', error);
-    }
-  };
+      // Process payment data
+      const paymentsData = paymentsResponse.data;
+      const studentRecordsData = studentRecordsForRevenueResponse.data.data;
+      const monthlyRevenueData = monthlyRevenueResponse.data;
+      const weeklyRevenueData = weeklyRevenueResponse.data;
 
-  const fetchUpcomingEvents = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/events/upcoming');
-      setUpcomingEvents(response.data.events);
-    } catch (error) {
-      console.error('Error fetching upcoming events:', error);
-    }
-  };
+      const totalPaymentAmount = studentRecordsData.reduce((sum, record) => {
+        const amount = parseFloat(record.payment_amount) || 0;
+        return sum + amount;
+      }, 0);
+      setTotalRevenue(totalPaymentAmount);
 
-  const fetchEventCounts = async () => {
-    try {
-      const allResponse = await axios.get('http://127.0.0.1:8000/api/events/count/all');
-      setAllEventsCount(allResponse.data.count);
-
-      const upcomingResponse = await axios.get('http://127.0.0.1:8000/api/events/count/upcoming');
-      setUpcomingEventsCount(upcomingResponse.data.count);
-    } catch (error) {
-      console.error('Error fetching event counts:', error);
-    }
-  };
-
-  const fetchMonthlyEvents = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/events/monthly');
-      setMonthlyEventsData({
-        labels: response.data.labels,
-        data: response.data.data,
+      const totalPaid = parseFloat(paymentsData.totalPayments) || 0;
+      const totalUnpaid = Math.max(0, totalPaymentAmount - totalPaid);
+      
+      const latestPayments = paymentsData.payments?.slice(0, 4) || [];
+      
+      setPaymentStats({
+        totalPaid,
+        totalUnpaid,
+        latestPayments,
+        monthlyRevenue: monthlyRevenueData.months || [],
+        weeklyRevenue: weeklyRevenueData.weeks?.slice(0, 4) || []
       });
+
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching monthly events:', error);
+      console.error('Error fetching data:', error);
+      setLoading(false);
     }
   };
 
@@ -327,6 +326,34 @@ const AdminReports = () => {
     ],
   };
 
+  const monthlyRevenueChartData = {
+    labels: paymentStats.monthlyRevenue.map(item => item.month),
+    datasets: [
+      {
+        label: "Monthly Revenue ($)",
+        data: paymentStats.monthlyRevenue.map(item => item.amount),
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+        tension: 0.1
+      },
+    ],
+  };
+
+  const weeklyRevenueChartData = {
+    labels: paymentStats.weeklyRevenue.map(item => `Week ${item.week}`),
+    datasets: [
+      {
+        label: "Weekly Revenue ($)",
+        data: paymentStats.weeklyRevenue.map(item => item.amount),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+        tension: 0.1
+      },
+    ],
+  };
+
   const downloadPDF = () => {
     const input = document.getElementById('report-content');
     html2canvas(input, { scale: 2 }).then((canvas) => {
@@ -343,6 +370,17 @@ const AdminReports = () => {
       pdf.save('school_report.pdf');
     });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex">
@@ -436,11 +474,12 @@ const AdminReports = () => {
 
       <main className="flex-1 p-8 bg-gray-100">
         <div id="report-content">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-8" data-aos="fade-down">
             <h1 className="text-3xl font-bold">School Reports</h1>
             <button
               onClick={downloadPDF}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-all duration-300"
+              data-aos="zoom-in"
             >
               <FaDownload />
               <span>Download as PDF</span>
@@ -448,26 +487,79 @@ const AdminReports = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
               <h2 className="text-xl font-semibold">Total Students</h2>
               <p className="text-3xl font-bold">{students}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
               <h2 className="text-xl font-semibold">Total Teachers</h2>
               <p className="text-3xl font-bold">{teachers}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
               <h2 className="text-xl font-semibold">Attendance Today</h2>
               <p className="text-3xl font-bold">{attendanceRate}%</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="300">
               <h2 className="text-xl font-semibold">Upcoming Events</h2>
               <p className="text-3xl font-bold">{upcomingEventsCount}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:bg-blue-100">
+                  <h4 className="text-lg font-semibold text-blue-800">Total Paid</h4>
+                  <p className="text-2xl font-bold">${paymentStats.totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg transition-all duration-300 hover:bg-red-100">
+                  <h4 className="text-lg font-semibold text-red-800">Total Unpaid</h4>
+                  <p className="text-2xl font-bold">${paymentStats.totalUnpaid.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="h-64">
+                <Line 
+                  data={monthlyRevenueChartData} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'Monthly Revenue',
+                        font: {
+                          size: 16
+                        }
+                      },
+                    },
+                  }} 
+                />
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-left">
+              <h3 className="text-xl font-bold mb-4">Weekly Revenue</h3>
+              <div className="h-64 flex items-center justify-center">
+                <Bar 
+                  data={weeklyRevenueChartData} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'Weekly Revenue (Last 4 Weeks)',
+                        font: {
+                          size: 16
+                        }
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg" data-aos="zoom-in">
               <h2 className="text-xl font-bold mb-4">Gender Distribution</h2>
               <div style={{ width: '100%', maxWidth: '300px', height: '300px' }}>
                 <Pie data={studentGenderData} />
@@ -475,11 +567,11 @@ const AdminReports = () => {
             </div>
 
             <div>
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
                 <h2 className="text-xl font-bold text-center mb-4">Class-wise Distribution</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                   {Object.entries(classDistribution).map(([className, count]) => (
-                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                       <h3 className="text-lg font-semibold">{className}</h3>
                       <p className="text-2xl font-bold">{count} Student{count !== 1 ? 's' : ''}</p>
                     </div>
@@ -487,11 +579,11 @@ const AdminReports = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
                 <h2 className="text-xl font-bold text-center mb-4">Class Gender Distribution</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                   {Object.entries(classGenderDistribution).map(([className, genderCount]) => (
-                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                       <h3 className="text-lg font-semibold">{className}</h3>
                       <p>Male: {genderCount.male}</p>
                       <p>Female: {genderCount.female}</p>
@@ -503,11 +595,11 @@ const AdminReports = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
               <h2 className="text-xl font-bold mb-4">Average Student Attendance For Each Class</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                 {Object.entries(classAttendance).map(([className, attendanceRate]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                     <h3 className="text-lg font-semibold">{className}</h3>
                     <p className="text-2xl font-bold">{attendanceRate}%</p>
                   </div>
@@ -515,18 +607,18 @@ const AdminReports = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-left">
               <h2 className="text-xl font-bold mb-4">Daily Attendance Trends (Last 7 Days)</h2>
               <Bar data={dailyAttendanceData} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
               <h2 className="text-xl font-bold mb-4">Average Grades for Each Class</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                 {Object.entries(gradesData.averageGrades).map(([className, averageGrade]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                     <h3 className="text-lg font-semibold">{className}</h3>
                     <p className="text-2xl font-bold">{averageGrade}</p>
                   </div>
@@ -534,16 +626,16 @@ const AdminReports = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
               <h2 className="text-xl font-bold mb-4">Average Grades for the Whole School</h2>
               <p className="text-3xl font-bold">{gradesData.schoolAverage}</p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
               <h2 className="text-xl font-bold mb-4">Weak Graders in Each Class</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                 {Object.entries(gradesData.weakGraders).map(([className, weakStudent]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                     <h3 className="text-lg font-semibold">{className}</h3>
                     <p className="text-sm">{weakStudent.student_name}: {weakStudent.grade}</p>
                   </div>
@@ -551,11 +643,11 @@ const AdminReports = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="300">
               <h2 className="text-xl font-bold mb-4">Top Grades in Each Class</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
                 {Object.entries(gradesData.topGrades).map(([className, topStudent]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                     <h3 className="text-lg font-semibold">{className}</h3>
                     <p className="text-sm">{topStudent.student_name}: {topStudent.grade}</p>
                   </div>
@@ -564,10 +656,10 @@ const AdminReports = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-md mb-8 transition-all duration-300 hover:shadow-lg" data-aos="zoom-in">
             <h2 className="text-xl font-bold mb-4">Teacher Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                 <h3 className="text-lg font-semibold mb-2">Gender Distribution</h3>
                 <div className="space-y-2">
                   <p className="text-sm">Male: {teacherStats.gender.male}</p>
@@ -575,7 +667,7 @@ const AdminReports = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                 <h3 className="text-lg font-semibold mb-2">Subjects Distribution</h3>
                 <div className="space-y-2">
                   {Object.entries(teacherStats.subjects).map(([subject, count]) => (
@@ -586,7 +678,7 @@ const AdminReports = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
                 <h3 className="text-lg font-semibold mb-2">Class Allocation</h3>
                 <div className="space-y-2">
                   {Object.entries(teacherStats.classes).map(([className, count]) => (
@@ -600,7 +692,7 @@ const AdminReports = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
               <h2 className="text-xl font-bold mb-4">Teacher Subject Distribution</h2>
               <div style={{ width: '100%', height: '300px' }}>
                 <Doughnut
@@ -627,7 +719,7 @@ const AdminReports = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-left">
               <h2 className="text-xl font-bold mb-4">Teacher Class Allocation</h2>
               <div style={{ width: '100%', height: '300px' }}>
                 <Line
@@ -675,42 +767,46 @@ const AdminReports = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md mb-8 transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
               <h2 className="text-xl font-bold mb-4">Monthly Events (This Year)</h2>
               <Bar data={monthlyEventsChartData} />
             </div>
 
             <div>
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
                 <h2 className="text-xl font-bold mb-4">All Events Count (This Year)</h2>
                 <p className="text-3xl font-bold">{allEventsCount}</p>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+              <div className="bg-white p-6 rounded-lg shadow-md mb-8 transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
                 <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {upcomingEvents.map((event) => (
-                    <div key={event.id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                      <h3 className="text-lg font-semibold">{event.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        <FaCalendarAlt className="inline-block mr-2" />
-                        {new Date(event.date).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <FaMapMarkerAlt className="inline-block mr-2" />
-                        {event.location}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <FaClipboardList className="inline-block mr-2" />
-                        {event.type}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <FaEye className="inline-block mr-2" />
-                        Visible to: {event.visible_to.join(', ')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                {upcomingEvents.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {upcomingEvents.map((event) => (
+                      <div key={event.id} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
+                        <h3 className="text-lg font-semibold">{event.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          <FaCalendarAlt className="inline-block mr-2" />
+                          {new Date(event.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <FaMapMarkerAlt className="inline-block mr-2" />
+                          {event.location}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <FaClipboardList className="inline-block mr-2" />
+                          {event.type}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <FaEye className="inline-block mr-2" />
+                          Visible to: {event.visible_to?.join(', ') || 'All'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600">No upcoming events</p>
+                )}
               </div>
             </div>
           </div>
