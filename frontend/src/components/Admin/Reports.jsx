@@ -63,52 +63,47 @@ const AdminReports = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [
-        usersResponse,
-        attendanceResponse,
-        studentRecordsResponse,
-        attendanceDataResponse,
-        dailyTrendsResponse,
-        gradesResponse,
-        lastMonthEventsResponse,
-        upcomingEventsResponse,
-        eventCountsResponse,
-        monthlyEventsResponse,
-        teacherResponse,
-        paymentsResponse,
-        studentRecordsForRevenueResponse,
-        monthlyRevenueResponse,
-        weeklyRevenueResponse
-      ] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/users'),
-        axios.get('http://127.0.0.1:8000/api/attendance-rate'),
-        axios.get('http://127.0.0.1:8000/api/student-records'),
-        axios.get('http://127.0.0.1:8000/api/attendance'),
-        axios.get('http://127.0.0.1:8000/api/daily-attendance-trends'),
-        axios.get('http://127.0.0.1:8000/api/grades-with-names'),
-        axios.get('http://127.0.0.1:8000/api/events/last-month').catch(() => ({ data: { events: [] }})),
-        axios.get('http://127.0.0.1:8000/api/events/upcoming').catch(() => ({ data: { events: [] }})),
-        axios.get('http://127.0.0.1:8000/api/events/count/all').catch(() => ({ data: { count: 0 }})),
-        axios.get('http://127.0.0.1:8000/api/events/monthly').catch(() => ({ data: { labels: [], data: [] }})),
-        axios.get('http://127.0.0.1:8000/api/teacher-records'),
-        axios.get('http://127.0.0.1:8000/api/get-all-payments'),
-        axios.get('http://127.0.0.1:8000/api/student-records'),
-        axios.get('http://127.0.0.1:8000/api/payments-by-month'),
-        axios.get('http://127.0.0.1:8000/api/payments-by-week')
-      ]);
+      
+      // Create an array of all API calls with error handling for each
+      const apiCalls = [
+        { key: 'users', call: axios.get('http://127.0.0.1:8000/api/users') },
+        { key: 'attendanceRate', call: axios.get('http://127.0.0.1:8000/api/attendance-rate').catch(() => ({ data: { attendance_rate: 0 } })) },
+        { key: 'studentRecords', call: axios.get('http://127.0.0.1:8000/api/student-records').catch(() => ({ data: { data: [] } })) },
+        { key: 'attendance', call: axios.get('http://127.0.0.1:8000/api/attendance').catch(() => ({ data: { attendances: [] } })) },
+        { key: 'dailyTrends', call: axios.get('http://127.0.0.1:8000/api/daily-attendance-trends').catch(() => ({ data: { labels: [], data: [] } })) },
+        { key: 'grades', call: axios.get('http://127.0.0.1:8000/api/grades-with-names').catch(() => ({ data: { grades: [] } })) },
+        { key: 'lastMonthEvents', call: axios.get('http://127.0.0.1:8000/api/events/last-month').catch(() => ({ data: { events: [] } })) },
+        { key: 'upcomingEvents', call: axios.get('http://127.0.0.1:8000/api/events/upcoming').catch(() => ({ data: { events: [] } })) },
+        { key: 'eventCounts', call: axios.get('http://127.0.0.1:8000/api/events/count/all').catch(() => ({ data: { count: 0 } })) },
+        { key: 'monthlyEvents', call: axios.get('http://127.0.0.1:8000/api/events/monthly').catch(() => ({ data: { labels: [], data: [] } })) },
+        { key: 'teacherRecords', call: axios.get('http://127.0.0.1:8000/api/teacher-records').catch(() => ({ data: { data: [] } })) },
+        { key: 'payments', call: axios.get('http://127.0.0.1:8000/api/get-all-payments').catch(() => ({ data: { totalPayments: 0, payments: [] } })) },
+        { key: 'studentRecordsRevenue', call: axios.get('http://127.0.0.1:8000/api/student-records').catch(() => ({ data: { data: [] } })) },
+        { key: 'monthlyRevenue', call: axios.get('http://127.0.0.1:8000/api/payments-by-month').catch(() => ({ data: { months: [] } })) },
+        { key: 'weeklyRevenue', call: axios.get('http://127.0.0.1:8000/api/payments-by-week').catch(() => ({ data: { weeks: [] } })) }
+      ];
+
+      // Execute all API calls in parallel
+      const responses = await Promise.all(apiCalls.map(item => item.call));
+      
+      // Create a results object with proper error handling
+      const results = {};
+      apiCalls.forEach((item, index) => {
+        results[item.key] = responses[index].data;
+      });
 
       // Process users data
-      const usersData = usersResponse.data;
+      const usersData = results.users;
       const studentCount = usersData.filter((user) => user.role === 'student').length;
       const teacherCount = usersData.filter((user) => user.role === 'teacher').length;
       setStudents(studentCount);
       setTeachers(teacherCount);
 
       // Process attendance data
-      setAttendanceRate(attendanceResponse.data.attendance_rate);
+      setAttendanceRate(results.attendanceRate.attendance_rate);
 
       // Process student records
-      const records = studentRecordsResponse.data.data;
+      const records = results.studentRecords.data;
       const maleCount = records.filter((record) => record.gender === 'Male').length;
       const femaleCount = records.filter((record) => record.gender === 'Female').length;
       setGenderData({ male: maleCount, female: femaleCount });
@@ -139,7 +134,7 @@ const AdminReports = () => {
       setClassGenderDistribution(classGenderCounts);
 
       // Process attendance data
-      const attendanceData = attendanceDataResponse.data.attendances || [];
+      const attendanceData = results.attendance.attendances || [];
       const classAttendanceRates = {};
       attendanceData.forEach((attendance) => {
         const className = `Class ${attendance.class}`;
@@ -161,12 +156,12 @@ const AdminReports = () => {
 
       // Process daily attendance trends
       setDailyAttendanceTrends({
-        labels: dailyTrendsResponse.data.labels,
-        data: dailyTrendsResponse.data.data,
+        labels: results.dailyTrends.labels,
+        data: results.dailyTrends.data,
       });
 
       // Process grades data
-      const grades = gradesResponse.data.grades;
+      const grades = results.grades.grades;
       const averageGrades = {};
       const topGrades = {};
       const weakGraders = {};
@@ -206,17 +201,17 @@ const AdminReports = () => {
       });
 
       // Process events data
-      setLastMonthEvents(lastMonthEventsResponse.data.events || []);
-      setUpcomingEvents(upcomingEventsResponse.data.events || []);
-      setAllEventsCount(eventCountsResponse.data.count || 0);
-      setUpcomingEventsCount(upcomingEventsResponse.data.events?.length || 0);
+      setLastMonthEvents(results.lastMonthEvents.events || []);
+      setUpcomingEvents(results.upcomingEvents.events || []);
+      setAllEventsCount(results.eventCounts.count || 0);
+      setUpcomingEventsCount(results.upcomingEvents.events?.length || 0);
       setMonthlyEventsData({
-        labels: monthlyEventsResponse.data.labels || [],
-        data: monthlyEventsResponse.data.data || [],
+        labels: results.monthlyEvents.labels || [],
+        data: results.monthlyEvents.data || [],
       });
 
       // Process teacher data
-      const teachers = teacherResponse.data.data;
+      const teachers = results.teacherRecords.data || [];
       const genderCount = { male: 0, female: 0 };
       const subjectCount = {};
       const classCount = {};
@@ -262,10 +257,10 @@ const AdminReports = () => {
       });
 
       // Process payment data
-      const paymentsData = paymentsResponse.data;
-      const studentRecordsData = studentRecordsForRevenueResponse.data.data;
-      const monthlyRevenueData = monthlyRevenueResponse.data;
-      const weeklyRevenueData = weeklyRevenueResponse.data;
+      const paymentsData = results.payments;
+      const studentRecordsData = results.studentRecordsRevenue.data || [];
+      const monthlyRevenueData = results.monthlyRevenue;
+      const weeklyRevenueData = results.weeklyRevenue;
 
       const totalPaymentAmount = studentRecordsData.reduce((sum, record) => {
         const amount = parseFloat(record.payment_amount) || 0;
@@ -288,10 +283,13 @@ const AdminReports = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error in fetchAllData:', error);
       setLoading(false);
     }
   };
+
+  // Rest of the component code remains the same...
+  // (All the chart data preparation and JSX rendering code from previous version)
 
   const studentGenderData = {
     labels: ['Male', 'Female'],
