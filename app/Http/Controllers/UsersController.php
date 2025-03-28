@@ -20,7 +20,9 @@ class UsersController extends Controller
             'nin' => 'required|string|size:11|unique:users,nin',
             'password' => 'required|string|min:8|max:12',
             'role' => 'required|string|in:student,teacher,admin,parent',
-            'class' => 'nullable|string|required_if:role,student', // Add this line
+            'class' => 'nullable|string|required_if:role,student',
+            'children_nin' => 'nullable|array|required_if:role,parent',
+            'children_nin.*' => 'string|size:11|distinct',
         ]);
 
         if ($validator->fails()) {
@@ -35,9 +37,12 @@ class UsersController extends Controller
             'role' => $request->role,
         ];
 
-        // Only add class if the role is student
         if ($request->role === 'student') {
             $userData['class'] = $request->class;
+        }
+
+        if ($request->role === 'parent' && !empty($request->children_nin)) {
+            $userData['children_nin'] = json_encode($request->children_nin);
         }
 
         $user = User::create($userData);
@@ -111,7 +116,6 @@ class UsersController extends Controller
         }
     }
 
-    // This method will return all users
     public function index()
     {
         $users = User::all();
@@ -132,7 +136,9 @@ class UsersController extends Controller
             'nin' => 'sometimes|string|size:11|unique:users,nin,' . $id,
             'password' => 'sometimes|string|min:8|max:12',
             'role' => 'sometimes|string|in:student,teacher,admin,parent',
-            'class' => 'nullable|string|required_if:role,student', 
+            'class' => 'nullable|string|required_if:role,student',
+            'children_nin' => 'nullable|array|required_if:role,parent',
+            'children_nin.*' => 'string|size:11|distinct',
         ]);
 
         if ($validator->fails()) {
@@ -162,7 +168,12 @@ class UsersController extends Controller
         if ($request->has('class') && $request->role === 'student') {
             $user->class = $request->class;
         } elseif ($request->role !== 'student') {
-            $user->class = null; // Clear class if role is not student
+            $user->class = null;
+        }
+        if ($request->has('children_nin') && $request->role === 'parent') {
+            $user->children_nin = json_encode($request->children_nin);
+        } elseif ($request->role !== 'parent') {
+            $user->children_nin = null;
         }
 
         $user->save();
@@ -170,7 +181,6 @@ class UsersController extends Controller
         return response()->json(['message' => 'User updated successfully', 'user' => $user]);
     }
 
-    // Delete a user
     public function destroy($id)
     {
         $user = User::find($id);

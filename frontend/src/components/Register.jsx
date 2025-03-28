@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
-import { FaSpinner, FaUser, FaEnvelope, FaIdCard, FaLock, FaChalkboardTeacher } from "react-icons/fa"; // Icons
-import { motion } from "framer-motion"; // For animations
+import { FaSpinner, FaUser, FaEnvelope, FaIdCard, FaLock, FaChalkboardTeacher, FaChild } from "react-icons/fa";
+import { motion } from "framer-motion"; 
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,13 +11,32 @@ const Register = () => {
     password: "",
     role: "student",
     class: "",
+    children_count: 1,
+    children_nin: []
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name.startsWith("child_nin_")) {
+      const index = parseInt(name.split("_")[2]);
+      const updatedChildren = [...formData.children_nin];
+      updatedChildren[index] = value;
+      setFormData({ ...formData, children_nin: updatedChildren });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleChildrenCountChange = (e) => {
+    const count = parseInt(e.target.value) || 1;
+    setFormData({
+      ...formData,
+      children_count: count,
+      children_nin: Array(count).fill("")
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -27,9 +46,22 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
+      const payload = {
+        ...formData,
+        children_nin: formData.role === "parent" ? formData.children_nin : null
+      };
+      const response = await axios.post("http://127.0.0.1:8000/api/register", payload);
       setSuccess("Registration successful! Please log in.");
-      setFormData({ name: "", email: "", nin: "", password: "", role: "student", class: "" });
+      setFormData({ 
+        name: "", 
+        email: "", 
+        nin: "", 
+        password: "", 
+        role: "student", 
+        class: "",
+        children_count: 1,
+        children_nin: []
+      });
     } catch (error) {
       setError(error.response?.data?.errors || { general: "Something went wrong." });
     } finally {
@@ -39,14 +71,12 @@ const Register = () => {
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900 p-4">
-      {/* Register Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
       >
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center">
           <h2 className="text-3xl font-bold text-white">Register</h2>
           <p className="text-sm text-gray-200 mt-2">
@@ -54,7 +84,6 @@ const Register = () => {
           </p>
         </div>
 
-        {/* Form */}
         <div className="p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 text-red-300 rounded-lg">
@@ -70,7 +99,6 @@ const Register = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Name Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Name
@@ -89,7 +117,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Email Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Email
@@ -108,7 +135,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* NIN Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 National ID Number (NIN)
@@ -127,7 +153,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Password Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Password
@@ -146,7 +171,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Role Select */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Role
@@ -169,7 +193,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Class Input (Conditional) */}
             {formData.role === "student" && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -190,7 +213,50 @@ const Register = () => {
               </div>
             )}
 
-            {/* Register Button */}
+            {formData.role === "parent" && (
+              <>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Number of Children
+                  </label>
+                  <div className="relative">
+                    <FaChild className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="number"
+                      name="children_count"
+                      min="1"
+                      max="10"
+                      value={formData.children_count}
+                      onChange={handleChildrenCountChange}
+                      className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Number of children"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {Array.from({ length: formData.children_count }).map((_, index) => (
+                  <div key={index} className="mb-6">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Child {index + 1} NIN
+                    </label>
+                    <div className="relative">
+                      <FaIdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        name={`child_nin_${index}`}
+                        value={formData.children_nin[index] || ""}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Enter child ${index + 1} NIN`}
+                        required
+                      />
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -204,7 +270,6 @@ const Register = () => {
             </button>
           </form>
 
-          {/* Login Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-300">
               Already have an account?{" "}

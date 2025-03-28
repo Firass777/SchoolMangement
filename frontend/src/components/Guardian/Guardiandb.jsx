@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt } from "react-icons/fa";
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaIdCard } from "react-icons/fa";
 import { Line, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -73,6 +73,12 @@ function Guardiandb() {
                   <span>Notifications</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/geditprofile" className="flex items-center space-x-2">
+                  <FaIdCard />
+                  <span>Profile</span>
+                </Link>
+              </li>              
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />

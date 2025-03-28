@@ -45,6 +45,7 @@ import SPayment from "./components/Student/SPayment";
 import Receipt from "./components/Student/Receipt";
 
 import Guardindb from './components/Guardian/Guardiandb';
+import GEditProfile from './components/Guardian/GEditProfile';
 
 function App() {
   const [scrollY, setScrollY] = useState(0); 
@@ -136,8 +137,6 @@ function App() {
           <Route path="/ttimetable" element={<TTimetable />} />
           <Route path="/teditprofile" element={<TEditProfile />} />
 
-          <Route path="/guardiandb" element={<Guardindb />} />
-
           <Route path="/studentdb" element={<Studentdb />} />
           <Route path="/attendanceview" element={<AttendanceView />} />
           <Route path="/gradesview" element={<GradeView />} />
@@ -150,6 +149,12 @@ function App() {
           <Route path="/documents" element={<Documents />} />
           <Route path="/spayment" element={<SPayment />} />
           <Route path="/receipt" element={<Receipt />} />
+
+          <Route path="/guardiandb" element={<Guardindb />} />
+          <Route path="/geditprofile" element={<GEditProfile />} />
+          
+
+
 
         </Routes>
       </div>

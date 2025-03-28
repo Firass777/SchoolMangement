@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('class')->nullable(); 
             $table->string('role')->default('student');
+            $table->json('children_nin')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });    
