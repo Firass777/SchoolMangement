@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaIdCard , FaMoneyCheck} from "react-icons/fa";
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaIdCard , FaMoneyCheck, FaEnvelope} from "react-icons/fa";
 import { Line, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 
@@ -60,7 +60,7 @@ function Guardiandb() {
                   <FaMoneyCheck />
                   <span>Payment</span>
                 </Link>
-              </li>              
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
@@ -75,9 +75,16 @@ function Guardiandb() {
               </li>
              <li className="px-6 py-3 hover:bg-orange-700">
                <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt /> <span>Events</span>
+                 <FaCalendarAlt />
+                  <span>Events</span>
                </Link>
              </li>  
+             <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />

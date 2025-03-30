@@ -73,58 +73,70 @@ const GEvent = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-orange-800 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
-        </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/studentdb" className="flex items-center space-x-2">
-                <FaUserGraduate /> <span>Dashboard</span>
-              </Link>
-            </li>
+        {/* Sidebar */}
+        <aside className="w-64 bg-orange-800 text-white flex flex-col">
+          <div className="p-6">
+            <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
+          </div>
+          <nav className="mt-6">
+            <ul>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/guardiandb" className="flex items-center space-x-2">
+                  <FaUserGraduate />
+                  <span>Dashboard</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/gpayment" className="flex items-center space-x-2">
                   <FaMoneyCheck />
                   <span>Payment</span>
                 </Link>
-              </li>                     
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/ggrades" className="flex items-center space-x-2">
-                <FaChartLine /> <span>Grades</span>
-              </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gattendance" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Attendance</span>
-              </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gevent" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Events</span>
-              </Link>
-            </li>                     
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/notificationview" className="flex items-center space-x-2">
-                <FaBell /> <span>Notifications</span>
-              </Link>
-            </li>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/ggrades" className="flex items-center space-x-2">
+                  <FaChartLine />
+                  <span>Grades</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gattendance" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
+                  <span>Attendance</span>
+                </Link>
+              </li>
              <li className="px-6 py-3 hover:bg-orange-700">
+               <Link to="/gevent" className="flex items-center space-x-2">
+                 <FaCalendarAlt />
+                  <span>Events</span>
+               </Link>
+             </li>  
+             <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/notifications" className="flex items-center space-x-2">
+                  <FaBell />
+                  <span>Notifications</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/geditprofile" className="flex items-center space-x-2">
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>
+              </li>              
+              <li className="px-6 py-3 hover:bg-red-600">
+                <Link to="/" className="flex items-center space-x-2">
+                  <FaSignOutAlt />
+                  <span>Logout</span>
+                </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-red-600">
-              <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt /> <span>Logout</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+            </ul>
+          </nav>
+        </aside>
 
       {/* Main Content */}
       <main className="flex-1 p-8 overflow-auto">

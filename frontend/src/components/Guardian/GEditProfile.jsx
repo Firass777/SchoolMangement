@@ -15,6 +15,7 @@ import {
   FaIdCard,
   FaInfoCircle,
   FaMoneyCheck,
+  FaEnvelope,
 } from "react-icons/fa";
 
 function ParentProfile() {
@@ -226,7 +227,7 @@ function ParentProfile() {
                   <FaMoneyCheck />
                   <span>Payment</span>
                 </Link>
-              </li>              
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
@@ -241,9 +242,16 @@ function ParentProfile() {
               </li>
              <li className="px-6 py-3 hover:bg-orange-700">
                <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt /> <span>Events</span>
+                 <FaCalendarAlt />
+                  <span>Events</span>
                </Link>
              </li>  
+             <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
@@ -255,7 +263,7 @@ function ParentProfile() {
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>
-              </li>
+              </li>              
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />

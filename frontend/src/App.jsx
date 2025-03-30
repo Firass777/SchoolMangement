@@ -50,6 +50,7 @@ import GAttendance from "./components/Guardian/GAttendance";
 import GGrades from "./components/Guardian/Ggrades";
 import Gpayment from "./components/Guardian/Gpayment";
 import GEvent from "./components/Guardian/GEvent";
+import GEmails from "./components/Guardian/GEmails";
 
 function App() {
   const [scrollY, setScrollY] = useState(0); 
@@ -160,6 +161,7 @@ function App() {
           <Route path="/ggrades" element={<GGrades />} />
           <Route path="/gpayment" element={<Gpayment />} />
           <Route path="/gevent" element={<GEvent />} />
+          <Route path="/gemails" element={<GEmails />} />
           
 
 

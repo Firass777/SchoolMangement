@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaCreditCard, FaMoneyCheck } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaIdCard, FaCreditCard, FaMoneyCheck } from 'react-icons/fa';
 import { motion } from 'framer-motion'; 
 
 const Gpayment = () => {
@@ -153,6 +153,7 @@ const Gpayment = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
+        {/* Sidebar */}
         <aside className="w-64 bg-orange-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
@@ -160,7 +161,7 @@ const Gpayment = () => {
           <nav className="mt-6">
             <ul>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/Guardiandb" className="flex items-center space-x-2">
+                <Link to="/guardiandb" className="flex items-center space-x-2">
                   <FaUserGraduate />
                   <span>Dashboard</span>
                 </Link>
@@ -170,7 +171,7 @@ const Gpayment = () => {
                   <FaMoneyCheck />
                   <span>Payment</span>
                 </Link>
-              </li>            
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
@@ -182,14 +183,21 @@ const Gpayment = () => {
                   <FaCalendarAlt />
                   <span>Attendance</span>
                 </Link>
-              </li>     
+              </li>
              <li className="px-6 py-3 hover:bg-orange-700">
                <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt /> <span>Events</span>
+                 <FaCalendarAlt />
+                  <span>Events</span>
                </Link>
-             </li>                                 
+             </li>  
+             <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gemails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/parentnotificationview" className="flex items-center space-x-2">
+                <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>
@@ -199,7 +207,7 @@ const Gpayment = () => {
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>
-              </li>
+              </li>              
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />
