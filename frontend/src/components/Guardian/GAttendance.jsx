@@ -10,6 +10,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaIdCard,
+  FaMoneyCheck,
 } from "react-icons/fa";
 
 function GAttendance() {
@@ -132,6 +133,12 @@ function GAttendance() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gpayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck />
+                  <span>Payment</span>
+                </Link>
+              </li>              
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
                   <span>Grades</span>
@@ -150,7 +157,7 @@ function GAttendance() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/notifications" className="flex items-center space-x-2">
+                <Link to="/geditprofile" className="flex items-center space-x-2">
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>

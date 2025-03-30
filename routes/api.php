@@ -36,6 +36,10 @@ Route::get('/payments-by-month', [PaymentController::class, 'getPaymentsByMonth'
 Route::get('/payments-by-week', [PaymentController::class, 'getPaymentsByWeek']);
 Route::get('/get-all-payments', [PaymentController::class, 'getAllPaymentsAdmin']);
 
+Route::get('/get-parent-payments', [PaymentController::class, 'getParentPayments']);
+Route::get('/get-all-parent-payments', [PaymentController::class, 'getAllParentPayments']);
+Route::get('/get-parent-payment-summary', [PaymentController::class, 'getParentPaymentSummary']);
+
 Route::get('/teacher-records', [TeacherRecordController::class, 'index']);
 Route::post('/teacher-records', [TeacherRecordController::class, 'store']);
 Route::get('/teacher-records/{nin}', [TeacherRecordController::class, 'show']);

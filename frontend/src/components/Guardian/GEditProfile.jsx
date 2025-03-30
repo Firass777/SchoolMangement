@@ -14,6 +14,7 @@ import {
   FaMinus,
   FaIdCard,
   FaInfoCircle,
+  FaMoneyCheck,
 } from "react-icons/fa";
 
 function ParentProfile() {
@@ -220,6 +221,12 @@ function ParentProfile() {
                   <span>Dashboard</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gpayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck />
+                  <span>Payment</span>
+                </Link>
+              </li>              
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />

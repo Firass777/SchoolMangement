@@ -48,6 +48,7 @@ import Guardindb from './components/Guardian/Guardiandb';
 import GEditProfile from './components/Guardian/GEditProfile';
 import GAttendance from "./components/Guardian/GAttendance";
 import GGrades from "./components/Guardian/Ggrades";
+import Gpayment from "./components/Guardian/Gpayment";
 
 function App() {
   const [scrollY, setScrollY] = useState(0); 
@@ -156,6 +157,7 @@ function App() {
           <Route path="/geditprofile" element={<GEditProfile />} />
           <Route path="/gattendance" element={<GAttendance />} />
           <Route path="/ggrades" element={<GGrades />} />
+          <Route path="/gpayment" element={<Gpayment />} />
           
 
 

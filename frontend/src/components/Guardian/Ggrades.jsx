@@ -10,6 +10,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaIdCard,
+  FaMoneyCheck,
 } from "react-icons/fa";
 
 function GGrades() {
@@ -131,6 +132,12 @@ function GGrades() {
                 <Link to="/guardiandb" className="flex items-center space-x-2">
                   <FaUserGraduate />
                   <span>Dashboard</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gpayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck />
+                  <span>Payment</span>
                 </Link>
               </li>
               <li className="px-6 py-3 bg-orange-700">
