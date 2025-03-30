@@ -239,6 +239,11 @@ function ParentProfile() {
                   <span>Attendance</span>
                 </Link>
               </li>
+             <li className="px-6 py-3 hover:bg-orange-700">
+               <Link to="/gevent" className="flex items-center space-x-2">
+                 <FaCalendarAlt /> <span>Events</span>
+               </Link>
+             </li>  
               <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/notifications" className="flex items-center space-x-2">
                   <FaBell />
