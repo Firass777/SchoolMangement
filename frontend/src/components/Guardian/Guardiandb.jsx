@@ -56,7 +56,7 @@ function Guardiandb() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/grades" className="flex items-center space-x-2">
+                <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
                   <span>Grades</span>
                 </Link>

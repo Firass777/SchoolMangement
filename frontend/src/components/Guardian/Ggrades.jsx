@@ -12,10 +12,10 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 
-function GAttendance() {
+function GGrades() {
   const [childrenRecords, setChildrenRecords] = useState([]);
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
-  const [attendances, setAttendances] = useState([]);
+  const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,7 +58,7 @@ function GAttendance() {
 
         setChildrenRecords(records);
         if (records.length > 0) {
-          fetchAttendances(records[0].student_nin);
+          fetchGrades(records[0].student_nin);
         }
       } catch (error) {
         console.error("Error fetching parent data:", error);
@@ -69,18 +69,18 @@ function GAttendance() {
     fetchParentData();
   }, []);
 
-  const fetchAttendances = async (studentNIN) => {
+  const fetchGrades = async (studentNIN) => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/attendance/${studentNIN}`, {
+      const response = await axios.get(`http://127.0.0.1:8000/api/grades/${studentNIN}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setAttendances(response.data.attendances || []);
+      setGrades(response.data.grades || []);
     } catch (err) {
-      console.error("Error fetching attendances:", err);
-      setError("Failed to load attendance records");
+      console.error("Error fetching grades:", err);
+      setError("Failed to load grade records");
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ function GAttendance() {
     const newIndex = currentChildIndex + 1;
     if (newIndex < childrenRecords.length) {
       setCurrentChildIndex(newIndex);
-      fetchAttendances(childrenRecords[newIndex].student_nin);
+      fetchGrades(childrenRecords[newIndex].student_nin);
     }
   };
 
@@ -98,18 +98,20 @@ function GAttendance() {
     const newIndex = currentChildIndex - 1;
     if (newIndex >= 0) {
       setCurrentChildIndex(newIndex);
-      fetchAttendances(childrenRecords[newIndex].student_nin);
+      fetchGrades(childrenRecords[newIndex].student_nin);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Present":
+  const getGradeColor = (grade) => {
+    switch (grade) {
+      case "A":
         return "bg-green-100 text-green-800";
-      case "Absent":
-        return "bg-red-100 text-red-800";
-      case "Late":
+      case "B":
+        return "bg-blue-100 text-blue-800";
+      case "C":
         return "bg-yellow-100 text-yellow-800";
+      case "D":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -131,13 +133,13 @@ function GAttendance() {
                   <span>Dashboard</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 bg-orange-700">
                 <Link to="/ggrades" className="flex items-center space-x-2">
                   <FaChartLine />
                   <span>Grades</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/gattendance" className="flex items-center space-x-2">
                   <FaCalendarAlt />
                   <span>Attendance</span>
@@ -150,7 +152,7 @@ function GAttendance() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/notifications" className="flex items-center space-x-2">
+                <Link to="/geditprofile" className="flex items-center space-x-2">
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>
@@ -167,7 +169,7 @@ function GAttendance() {
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Attendance Records</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-6">Grades</h2>
 
           {error && (
             <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
@@ -179,7 +181,7 @@ function GAttendance() {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  {childrenRecords[currentChildIndex].full_name}'s Attendance
+                  {childrenRecords[currentChildIndex].full_name}'s Grades
                 </h3>
                 {childrenRecords.length > 1 && (
                   <div className="flex items-center space-x-4">
@@ -208,32 +210,32 @@ function GAttendance() {
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600"></div>
                 </div>
-              ) : attendances.length > 0 ? (
+              ) : grades.length > 0 ? (
                 <div className="bg-white shadow-md rounded-lg overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {attendances.map((attendance, index) => (
+                      {grades.map((grade, index) => (
                         <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {new Date(attendance.created_at).toLocaleDateString()}
-                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{grade.subject}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(attendance.status)}`}>
-                              {attendance.status}
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getGradeColor(grade.grade)}`}>
+                              {grade.grade}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{attendance.class}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{attendance.subject}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{attendance.teacher_nin}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{grade.class}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{grade.teacher_nin}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(grade.created_at).toLocaleDateString()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -241,7 +243,7 @@ function GAttendance() {
                 </div>
               ) : (
                 <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                  <p className="text-gray-600">No attendance records found for this student.</p>
+                  <p className="text-gray-600">No grade records found for this student.</p>
                 </div>
               )}
             </div>
@@ -252,4 +254,4 @@ function GAttendance() {
   );
 }
 
-export default GAttendance;
+export default GGrades;
