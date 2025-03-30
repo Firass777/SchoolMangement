@@ -15,6 +15,32 @@ class PaymentController extends Controller
     {
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
+        if ($request->has('student_nin')) {
+            $request->validate([
+                'amount' => 'required|numeric|min:1',
+                'student_nin' => 'required|string'
+            ]);
+
+            $user_id = DB::table('users')
+                ->where('nin', $request->student_nin)
+                ->value('id');
+
+            if (!$user_id) {
+                return response()->json(['error' => 'Student not found'], 404);
+            }
+
+            $client_reference_id = $user_id;
+            $metadata = ['student_nin' => $request->student_nin];
+        } else {
+            $request->validate([
+                'amount' => 'required|numeric|min:1',
+                'user_id' => 'required'
+            ]);
+
+            $client_reference_id = $request->user_id;
+            $metadata = [];
+        }
+
         $amount = $request->amount;
         $amountInCents = $amount * 100;
 
@@ -31,7 +57,8 @@ class PaymentController extends Controller
             'mode' => 'payment',
             'success_url' => 'http://localhost:5173/receipt',
             'cancel_url' => 'http://localhost:5173/error',
-            'client_reference_id' => $request->user_id,
+            'client_reference_id' => $client_reference_id,
+            'metadata' => $metadata
         ]);
 
         return response()->json(['url' => $session->url]);
@@ -54,24 +81,38 @@ class PaymentController extends Controller
         if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
             
-            $payment = Payment::create([
+            $paymentData = [
                 'user_id' => $session->client_reference_id,
                 'stripe_payment_id' => $session->payment_intent,
                 'amount' => $session->amount_total / 100,
                 'currency' => strtoupper($session->currency),
                 'status' => $session->payment_status,
-            ]);
-    
-            $paymentDetails = [
-                'user_id' => $session->client_reference_id,
-                'amount' => $session->amount_total / 100,
-                'created_at' => $payment->created_at,
-                'stripe_payment_id' => $session->payment_intent,
-                'status' => $session->payment_status,
             ];
+
+            if (isset($session->metadata->student_nin)) {
+                $paymentData['student_nin'] = $session->metadata->student_nin;
+            }
+
+            $payment = Payment::create($paymentData);
         }
     
         return response()->json(['status' => 'success']);
+    }
+
+    public function getChildren(Request $request)
+    {
+        $nins = explode(',', $request->nins);
+        
+        $children = DB::table('users')
+            ->join('student_records', 'users.nin', '=', 'student_records.student_nin')
+            ->whereIn('users.nin', $nins)
+            ->select(
+                'users.nin',
+                'student_records.full_name'
+            )
+            ->get();
+        
+        return response()->json($children);
     }
 
     public function getPayments(Request $request)

@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 
 const Gpayment = () => {
   const [amount, setAmount] = useState('');
+  const [selectedChild, setSelectedChild] = useState('');
+  const [children, setChildren] = useState([]);
   const [payments, setPayments] = useState([]); 
   const [allPayments, setAllPayments] = useState([]);
   const [totalPayments, setTotalPayments] = useState(0);
@@ -14,6 +16,22 @@ const Gpayment = () => {
   const [summary, setSummary] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user'));
+
+  useEffect(() => {
+    if (user) {
+      const childrenNin = JSON.parse(user.children_nin || '[]');
+      if (childrenNin.length > 0) {
+        fetch(`http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`)
+          .then(response => response.json())
+          .then(data => setChildren(data))
+          .catch(error => console.error('Error fetching children:', error));
+      }
+      
+      fetchPayments(currentPage);
+      fetchAllPayments();
+      fetchSummary();
+    }
+  }, [currentPage]);
 
   const fetchPayments = async (page) => {
     setIsLoading(true);
@@ -71,14 +89,6 @@ const Gpayment = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchPayments(currentPage);
-      fetchAllPayments();
-      fetchSummary();
-    }
-  }, [currentPage]);
-
   const handlePayment = async () => {
     if (!user) {
       alert('Please log in to make a payment.');
@@ -87,6 +97,11 @@ const Gpayment = () => {
   
     if (!amount || isNaN(amount) || amount <= 0) {
       alert('Please enter a valid amount.');
+      return;
+    }
+
+    if (!selectedChild) {
+      alert('Please select a child to pay for.');
       return;
     }
   
@@ -98,8 +113,8 @@ const Gpayment = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          user_id: user.id,
           amount: amount,
+          student_nin: selectedChild
         }),
       });
   
@@ -107,6 +122,7 @@ const Gpayment = () => {
       
       const paymentDetails = {
         user_id: user.id,
+        student_nin: selectedChild,
         amount: amount,
         created_at: new Date().toISOString(),
         stripe_payment_id: 'temp_id',
@@ -191,7 +207,7 @@ const Gpayment = () => {
 
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Children Payment Portal</h2>
+            <h2 className="text-3xl font-bold text-gray-800">Payment </h2>
             <p className="text-lg text-gray-600 mt-2">Pay your children's school fees securely using Stripe.</p>
           </div>
 
@@ -205,6 +221,21 @@ const Gpayment = () => {
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4">Make a Payment</h3>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Select Child</label>
+                  <select
+                    value={selectedChild}
+                    onChange={(e) => setSelectedChild(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="">Select a child</option>
+                    {children.map(child => (
+                      <option key={child.nin} value={child.nin}>
+                        {child.full_name} (NIN: {child.nin})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Amount (USD)</label>
                   <input

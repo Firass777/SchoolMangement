@@ -212,7 +212,7 @@ const Spayment = () => {
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           {/* Header */}
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Payment Portal</h2>
+            <h2 className="text-3xl font-bold text-gray-800">Payment</h2>
             <p className="text-lg text-gray-600 mt-2">Pay your school fees securely using Stripe.</p>
           </div>
 
