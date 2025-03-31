@@ -52,6 +52,7 @@ import Gpayment from "./components/Guardian/Gpayment";
 import GEvent from "./components/Guardian/GEvent";
 import GEmails from "./components/Guardian/GEmails";
 import GTimetable from "./components/Guardian/Gtimetable";
+import GNotification from "./components/Guardian/GNotification";
 
 function App() {
   const [scrollY, setScrollY] = useState(0); 
@@ -164,6 +165,7 @@ function App() {
           <Route path="/gevent" element={<GEvent />} />
           <Route path="/gemails" element={<GEmails />} />
           <Route path="/gtimetable" element={<GTimetable />} />
+          <Route path="/gnotification" element={<GNotification />} />
           
 
 

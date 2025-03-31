@@ -171,7 +171,7 @@ function GAttendance() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/notifications" className="flex items-center space-x-2">
+                <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
                 </Link>
