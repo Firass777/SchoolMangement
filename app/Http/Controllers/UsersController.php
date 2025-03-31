@@ -214,4 +214,9 @@ class UsersController extends Controller
 
         return response()->json(['message' => 'Latest teachers retrieved successfully.', 'teachers' => $teachers], 200);
     }
+
+    public function getUserByNin($nin) {
+        $user = User::where('nin', $nin)->first();
+        return $user ? response()->json($user) : response()->json(['error' => 'User not found'], 404);
+    }
 }

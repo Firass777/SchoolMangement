@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaPaperPlane, FaSearch, FaClock, FaIdCard, FaMoneyCheck } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaPaperPlane, FaSearch, FaIdCard, FaMoneyCheck, FaClock } from 'react-icons/fa';
 
 const GEmails = () => {
   const [emails, setEmails] = useState([]);
@@ -122,6 +122,11 @@ const GEmails = () => {
                   <span>Attendance</span>
                 </Link>
               </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+              <Link to="/gtimetable" className="flex items-center space-x-2">
+                <FaClock /> <span>Time-Table</span>
+              </Link>
+            </li>
              <li className="px-6 py-3 hover:bg-orange-700">
                <Link to="/gevent" className="flex items-center space-x-2">
                  <FaCalendarAlt />

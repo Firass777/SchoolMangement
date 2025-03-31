@@ -119,6 +119,9 @@ Route::delete('/attendance/{id}', [AttendanceController::class, 'deleteAttendanc
 Route::get('/attendance-rate', [AttendanceController::class, 'getAttendanceRate']);
 Route::get('/daily-attendance-trends', [AttendanceController::class, 'getDailyAttendanceTrends']);
 
+
+
+Route::get('/user-by-nin/{nin}', [UsersController::class, 'getUserByNin']);
 Route::get('/users/latest/students', [UsersController::class, 'getLatestStudents']);
 Route::get('/users/latest/teachers', [UsersController::class, 'getLatestTeachers']);
 Route::put('/users/{id}', [UsersController::class, 'update']); 

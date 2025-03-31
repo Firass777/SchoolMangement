@@ -16,6 +16,7 @@ import {
   FaInfoCircle,
   FaMoneyCheck,
   FaEnvelope,
+  FaClock,
 } from "react-icons/fa";
 
 function ParentProfile() {
@@ -240,6 +241,11 @@ function ParentProfile() {
                   <span>Attendance</span>
                 </Link>
               </li>
+            <li className="px-6 py-3 hover:bg-orange-700">
+              <Link to="/gtimetable" className="flex items-center space-x-2">
+                <FaClock /> <span>Time-Table</span>
+              </Link>
+            </li>
              <li className="px-6 py-3 hover:bg-orange-700">
                <Link to="/gevent" className="flex items-center space-x-2">
                  <FaCalendarAlt />
