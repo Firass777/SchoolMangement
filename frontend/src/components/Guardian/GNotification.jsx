@@ -25,6 +25,9 @@ const GNotification = () => {
 
         if (response.ok) {
           setNotifications(data.notifications);
+          // Update the count in localStorage when fetching notifications
+          const unreadCount = data.notifications.filter(n => !n.read_at).length;
+          localStorage.setItem('notificationCount', unreadCount.toString());
         } else {
           setError(data.message || 'Failed to fetch notifications.');
         }
@@ -35,6 +38,37 @@ const GNotification = () => {
     };
 
     fetchNotifications();
+    
+    // Mark notifications as read when page is viewed
+    const markAsRead = async () => {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const email = userData?.email;
+      
+      if (!email) return;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/notifications/mark-as-read`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          // Clear the count in localStorage when marked as read
+          localStorage.setItem('notificationCount', '0');
+        }
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    };
+
+    markAsRead();
+    
+    // Check for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter notifications based on search term
@@ -90,26 +124,27 @@ const GNotification = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock /> <span>Time-Table</span>
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-orange-700">
-               <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt />
+                <Link to="/gtimetable" className="flex items-center space-x-2">
+                  <FaClock /> <span>Time-Table</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gevent" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
                   <span>Events</span>
-               </Link>
-             </li>  
-             <li className="px-6 py-3 hover:bg-orange-700">
+                </Link>
+              </li>  
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {/* No badge shown on the notifications page itself */}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
@@ -167,10 +202,21 @@ const GNotification = () => {
               currentNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 border-orange-500 hover:shadow-lg transition-shadow"
+                  className={`p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 ${
+                    !notification.read_at 
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-gray-300'
+                  } hover:shadow-lg transition-shadow`}
                 >
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-800">{notification.title}</h3>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {notification.title}
+                      {!notification.read_at && (
+                        <span className="ml-2 text-xs bg-orange-500 text-white px-2 py-1 rounded-full">
+                          New
+                        </span>
+                      )}
+                    </h3>
                     <p className="mt-2 text-gray-600">{notification.description}</p>
                   </div>
                   <span className="text-sm text-gray-500 ml-6 italic">

@@ -135,3 +135,7 @@ Route::get('/users', [UsersController::class, 'index']);
 
 Route::get('/grades/recent/{studentNIN}', [GradesController::class, 'getRecentGrades']);
 Route::get('/attendance/recent/{studentNIN}', [AttendanceController::class, 'getRecentAttendance']);
+
+Route::get('/notifications/{email}', [NotificationController::class, 'getNotifications']);
+Route::get('/notifications/unread-count/{email}', [NotificationController::class, 'getUnreadCount']);
+Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead']);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import {
   FaUserGraduate,
   FaCalendarAlt,
@@ -26,10 +27,35 @@ function Guardiandb() {
     grades: true,
     attendance: true
   });
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     fetchData();
+    fetchNotificationCount();
+
+    // Set up polling for notifications
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -38,19 +64,17 @@ function Guardiandb() {
 
       const childrenNin = JSON.parse(user.children_nin || '[]');
       if (childrenNin.length > 0) {
-        const childrenResponse = await fetch(
+        const childrenResponse = await axios.get(
           `http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`
         );
-        const childrenData = await childrenResponse.json();
-        setChildren(childrenData);
+        setChildren(childrenResponse.data);
 
-        const gradesPromises = childrenData.map(child => 
-          fetch(`http://localhost:8000/api/grades/recent/${child.nin}`)
-            .then(res => res.json())
-            .then(data => ({ 
+        const gradesPromises = childrenResponse.data.map(child => 
+          axios.get(`http://localhost:8000/api/grades/recent/${child.nin}`)
+            .then(res => ({ 
               nin: child.nin, 
               name: child.name,
-              grades: data.grades 
+              grades: res.data.grades 
             }))
             .catch(() => ({ 
               nin: child.nin, 
@@ -59,13 +83,12 @@ function Guardiandb() {
             }))
         );
 
-        const attendancePromises = childrenData.map(child =>
-          fetch(`http://localhost:8000/api/attendance/recent/${child.nin}`)
-            .then(res => res.json())
-            .then(data => ({
+        const attendancePromises = childrenResponse.data.map(child =>
+          axios.get(`http://localhost:8000/api/attendance/recent/${child.nin}`)
+            .then(res => ({
               nin: child.nin,
               name: child.name,
-              attendances: data.attendances
+              attendances: res.data.attendances
             }))
             .catch(() => ({
               nin: child.nin,
@@ -96,10 +119,11 @@ function Guardiandb() {
         }), {}));
       }
 
-      const summaryResponse = await fetch(
-        `http://localhost:8000/api/get-parent-payment-summary?user=${JSON.stringify(user)}`
+      const summaryResponse = await axios.get(
+        `http://localhost:8000/api/get-parent-payment-summary`,
+        { params: { user: JSON.stringify(user) } }
       );
-      setSummary(await summaryResponse.json());
+      setSummary(summaryResponse.data);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -184,10 +208,15 @@ function Guardiandb() {
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
@@ -213,7 +242,7 @@ function Guardiandb() {
             <h2 className="text-3xl font-bold text-gray-800">Guardian Dashboard</h2>
             <p className="text-lg text-gray-600 mt-2">
               {children && children.length === 1
-                ? `Tracking ${children[0]?.name || 'your child'}'s Progress`
+                ? `Tracking ${children[0]?.name || 'your child'} Progress`
                 : children && children.length > 1
                 ? `Managing ${children.length} Students`
                 : "Loading your dashboard..."}
@@ -375,7 +404,7 @@ function Guardiandb() {
                                   <FaChartLine className="text-blue-600 text-xl" />
                                 </div>
                                 <h3 className="text-lg font-semibold">
-                                  {childrenGrades[child.nin]?.name || child.name}'s Grades
+                                  {childrenGrades[child.nin]?.name || child.name} Grades
                                 </h3>
                               </div>
                               {childrenGrades[child.nin]?.grades?.length > 0 ? (
@@ -484,7 +513,7 @@ function Guardiandb() {
                                   <FaCalendarAlt className="text-green-600 text-xl" />
                                 </div>
                                 <h3 className="text-lg font-semibold">
-                                  {childrenAttendances[child.nin]?.name || child.name}'s Attendance
+                                  {childrenAttendances[child.nin]?.name || child.name} Attendance
                                 </h3>
                               </div>
                               {childrenAttendances[child.nin]?.attendances?.length > 0 ? (

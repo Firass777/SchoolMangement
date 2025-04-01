@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/Notification.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,5 +13,12 @@ class Notification extends Model
         'to',
         'title',
         'description',
+        'read_at'
+    ];
+
+    protected $dates = [
+        'read_at',
+        'created_at',
+        'updated_at'
     ];
 }

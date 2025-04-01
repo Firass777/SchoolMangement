@@ -21,7 +21,44 @@ function GGrades() {
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notificationCount, setNotificationCount] = useState(0);
 
+  // Fetch notification count
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const email = userData?.email;
+      
+      if (!email) return;
+
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/notifications/unread-count/${email}`
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setNotificationCount(data.count);
+          localStorage.setItem('notificationCount', data.count.toString());
+        }
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
+
+    // Load from localStorage first
+    const savedCount = localStorage.getItem('notificationCount');
+    if (savedCount) {
+      setNotificationCount(parseInt(savedCount));
+    }
+
+    fetchNotificationCount();
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Rest of your existing code for fetching children and grades...
   useEffect(() => {
     const fetchParentData = async () => {
       try {
@@ -154,27 +191,32 @@ function GGrades() {
                   <span>Attendance</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock /> <span>Time-Table</span>
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-orange-700">
-               <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt />
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gtimetable" className="flex items-center space-x-2">
+                  <FaClock /> <span>Time-Table</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gevent" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
                   <span>Events</span>
-               </Link>
-             </li>  
-             <li className="px-6 py-3 hover:bg-orange-700">
+                </Link>
+              </li>  
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">

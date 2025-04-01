@@ -36,6 +36,7 @@ function ParentProfile() {
   const [childrenRecords, setChildrenRecords] = useState([]);
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [needsReload, setNeedsReload] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const safeParseJSON = (jsonString, fallback = []) => {
     try {
@@ -47,47 +48,69 @@ function ParentProfile() {
   };
 
   useEffect(() => {
-    const fetchParentData = async () => {
-      try {
-        const userString = localStorage.getItem("user");
-        if (!userString) {
-          setError("Please log in to view this page");
-          return;
-        }
-
-        const loggedInUser = safeParseJSON(userString, {});
-        if (!loggedInUser || typeof loggedInUser !== 'object') {
-          setError("Invalid user data format");
-          return;
-        }
-
-        const childrenNin = Array.isArray(loggedInUser.children_nin) 
-          ? loggedInUser.children_nin 
-          : safeParseJSON(loggedInUser.children_nin || "[]", []);
-
-        const userData = {
-          id: loggedInUser.id || "",
-          name: loggedInUser.name || "",
-          email: loggedInUser.email || "",
-          nin: loggedInUser.nin || "",
-          password: "",
-          role: loggedInUser.role || "parent",
-          children_nin: childrenNin,
-        };
-
-        setFormData(userData);
-
-        if (childrenNin.length > 0) {
-          await fetchChildrenRecords(childrenNin);
-        }
-      } catch (error) {
-        console.error("Error in fetchParentData:", error);
-        setError("Failed to load user data.");
-      }
-    };
-
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
     fetchParentData();
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchParentData = async () => {
+    try {
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        setError("Please log in to view this page");
+        return;
+      }
+
+      const loggedInUser = safeParseJSON(userString, {});
+      if (!loggedInUser || typeof loggedInUser !== 'object') {
+        setError("Invalid user data format");
+        return;
+      }
+
+      const childrenNin = Array.isArray(loggedInUser.children_nin) 
+        ? loggedInUser.children_nin 
+        : safeParseJSON(loggedInUser.children_nin || "[]", []);
+
+      const userData = {
+        id: loggedInUser.id || "",
+        name: loggedInUser.name || "",
+        email: loggedInUser.email || "",
+        nin: loggedInUser.nin || "",
+        password: "",
+        role: loggedInUser.role || "parent",
+        children_nin: childrenNin,
+      };
+
+      setFormData(userData);
+
+      if (childrenNin.length > 0) {
+        await fetchChildrenRecords(childrenNin);
+      }
+    } catch (error) {
+      console.error("Error in fetchParentData:", error);
+      setError("Failed to load user data.");
+    }
+  };
 
   const fetchChildrenRecords = async (childrenNin) => {
     try {
@@ -210,77 +233,8 @@ function ParentProfile() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="w-64 bg-orange-800 text-white flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
-          </div>
-          <nav className="mt-6">
-            <ul>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/guardiandb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gpayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/ggrades" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gattendance" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
-                </Link>
-              </li>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock /> <span>Time-Table</span>
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-orange-700">
-               <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt />
-                  <span>Events</span>
-               </Link>
-             </li>  
-             <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gemails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gnotification" className="flex items-center space-x-2">
-                  <FaBell />
-                  <span>Notifications</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/geditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>              
-              <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+        <Sidebar notificationCount={notificationCount} />
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Profile</h2>
 
@@ -291,7 +245,6 @@ function ParentProfile() {
             </div>
           )}
 
-          {/* User Information Section */}
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-gray-800">User Information</h3>
@@ -372,7 +325,6 @@ function ParentProfile() {
                   </div>
                 </div>
 
-                {/* Children NIN Fields */}
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-800">Children NINs</h3>
@@ -428,7 +380,6 @@ function ParentProfile() {
             )}
           </div>
 
-          {/* Children Records Section */}
           {childrenRecords.length > 0 ? (
             <div className="bg-white shadow-md rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
@@ -526,7 +477,6 @@ function ParentProfile() {
             </div>
           ) : null}
 
-          {/* Error and Success Messages */}
           {error && <div className="mt-6 p-4 bg-red-100 text-red-600 rounded">{error}</div>}
           {success && <div className="mt-6 p-4 bg-green-100 text-green-600 rounded">{success}</div>}
         </main>
@@ -534,5 +484,82 @@ function ParentProfile() {
     </div>
   );
 }
+
+const Sidebar = ({ notificationCount }) => (
+  <aside className="w-64 bg-orange-800 text-white flex flex-col">
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
+    </div>
+    <nav className="mt-6">
+      <ul>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/guardiandb" className="flex items-center space-x-2">
+            <FaUserGraduate />
+            <span>Dashboard</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gpayment" className="flex items-center space-x-2">
+            <FaMoneyCheck />
+            <span>Payment</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/ggrades" className="flex items-center space-x-2">
+            <FaChartLine />
+            <span>Grades</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gattendance" className="flex items-center space-x-2">
+            <FaCalendarAlt />
+            <span>Attendance</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gtimetable" className="flex items-center space-x-2">
+            <FaClock />
+            <span>Time-Table</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gevent" className="flex items-center space-x-2">
+            <FaCalendarAlt />
+            <span>Events</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gemails" className="flex items-center space-x-2">
+            <FaEnvelope />
+            <span>Emails</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700 relative">
+          <Link to="/gnotification" className="flex items-center space-x-2">
+            <FaBell />
+            <span>Notifications</span>
+            {notificationCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/geditprofile" className="flex items-center space-x-2">
+            <FaIdCard />
+            <span>Profile</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-red-600">
+          <Link to="/" className="flex items-center space-x-2">
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+);
 
 export default ParentProfile;

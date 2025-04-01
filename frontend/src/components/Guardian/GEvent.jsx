@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt,  FaSearch, FaEnvelope, FaIdCard, FaClock, FaMoneyCheck } from 'react-icons/fa';
+import { 
+  FaUserGraduate, 
+  FaCalendarAlt, 
+  FaChartLine, 
+  FaBell, 
+  FaSignOutAlt,  
+  FaSearch, 
+  FaEnvelope, 
+  FaIdCard, 
+  FaClock, 
+  FaMoneyCheck 
+} from 'react-icons/fa';
 
 const GEvent = () => {
   const [events, setEvents] = useState([]);
@@ -10,9 +21,13 @@ const GEvent = () => {
   const [expandedEventId, setExpandedEventId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const eventsPerPage = 4;
 
   useEffect(() => {
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    
     const fetchEvents = async () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       if (!userData || !userData.role) {
@@ -25,7 +40,6 @@ const GEvent = () => {
           params: { role: userRole },
         });
 
-        // Sort events by date (newest to oldest)
         const sortedEvents = response.data.events.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
@@ -39,19 +53,34 @@ const GEvent = () => {
         setFilteredEvents([]);
       }
     };
+    
     fetchEvents();
+    return () => clearInterval(interval);
   }, []);
 
-  // Toggle the expanded state of an event
-  const toggleEventDescription = (eventId) => {
-    if (expandedEventId === eventId) {
-      setExpandedEventId(null); 
-    } else {
-      setExpandedEventId(eventId); 
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
     }
   };
 
-  // Handle search
+  const toggleEventDescription = (eventId) => {
+    setExpandedEventId(expandedEventId === eventId ? null : eventId);
+  };
+
   useEffect(() => {
     const filtered = events.filter(
       (event) =>
@@ -63,92 +92,20 @@ const GEvent = () => {
     setCurrentPage(1);
   }, [searchQuery, events]);
 
-  // Pagination logic
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
 
-  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex h-screen bg-gray-100">
-        {/* Sidebar */}
-        <aside className="w-64 bg-orange-800 text-white flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
-          </div>
-          <nav className="mt-6">
-            <ul>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/guardiandb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gpayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/ggrades" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gattendance" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock /> <span>Time-Table</span>
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-orange-700">
-               <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt />
-                  <span>Events</span>
-               </Link>
-             </li>  
-             <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gemails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/gnotification" className="flex items-center space-x-2">
-                  <FaBell />
-                  <span>Notifications</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
-                <Link to="/geditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>              
-              <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-      {/* Main Content */}
+      <Sidebar notificationCount={notificationCount} />
+      
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Events</h2>
 
-          {/* Search Bar */}
           <div className="mb-6">
             <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
               <FaSearch className="text-gray-500" />
@@ -164,7 +121,6 @@ const GEvent = () => {
 
           {message && <p className="mt-4 text-red-600">{message}</p>}
 
-          {/* Events List */}
           <div className="space-y-6">
             {currentEvents.map((event) => (
               <div
@@ -180,7 +136,6 @@ const GEvent = () => {
                   <span className="font-medium">Date:</span> {new Date(event.date).toLocaleDateString()}
                 </p>
 
-                {/* Show description if the event is expanded */}
                 {expandedEventId === event.id && (
                   <p className="text-gray-600 mt-4">
                     <span className="font-medium">Description:</span> {event.description}
@@ -190,7 +145,6 @@ const GEvent = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           {filteredEvents.length > eventsPerPage && (
             <div className="mt-6 flex justify-center space-x-2">
               {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }).map(
@@ -215,5 +169,82 @@ const GEvent = () => {
     </div>
   );
 };
+
+const Sidebar = ({ notificationCount }) => (
+  <aside className="w-64 bg-orange-800 text-white flex flex-col">
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
+    </div>
+    <nav className="mt-6">
+      <ul>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/guardiandb" className="flex items-center space-x-2">
+            <FaUserGraduate />
+            <span>Dashboard</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gpayment" className="flex items-center space-x-2">
+            <FaMoneyCheck />
+            <span>Payment</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/ggrades" className="flex items-center space-x-2">
+            <FaChartLine />
+            <span>Grades</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gattendance" className="flex items-center space-x-2">
+            <FaCalendarAlt />
+            <span>Attendance</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gtimetable" className="flex items-center space-x-2">
+            <FaClock />
+            <span>Time-Table</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gevent" className="flex items-center space-x-2">
+            <FaCalendarAlt />
+            <span>Events</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/gemails" className="flex items-center space-x-2">
+            <FaEnvelope />
+            <span>Emails</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700 relative">
+          <Link to="/gnotification" className="flex items-center space-x-2">
+            <FaBell />
+            <span>Notifications</span>
+            {notificationCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-orange-700">
+          <Link to="/geditprofile" className="flex items-center space-x-2">
+            <FaIdCard />
+            <span>Profile</span>
+          </Link>
+        </li>
+        <li className="px-6 py-3 hover:bg-red-600">
+          <Link to="/" className="flex items-center space-x-2">
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+);
 
 export default GEvent;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import {
   FaUserGraduate,
   FaChartLine,
@@ -17,82 +18,107 @@ function Gtimetable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeChildIndex, setActiveChildIndex] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userData = localStorage.getItem("user");
-        if (!userData) {
-          setError("No user data found");
-          setLoading(false);
-          return;
-        }
-        
-        const user = JSON.parse(userData);
-        if (user.role !== "parent" || !user.children_nin) {
-          setError("Not a parent account or no children data");
-          setLoading(false);
-          return;
-        }
-
-        let childrenNin = [];
-        try {
-          childrenNin = JSON.parse(user.children_nin);
-          if (!Array.isArray(childrenNin)) {
-            childrenNin = [childrenNin];
-          }
-        } catch (e) {
-          setError("Invalid children data format");
-          setLoading(false);
-          return;
-        }
-
-        if (!childrenNin.length) {
-          setError("No children registered");
-          setLoading(false);
-          return;
-        }
-
-        const childrenData = await Promise.all(
-          childrenNin.map(async (nin) => {
-            try {
-              const response = await fetch(`http://127.0.0.1:8000/api/user-by-nin/${nin}`);
-              if (!response.ok) return null;
-              const student = await response.json();
-              return { nin, name: student.name, class: student.class };
-            } catch (error) {
-              console.error(`Error fetching child data for NIN ${nin}:`, error);
-              return null;
-            }
-          })
-        );
-
-        const validChildren = childrenData.filter(child => child && child.class);
-
-        const timetablesPromises = validChildren.map(async (child) => {
-          try {
-            const response = await fetch(`http://127.0.0.1:8000/api/student-timetable/${child.class}`);
-            if (!response.ok) return { ...child, timetable: [] };
-            const timetable = await response.json();
-            return { ...child, timetable };
-          } catch (error) {
-            console.error(`Error fetching timetable for ${child.name}:`, error);
-            return { ...child, timetable: [] };
-          }
-        });
-
-        const timetables = await Promise.all(timetablesPromises);
-        setChildrenTimetables(timetables);
-      } catch (error) {
-        console.error("Error in fetchData:", error);
-        setError("Failed to load data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    fetchNotificationCount();
     fetchData();
+
+    // Set up polling for notifications
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = localStorage.getItem("user");
+    if (!userData) return;
+    
+    const user = JSON.parse(userData);
+    const email = user?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const userData = localStorage.getItem("user");
+      if (!userData) {
+        setError("No user data found");
+        setLoading(false);
+        return;
+      }
+      
+      const user = JSON.parse(userData);
+      if (user.role !== "parent" || !user.children_nin) {
+        setError("Not a parent account or no children data");
+        setLoading(false);
+        return;
+      }
+
+      let childrenNin = [];
+      try {
+        childrenNin = JSON.parse(user.children_nin);
+        if (!Array.isArray(childrenNin)) {
+          childrenNin = [childrenNin];
+        }
+      } catch (e) {
+        setError("Invalid children data format");
+        setLoading(false);
+        return;
+      }
+
+      if (!childrenNin.length) {
+        setError("No children registered");
+        setLoading(false);
+        return;
+      }
+
+      const childrenData = await Promise.all(
+        childrenNin.map(async (nin) => {
+          try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/user-by-nin/${nin}`);
+            if (!response.data) return null;
+            return { nin, name: response.data.name, class: response.data.class };
+          } catch (error) {
+            console.error(`Error fetching child data for NIN ${nin}:`, error);
+            return null;
+          }
+        })
+      );
+
+      const validChildren = childrenData.filter(child => child && child.class);
+
+      const timetablesPromises = validChildren.map(async (child) => {
+        try {
+          const response = await axios.get(`http://127.0.0.1:8000/api/student-timetable/${child.class}`);
+          return { ...child, timetable: response.data || [] };
+        } catch (error) {
+          console.error(`Error fetching timetable for ${child.name}:`, error);
+          return { ...child, timetable: [] };
+        }
+      });
+
+      const timetables = await Promise.all(timetablesPromises);
+      setChildrenTimetables(timetables);
+    } catch (error) {
+      console.error("Error in fetchData:", error);
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const parseTime = (timeRange) => {
     const startTime = timeRange.split(" - ")[0];
@@ -118,7 +144,7 @@ function Gtimetable() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar />
+        <Sidebar notificationCount={notificationCount} />
         <div className="flex-1 p-6">Loading...</div>
       </div>
     );
@@ -127,7 +153,7 @@ function Gtimetable() {
   if (error) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar />
+        <Sidebar notificationCount={notificationCount} />
         <div className="flex-1 p-6 text-red-500">{error}</div>
       </div>
     );
@@ -136,7 +162,7 @@ function Gtimetable() {
   if (childrenTimetables.length === 0) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar />
+        <Sidebar notificationCount={notificationCount} />
         <div className="flex-1 p-6">No children timetables found</div>
       </div>
     );
@@ -155,7 +181,7 @@ function Gtimetable() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+      <Sidebar notificationCount={notificationCount} />
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Children's Timetables</h1>
@@ -231,7 +257,7 @@ function Gtimetable() {
   );
 }
 
-const Sidebar = () => (
+const Sidebar = ({ notificationCount }) => (
   <aside className="w-64 bg-orange-800 text-white flex flex-col">
     <div className="p-6">
       <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
@@ -280,10 +306,15 @@ const Sidebar = () => (
             <span>Emails</span>
           </Link>
         </li>
-        <li className="px-6 py-3 hover:bg-orange-700">
-          <Link to="/notifications" className="flex items-center space-x-2">
+        <li className="px-6 py-3 hover:bg-orange-700 relative">
+          <Link to="/gnotification" className="flex items-center space-x-2">
             <FaBell />
             <span>Notifications</span>
+            {notificationCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
           </Link>
         </li>
         <li className="px-6 py-3 hover:bg-orange-700">

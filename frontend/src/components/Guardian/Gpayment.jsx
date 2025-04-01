@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaIdCard, FaCreditCard, FaMoneyCheck,FaClock } from 'react-icons/fa';
+import axios from 'axios';
+import {
+  FaUserGraduate,
+  FaCalendarAlt,
+  FaChartLine,
+  FaBell,
+  FaSignOutAlt,
+  FaEnvelope,
+  FaIdCard,
+  FaCreditCard,
+  FaMoneyCheck,
+  FaClock
+} from 'react-icons/fa';
 import { motion } from 'framer-motion'; 
 
 const Gpayment = () => {
@@ -14,16 +26,18 @@ const Gpayment = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
+    fetchNotificationCount();
+    
     if (user) {
       const childrenNin = JSON.parse(user.children_nin || '[]');
       if (childrenNin.length > 0) {
-        fetch(`http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`)
-          .then(response => response.json())
-          .then(data => setChildren(data))
+        axios.get(`http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`)
+          .then(response => setChildren(response.data))
           .catch(error => console.error('Error fetching children:', error));
       }
       
@@ -31,19 +45,38 @@ const Gpayment = () => {
       fetchAllPayments();
       fetchSummary();
     }
+
+    // Set up polling for notifications
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [currentPage]);
+
+  const fetchNotificationCount = async () => {
+    if (!user?.email) return;
+    
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${user.email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchPayments = async (page) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/get-parent-payments?page=${page}&user=${JSON.stringify(user)}`);
-      const data = await response.json();
-  
-      if (response.ok) {
-        setPayments(data.payments.data);
-        setTotalPages(data.payments.last_page);
-      } else {
-        alert(data.error || 'Failed to fetch payments.');
+      const response = await axios.get(
+        `http://localhost:8000/api/get-parent-payments?page=${page}&user=${JSON.stringify(user)}`
+      );
+      
+      if (response.data) {
+        setPayments(response.data.payments.data);
+        setTotalPages(response.data.payments.last_page);
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -54,14 +87,13 @@ const Gpayment = () => {
   
   const fetchAllPayments = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/get-all-parent-payments?user=${JSON.stringify(user)}`);
-      const data = await response.json();
-  
-      if (response.ok) {
-        setAllPayments(data.payments);
-        setTotalPayments(data.totalPayments);
-      } else {
-        alert(data.error || 'Failed to fetch all payments.');
+      const response = await axios.get(
+        `http://localhost:8000/api/get-all-parent-payments?user=${JSON.stringify(user)}`
+      );
+      
+      if (response.data) {
+        setAllPayments(response.data.payments);
+        setTotalPayments(response.data.totalPayments);
       }
     } catch (error) {
       console.error('Error fetching all payments:', error);
@@ -70,13 +102,12 @@ const Gpayment = () => {
   
   const fetchSummary = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/get-parent-payment-summary?user=${JSON.stringify(user)}`);
-      const data = await response.json();
-  
-      if (response.ok) {
-        setSummary(data);
-      } else {
-        alert(data.error || 'Failed to fetch payment summary.');
+      const response = await axios.get(
+        `http://localhost:8000/api/get-parent-payment-summary?user=${JSON.stringify(user)}`
+      );
+      
+      if (response.data) {
+        setSummary(response.data);
       }
     } catch (error) {
       console.error('Error fetching summary:', error);
@@ -106,19 +137,14 @@ const Gpayment = () => {
     }
   
     try {
-      const response = await fetch('http://localhost:8000/api/create-payment', {
-        method: 'POST',
+      const response = await axios.post('http://localhost:8000/api/create-payment', {
+        amount: amount,
+        student_nin: selectedChild
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          amount: amount,
-          student_nin: selectedChild
-        }),
+        }
       });
-  
-      const { url } = await response.json();
       
       const paymentDetails = {
         user_id: user.id,
@@ -130,7 +156,7 @@ const Gpayment = () => {
       };
       localStorage.setItem('latestPayment', JSON.stringify(paymentDetails));
   
-      window.location.href = url;
+      window.location.href = response.data.url;
     } catch (error) {
       console.error('Payment error:', error);
     }
@@ -184,27 +210,33 @@ const Gpayment = () => {
                   <span>Attendance</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-orange-700">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock /> <span>Time-Table</span>
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-orange-700">
-               <Link to="/gevent" className="flex items-center space-x-2">
-                 <FaCalendarAlt />
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gtimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
+                <Link to="/gevent" className="flex items-center space-x-2">
+                  <FaCalendarAlt />
                   <span>Events</span>
-               </Link>
-             </li>  
-             <li className="px-6 py-3 hover:bg-orange-700">
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-orange-700">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">
@@ -212,7 +244,7 @@ const Gpayment = () => {
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>
-              </li>              
+              </li>
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
                   <FaSignOutAlt />
@@ -225,7 +257,7 @@ const Gpayment = () => {
 
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Payment </h2>
+            <h2 className="text-3xl font-bold text-gray-800">Payment</h2>
             <p className="text-lg text-gray-600 mt-2">Pay your children's school fees securely using Stripe.</p>
           </div>
 
