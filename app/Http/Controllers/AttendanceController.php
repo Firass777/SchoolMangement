@@ -202,4 +202,18 @@ class AttendanceController extends Controller
             'data' => $data,
         ], 200);
     }
+
+    public function getRecentAttendance($studentNIN)
+{
+    $attendances = Attendance::where('student_nin', $studentNIN)
+        ->orderBy('created_at', 'desc')
+        ->take(3)
+        ->get();
+
+    if ($attendances->isEmpty()) {
+        return response()->json(['message' => 'No recent attendance records found.'], 404);
+    }
+
+    return response()->json(['attendances' => $attendances], 200);
+}
 }

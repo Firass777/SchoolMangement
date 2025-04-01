@@ -195,4 +195,19 @@ class GradesController extends Controller
 
     return response()->json(['labels' => $labels, 'data' => $data], 200);
 }
+
+
+public function getRecentGrades($studentNIN)
+{
+    $grades = Grade::where('student_nin', $studentNIN)
+        ->orderBy('created_at', 'desc')
+        ->take(2)
+        ->get();
+
+    if ($grades->isEmpty()) {
+        return response()->json(['message' => 'No recent grades found'], 404);
+    }
+
+    return response()->json(['grades' => $grades], 200);
+}
 }
