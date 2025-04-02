@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch, FaClock, FaIdCard, FaFileInvoice, FaMoneyCheck } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaMoneyCheck, FaBook, FaFileInvoice } from 'react-icons/fa';
 
-const NotificationView = () => {
+const SNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +25,9 @@ const NotificationView = () => {
 
         if (response.ok) {
           setNotifications(data.notifications);
+          // Update the count in localStorage when fetching notifications
+          const unreadCount = data.notifications.filter(n => !n.read_at).length;
+          localStorage.setItem('notificationCount', unreadCount.toString());
         } else {
           setError(data.message || 'Failed to fetch notifications.');
         }
@@ -35,6 +38,37 @@ const NotificationView = () => {
     };
 
     fetchNotifications();
+    
+    // Mark notifications as read when page is viewed
+    const markAsRead = async () => {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const email = userData?.email;
+      
+      if (!email) return;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/notifications/mark-as-read`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          // Clear the count in localStorage when marked as read
+          localStorage.setItem('notificationCount', '0');
+        }
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    };
+
+    markAsRead();
+    
+    // Check for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter notifications based on search term
@@ -140,6 +174,7 @@ const NotificationView = () => {
           </nav>
         </aside>
 
+
         {/* Main Content */}
         <main className="flex-1 p-8 overflow-auto min-h-screen bg-gray-50">
           {/* Header */}
@@ -163,7 +198,7 @@ const NotificationView = () => {
                 placeholder="Search notifications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-Purple-500"
               />
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
@@ -179,10 +214,21 @@ const NotificationView = () => {
               currentNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 border-purple-500 hover:shadow-lg transition-shadow"
+                  className={`p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 ${
+                    !notification.read_at 
+                      ? 'border-Purple-500 bg-Purple-50' 
+                      : 'border-gray-300'
+                  } hover:shadow-lg transition-shadow`}
                 >
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-800">{notification.title}</h3>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {notification.title}
+                      {!notification.read_at && (
+                        <span className="ml-2 text-xs bg-Purple-500 text-white px-2 py-1 rounded-full">
+                          New
+                        </span>
+                      )}
+                    </h3>
                     <p className="mt-2 text-gray-600">{notification.description}</p>
                   </div>
                   <span className="text-sm text-gray-500 ml-6 italic">
@@ -203,8 +249,8 @@ const NotificationView = () => {
                     onClick={() => paginate(index + 1)}
                     className={`px-4 py-2 rounded-lg ${
                       currentPage === index + 1
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
+                        ? 'bg-Purple-600 text-white'
+                        : 'bg-white text-Purple-600 border border-Purple-600 hover:bg-Purple-50'
                     }`}
                   >
                     {index + 1}
@@ -219,4 +265,4 @@ const NotificationView = () => {
   );
 };
 
-export default NotificationView;
+export default SNotification;

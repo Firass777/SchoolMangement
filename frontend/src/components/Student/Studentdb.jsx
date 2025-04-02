@@ -9,6 +9,7 @@ import { Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { motion } from "framer-motion";
+import axios from 'axios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement,
   Title, Tooltip, Legend, ArcElement);
@@ -28,6 +29,7 @@ const StudentDB = () => {
   const [grades, setGrades] = useState([]);
   const [payments, setPayments] = useState({ total: 0, pending: 0, amountDue: 0 });
   const [prediction, setPrediction] = useState('Loading...');
+  const [notificationCount, setNotificationCount] = useState(0);
   const studentData = JSON.parse(localStorage.getItem('user'));
   const studentNIN = studentData?.nin;
 
@@ -96,12 +98,34 @@ const StudentDB = () => {
       }
     };
 
+    const fetchNotificationCount = async () => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const email = userData?.email;
+      
+      if (!email) return;
+
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/notifications/unread-count/${email}`
+        );
+        if (response.data) {
+          setNotificationCount(response.data.count);
+          localStorage.setItem('notificationCount', response.data.count.toString());
+        }
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
+
     fetchPrediction();
     if (studentData?.id) {
       fetchPayments();
     }
     fetchAttendance();
     fetchGrades();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [studentNIN, studentData]);
 
   const attendanceChartData = {
@@ -271,10 +295,15 @@ const StudentDB = () => {
                   <FaFileInvoice /> <span>Documents</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">

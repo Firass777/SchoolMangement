@@ -33,6 +33,27 @@ function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [studentRecord, setStudentRecord] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   // Fetch the logged-in student's data from localStorage
   useEffect(() => {
@@ -67,6 +88,9 @@ function EditProfile() {
     };
 
     fetchStudentData();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchStudentRecord = async (nin) => {
@@ -191,14 +215,19 @@ function EditProfile() {
                   <FaFileInvoice /> <span>Documents</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/notificationview" className="flex items-center space-x-2">
+                <Link to="/seditprofile" className="flex items-center space-x-2">
                   <FaIdCard />
                   <span>Profile</span>
                 </Link>

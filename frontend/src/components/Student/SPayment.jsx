@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaCreditCard, FaMoneyCheck } from 'react-icons/fa';
 import { motion } from 'framer-motion'; 
+import axios from 'axios';
 
 const Spayment = () => {
   const [amount, setAmount] = useState('');
@@ -11,8 +12,29 @@ const Spayment = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('user'));
+
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   // Fetch paginated payments from the backend
   const fetchPayments = async (page) => {
@@ -61,6 +83,9 @@ const Spayment = () => {
     if (user) {
       fetchPayments(currentPage);
       fetchAllPayments(); 
+      fetchNotificationCount();
+      const interval = setInterval(fetchNotificationCount, 30000);
+      return () => clearInterval(interval);
     }
   }, [currentPage]);
 
@@ -186,10 +211,15 @@ const Spayment = () => {
                   <FaFileInvoice /> <span>Documents</span>
                 </Link>
               </li>                                   
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
