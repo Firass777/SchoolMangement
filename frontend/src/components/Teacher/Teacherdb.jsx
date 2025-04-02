@@ -5,6 +5,7 @@ import "aos/dist/aos.css";
 import { FaChalkboardTeacher, FaUserGraduate, FaChartLine, FaCalendarAlt, FaSignOutAlt, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaBell } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
+import axios from "axios";
 
 function Teacherdb() {
   const [stats, setStats] = useState({ students: 0, attendance: 0, grades: 0 });
@@ -14,18 +15,40 @@ function Teacherdb() {
   const [nextClass, setNextClass] = useState(null);
   const [latestEvents, setLatestEvents] = useState([]);
   const [error, setError] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     AOS.init({ duration: 1000 });
     fetchData();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
       setError(null);
 
-      // Fetch stats
       const statsRes = await Promise.all([
         fetch(`http://127.0.0.1:8000/api/attendance/students-count/${user.nin}`),
         fetch(`http://127.0.0.1:8000/api/attendance/rate/${user.nin}`),
@@ -35,7 +58,6 @@ function Teacherdb() {
       const [studentsData, attendanceData, gradesData] = await Promise.all(
         statsRes.map(async (res) => {
           const text = await res.text();
-          console.log("Raw response:", text);
           if (!res.ok) {
             throw new Error(`Failed to fetch data: ${res.statusText}`);
           }
@@ -49,7 +71,6 @@ function Teacherdb() {
         grades: gradesData.average_grade
       });
 
-      // Fetch last 7 days attendance for the chart
       const attendanceRes = await fetch(`http://127.0.0.1:8000/api/attendance/last-7-days/${user.nin}`);
       const attendanceChart = await attendanceRes.json();
 
@@ -64,7 +85,6 @@ function Teacherdb() {
         }]
       });
 
-      // Fetch last 7 days grades for the chart
       const gradesRes = await fetch(`http://127.0.0.1:8000/api/grades/last-7-days/${user.nin}`);
       const gradesChart = await gradesRes.json();
 
@@ -79,17 +99,14 @@ function Teacherdb() {
         }]
       });
 
-      // Fetch recent attendance (last 3 records)
       const recentRes = await fetch(`http://127.0.0.1:8000/api/attendance/teacher/${user.nin}?limit=3`);
       const recentData = await recentRes.json();
       setRecentAttendance(recentData.attendances);
 
-      // Fetch next class
       const timetableRes = await fetch(`http://127.0.0.1:8000/api/timetable/next-class/${user.email}`);
       const timetableData = await timetableRes.json();
       setNextClass(timetableData.nextClass || { subject: 'No Classes Yet', day: '', time: '', location: '' });
 
-      // Fetch latest events for the teacher
       const eventsRes = await fetch(`http://127.0.0.1:8000/api/events/latest-for-teacher`);
       const eventsData = await eventsRes.json();
       setLatestEvents(eventsData.events);
@@ -119,7 +136,6 @@ function Teacherdb() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -173,10 +189,15 @@ function Teacherdb() {
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-green-700">
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -195,15 +216,12 @@ function Teacherdb() {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto min-h-screen">
-          {/* Header */}
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Welcome, Teacher!</h2>
             <p className="text-gray-600">Manage your classes and students.</p>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div data-aos="fade-up" className="bg-white shadow-lg p-6 rounded-lg flex items-center">
               <FaUserGraduate className="text-green-600 text-4xl mr-4" />
@@ -241,9 +259,7 @@ function Teacherdb() {
             </div>
           </div>
 
-          {/* Chart Section */}
           <div className="flex flex-col sm:flex-row sm:space-x-6 mb-6">
-            {/* Bar Chart */}
             <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full mb-6 sm:mb-0" data-aos="fade-up">
               <h3 className="text-xl font-bold mb-4">Student Attendance</h3>
               <div className="h-80">
@@ -251,7 +267,6 @@ function Teacherdb() {
               </div>
             </div>
 
-            {/* Line Chart */}
             <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full" data-aos="fade-up">
               <h3 className="text-xl font-bold mb-4">Class Performance</h3>
               <div className="h-80">
@@ -260,9 +275,7 @@ function Teacherdb() {
             </div>
           </div>
 
-          {/* Recent Attendance and Latest Events Section */}
           <div className="flex flex-col sm:flex-row sm:space-x-6 mb-6">
-            {/* Recent Attendance Table */}
             <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full mb-6 sm:mb-0" data-aos="fade-up">
               <h3 className="text-xl font-bold mb-4">Recent Attendance</h3>
               <table className="w-full border-collapse">
@@ -290,7 +303,6 @@ function Teacherdb() {
               </table>
             </div>
 
-            {/* Latest Events Section */}
             <div className="bg-white p-6 shadow-lg rounded-lg sm:w-1/2 w-full" data-aos="fade-up">
               <h3 className="text-xl font-bold mb-4">Latest Events</h3>
               {latestEvents.length === 0 ? (

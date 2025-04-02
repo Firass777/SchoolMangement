@@ -30,14 +30,12 @@ function TEditProfile() {
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [teacherRecord, setTeacherRecord] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
 
-  // Fetch the logged-in teacher's data from localStorage
   useEffect(() => {
     const fetchTeacherData = () => {
       try {
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
-
-        console.log("Logged-in User Data from localStorage:", loggedInUser);
 
         if (loggedInUser) {
           setFormData({
@@ -49,7 +47,6 @@ function TEditProfile() {
             role: loggedInUser.role,
           });
 
-          // Fetch teacher record if NIN is available
           if (loggedInUser.nin) {
             fetchTeacherRecord(loggedInUser.nin);
           }
@@ -63,7 +60,29 @@ function TEditProfile() {
     };
 
     fetchTeacherData();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchTeacherRecord = async (nin) => {
     try {
@@ -90,7 +109,6 @@ function TEditProfile() {
     setSuccess("");
 
     try {
-      // If password is blank, remove it from the form data
       const dataToSend = { ...formData };
       if (!dataToSend.password) {
         delete dataToSend.password;
@@ -107,7 +125,6 @@ function TEditProfile() {
       );
       setSuccess("Profile updated successfully!");
 
-      // Update the user data in localStorage
       const updatedUser = { ...formData, ...dataToSend };
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
@@ -127,7 +144,6 @@ function TEditProfile() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -181,10 +197,15 @@ function TEditProfile() {
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-green-700">
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -203,11 +224,9 @@ function TEditProfile() {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Profile</h2>
 
-          {/* User Information Section */}
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-gray-800">User Information</h3>
@@ -303,7 +322,6 @@ function TEditProfile() {
             )}
           </div>
 
-          {/* Teacher Record Section */}
           {teacherRecord && (
             <div className="bg-white shadow-md rounded-lg p-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Teacher Record</h3>
@@ -372,7 +390,6 @@ function TEditProfile() {
             </div>
           )}
 
-          {/* Error and Success Messages */}
           {error && <div className="mt-6 p-4 bg-red-100 text-red-600 rounded">{error}</div>}
           {success && <div className="mt-6 p-4 bg-green-100 text-green-600 rounded">{success}</div>}
         </main>

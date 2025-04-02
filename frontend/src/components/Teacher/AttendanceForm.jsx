@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaSearch, FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -15,13 +15,12 @@ const AttendanceForm = () => {
   const [attendances, setAttendances] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [message, setMessage] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const attendancesPerPage = 5;
 
-  // Retrieve the logged-in teacher's data from local storage
   const user = JSON.parse(localStorage.getItem('user'));
   const teacherNin = user.nin;
 
-  // Fetch students
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -35,7 +34,6 @@ const AttendanceForm = () => {
     fetchStudents();
   }, []);
 
-  // Fetch attendances for the logged-in teacher
   useEffect(() => {
     const fetchAttendances = async () => {
       try {
@@ -46,7 +44,29 @@ const AttendanceForm = () => {
       }
     };
     fetchAttendances();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [teacherNin]);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,7 +88,6 @@ const AttendanceForm = () => {
     const data = await response.json();
     if (response.ok) {
       setMessage('Attendance added successfully!');
-      // Refresh the attendances list
       const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
       setAttendances(updatedAttendances.data.attendances);
     } else {
@@ -80,7 +99,6 @@ const AttendanceForm = () => {
     try {
       await axios.delete(`http://localhost:8000/api/attendance/delete/${id}`);
       setMessage('Attendance deleted successfully!');
-      // Refresh the attendances list
       const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
       setAttendances(updatedAttendances.data.attendances);
     } catch (error) {
@@ -95,7 +113,6 @@ const AttendanceForm = () => {
     student.id.toString().includes(searchTerm)
   );
 
-  // Pagination logic
   const indexOfLastAttendance = currentPage * attendancesPerPage;
   const indexOfFirstAttendance = indexOfLastAttendance - attendancesPerPage;
   const currentAttendances = attendances.slice(indexOfFirstAttendance, indexOfLastAttendance);
@@ -105,7 +122,6 @@ const AttendanceForm = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -159,10 +175,15 @@ const AttendanceForm = () => {
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-green-700">
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -181,14 +202,12 @@ const AttendanceForm = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Add Attendance</h2>
             <p className="text-gray-600">Enter the attendance details below.</p>
           </div>
 
-          {/* Search Bar for Students */}
           <div className="mb-6 flex justify-between items-center">
             {showSearch && (
               <div className="flex items-center bg-white p-4 rounded-md shadow-md">
@@ -202,7 +221,6 @@ const AttendanceForm = () => {
               </div>
             )}
 
-            {/* Button to Show/Hide Student List and Search Bar */}
             <button
               onClick={() => {
                 setShowStudents(!showStudents);
@@ -214,7 +232,6 @@ const AttendanceForm = () => {
             </button>
           </div>
 
-          {/* Student List */}
           {showStudents && (
             <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Student</h3>
@@ -234,7 +251,6 @@ const AttendanceForm = () => {
             </div>
           )}
 
-          {/* Add Attendance Form */}
           <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -291,7 +307,6 @@ const AttendanceForm = () => {
             {message && <p className="mt-4 text-green-600">{message}</p>}
           </div>
 
-          {/* Display Attendances in Table */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Attendances</h3>
             {currentAttendances.length > 0 ? (
@@ -328,7 +343,6 @@ const AttendanceForm = () => {
               <p>No attendance records found.</p>
             )}
 
-            {/* Pagination */}
             <div className="flex justify-center mt-6">
               {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }, (_, i) => (
                 <button

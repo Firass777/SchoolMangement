@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBook, FaSignOutAlt, FaClipboardList, FaBell, FaEnvelope, FaPaperPlane, FaSearch, FaClock,FaIdCard } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBook, FaSignOutAlt, FaClipboardList, FaBell, FaEnvelope, FaPaperPlane, FaSearch, FaClock, FaIdCard } from 'react-icons/fa';
 
 const TEmails = () => {
   const [emails, setEmails] = useState([]);
@@ -13,11 +13,11 @@ const TEmails = () => {
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('inbox'); 
+  const [view, setView] = useState('inbox');
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const userEmail = JSON.parse(localStorage.getItem('user')).email;
 
- 
   useEffect(() => {
     const fetchEmails = async () => {
       try {
@@ -25,17 +25,13 @@ const TEmails = () => {
           params: { email: userEmail },
         });
 
-        // Sort emails by date (newest to oldest)
         const sortedEmails = response.data.emails.sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
 
         setEmails(sortedEmails);
-
-        // Filter emails based on the default view (inbox)
         const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails); 
-
+        setFilteredEmails(inboxEmails);
         setMessage('');
       } catch (error) {
         setMessage('No emails found.');
@@ -44,9 +40,30 @@ const TEmails = () => {
       }
     };
     fetchEmails();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [userEmail]);
 
-  // Handle search
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
   useEffect(() => {
     const filtered = emails.filter(
       (email) =>
@@ -55,7 +72,6 @@ const TEmails = () => {
         email.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Apply view filter on top of search results
     if (view === 'inbox') {
       setFilteredEmails(filtered.filter(email => email.to === userEmail));
     } else {
@@ -63,7 +79,6 @@ const TEmails = () => {
     }
   }, [searchQuery, emails, view, userEmail]);
 
-  // Toggle between inbox and sent views
   const toggleView = (viewType) => {
     setView(viewType);
   };
@@ -91,7 +106,6 @@ const TEmails = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-green-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -105,11 +119,11 @@ const TEmails = () => {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <Link to="/ttimetable" className="flex items-center space-x-2">
+                <FaClock />
+                <span>Time-Table</span>
+              </Link>
+            </li>             
             <li className="px-6 py-3 hover:bg-green-700">
               <Link to="/teacherstudents" className="flex items-center space-x-2">
                 <FaUserGraduate />
@@ -145,18 +159,23 @@ const TEmails = () => {
                 <span>Emails</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-6 py-3 hover:bg-green-700 relative">
               <Link to="/tnotificationview" className="flex items-center space-x-2">
                 <FaBell />
                 <span>Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/teditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>
+            <li className="px-6 py-3 hover:bg-green-700">
+              <Link to="/teditprofile" className="flex items-center space-x-2">
+                <FaIdCard />
+                <span>Profile</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/" className="flex items-center space-x-2">
                 <FaSignOutAlt />
@@ -167,16 +186,12 @@ const TEmails = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <div className="p-6 bg-white border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800">Inbox</h2>
         </div>
 
-        {/* Email List and Details */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Part: Email List */}
           <div className="w-1/3 p-6 border-r border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-800">Emails</h3>
@@ -189,7 +204,6 @@ const TEmails = () => {
               </button>
             </div>
 
-            {/* View Toggle Buttons */}
             <div className="flex space-x-4 mb-6">
               <button
                 onClick={() => toggleView('inbox')}
@@ -205,7 +219,6 @@ const TEmails = () => {
               </button>
             </div>
 
-            {/* Search Bar */}
             <div className="mb-6">
               <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
                 <FaSearch className="text-gray-500" />
@@ -221,7 +234,6 @@ const TEmails = () => {
 
             {message && <p className="mt-4 text-green-600">{message}</p>}
 
-            {/* Email List Container */}
             <div className="space-y-4 h-[calc(100vh-300px)] overflow-y-auto">
               {filteredEmails.map((email) => (
                 <div
@@ -239,7 +251,6 @@ const TEmails = () => {
             </div>
           </div>
 
-          {/* Right Part: Email Details */}
           <div className="w-2/3 p-6 overflow-y-auto">
             {selectedEmail ? (
               <div className="bg-white p-6 rounded-lg shadow-md">
@@ -270,7 +281,6 @@ const TEmails = () => {
         </div>
       </main>
 
-      {/* Compose Form */}
       {showComposeForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">

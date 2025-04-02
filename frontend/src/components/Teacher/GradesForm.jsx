@@ -15,13 +15,12 @@ const GradesForm = () => {
   const [grades, setGrades] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [message, setMessage] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const gradesPerPage = 5;
 
-  // Retrieve the logged-in teacher's data from local storage
   const user = JSON.parse(localStorage.getItem('user'));
   const teacherNin = user.nin;
 
-  // Fetch students
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -35,7 +34,6 @@ const GradesForm = () => {
     fetchStudents();
   }, []);
 
-  // Fetch grades for the logged-in teacher
   useEffect(() => {
     const fetchGrades = async () => {
       try {
@@ -46,7 +44,29 @@ const GradesForm = () => {
       }
     };
     fetchGrades();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [teacherNin]);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,7 +88,6 @@ const GradesForm = () => {
     const data = await response.json();
     if (response.ok) {
       setMessage('Grade added successfully!');
-      // Refresh the grades list
       const updatedGrades = await axios.get(`http://localhost:8000/api/grades/teacher/${teacherNin}`);
       setGrades(updatedGrades.data.grades);
     } else {
@@ -80,14 +99,7 @@ const GradesForm = () => {
     try {
       await axios.delete(`http://localhost:8000/api/grades/delete/${id}`);
       setMessage('Grade deleted successfully!');
-      console.log('Grades before deletion:', grades);
-      
-      // Update the local state to remove the deleted grade
-      setGrades(prevGrades => {
-        const updatedGrades = prevGrades.filter(grade => grade.id !== id);
-        console.log('Grades after deletion:', updatedGrades);
-        return updatedGrades;
-      });
+      setGrades(prevGrades => prevGrades.filter(grade => grade.id !== id));
     } catch (error) {
       setMessage('Failed to delete grade.');
       console.error('Error:', error);
@@ -100,7 +112,6 @@ const GradesForm = () => {
     student.id.toString().includes(searchTerm)
   );
 
-  // Pagination logic
   const indexOfLastGrade = currentPage * gradesPerPage;
   const indexOfFirstGrade = indexOfLastGrade - gradesPerPage;
   const currentGrades = grades.slice(indexOfFirstGrade, indexOfLastGrade);
@@ -110,7 +121,6 @@ const GradesForm = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -124,11 +134,11 @@ const GradesForm = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>               
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>               
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -158,16 +168,21 @@ const GradesForm = () => {
                   <FaClipboardList /> <span>Events</span>
                 </Link>
               </li> 
-            <li className="px-6 py-3 hover:bg-green-700">
-              <Link to="/temails" className="flex items-center space-x-2">
-                <FaEnvelope />
-                <span>Emails</span>
-              </Link>
-            </li>                              
               <li className="px-6 py-3 hover:bg-green-700">
+                <Link to="/temails" className="flex items-center space-x-2">
+                  <FaEnvelope />
+                  <span>Emails</span>
+                </Link>
+              </li>                              
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -186,14 +201,12 @@ const GradesForm = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Add Grade</h2>
             <p className="text-gray-600">Enter the grade details below.</p>
           </div>
 
-          {/* Search Bar for Students */}
           <div className="mb-6 flex justify-between items-center">
             {showSearch && (
               <div className="flex items-center bg-white p-4 rounded-md shadow-md">
@@ -207,7 +220,6 @@ const GradesForm = () => {
               </div>
             )}
 
-            {/* Button to Show/Hide Student List and Search Bar */}
             <button
               onClick={() => {
                 setShowStudents(!showStudents);
@@ -219,7 +231,6 @@ const GradesForm = () => {
             </button>
           </div>
 
-          {/* Student List */}
           {showStudents && (
             <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Student</h3>
@@ -239,7 +250,6 @@ const GradesForm = () => {
             </div>
           )}
 
-          {/* Grade Form */}
           <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -293,7 +303,6 @@ const GradesForm = () => {
             {message && <p className="mt-4 text-green-600">{message}</p>}
           </div>
 
-          {/* Display Grades in Table */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Grades List</h3>
             {currentGrades.length > 0 ? (
@@ -330,7 +339,6 @@ const GradesForm = () => {
               <p>No grade records found.</p>
             )}
 
-            {/* Pagination */}
             <div className="flex justify-center mt-6">
               {Array.from({ length: Math.ceil(grades.length / gradesPerPage) }, (_, i) => (
                 <button

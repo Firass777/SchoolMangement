@@ -13,16 +13,37 @@ const AddCourseForm = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const coursesPerPage = 5;
 
-  // Retrieve the logged-in teacher's data from local storage
   const user = JSON.parse(localStorage.getItem('user'));
   const teacherNin = user.nin;
 
-  // Fetch courses by teacher_nin on component mount
   useEffect(() => {
     fetchCourses();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [teacherNin]);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchCourses = async () => {
     try {
@@ -34,7 +55,6 @@ const AddCourseForm = () => {
     }
   };
 
-  // Handle form submission for adding a course
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -64,7 +84,6 @@ const AddCourseForm = () => {
     }
   };
 
-  // Handle course deletion
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://127.0.0.1:8000/api/courses/delete/${id}`);
@@ -76,7 +95,6 @@ const AddCourseForm = () => {
     }
   };
 
-  // Filter and sort courses
   const filteredCourses = courses
     .filter((course) =>
       course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,7 +103,6 @@ const AddCourseForm = () => {
     )
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  // Pagination logic
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
   const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
@@ -95,7 +112,6 @@ const AddCourseForm = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -149,10 +165,15 @@ const AddCourseForm = () => {
                   <span>Emails</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-green-700">
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -171,11 +192,9 @@ const AddCourseForm = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Courses</h2>
 
-          {/* Search Bar */}
           <div className="mb-6">
             <div className="flex items-center bg-white rounded-lg shadow-md p-2">
               <FaSearch className="text-gray-500" />
@@ -189,7 +208,6 @@ const AddCourseForm = () => {
             </div>
           </div>
 
-          {/* Toggle Add Form Button */}
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="mb-6 py-2 px-4 bg-green-800 text-white rounded hover:bg-green-700 flex items-center"
@@ -198,7 +216,6 @@ const AddCourseForm = () => {
             {showAddForm ? 'Hide Add Form' : 'Add New Course'}
           </button>
 
-          {/* Add Course Form */}
           {showAddForm && (
             <div className="p-6 bg-white shadow-md rounded-lg mb-8">
               <form onSubmit={handleSubmit}>
@@ -259,7 +276,6 @@ const AddCourseForm = () => {
             </div>
           )}
 
-          {/* Display Courses in Table */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Courses</h3>
             {currentCourses.length > 0 ? (
@@ -300,7 +316,6 @@ const AddCourseForm = () => {
               <p>No courses found.</p>
             )}
 
-            {/* Pagination */}
             <div className="flex justify-center mt-6">
               {Array.from({ length: Math.ceil(filteredCourses.length / coursesPerPage) }, (_, i) => (
                 <button

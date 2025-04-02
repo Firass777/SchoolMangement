@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope, FaClock, FaIdCard  } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope, FaClock, FaIdCard } from 'react-icons/fa';
 
 const TeacherEventView = () => {
   const [events, setEvents] = useState([]);
@@ -10,6 +10,7 @@ const TeacherEventView = () => {
   const [expandedEventId, setExpandedEventId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const eventsPerPage = 4; 
 
   useEffect(() => {
@@ -25,7 +26,6 @@ const TeacherEventView = () => {
           params: { role: userRole },
         });
 
-        // Sort events by date 
         const sortedEvents = response.data.events.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
@@ -40,18 +40,38 @@ const TeacherEventView = () => {
       }
     };
     fetchEvents();
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Toggle the expanded state of an event
-  const toggleEventDescription = (eventId) => {
-    if (expandedEventId === eventId) {
-      setExpandedEventId(null); // Collapse if already expanded
-    } else {
-      setExpandedEventId(eventId); // Expand the clicked event
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
     }
   };
 
-  // Handle search
+  const toggleEventDescription = (eventId) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+    } else {
+      setExpandedEventId(eventId);
+    }
+  };
+
   useEffect(() => {
     const filtered = events.filter(
       (event) =>
@@ -60,20 +80,17 @@ const TeacherEventView = () => {
         event.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredEvents(filtered);
-    setCurrentPage(1); // Reset to the first page after search
+    setCurrentPage(1);
   }, [searchQuery, events]);
 
-  // Pagination logic
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
 
-  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-green-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -86,11 +103,11 @@ const TeacherEventView = () => {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <Link to="/ttimetable" className="flex items-center space-x-2">
+                <FaClock />
+                <span>Time-Table</span>
+              </Link>
+            </li>             
             <li className="px-6 py-3 hover:bg-green-700">
               <Link to="/teacherstudents" className="flex items-center space-x-2">
                 <FaUserGraduate /> <span>Students</span>
@@ -122,17 +139,22 @@ const TeacherEventView = () => {
                 <span>Emails</span>
               </Link>
             </li>            
-            <li className="px-6 py-3 hover:bg-green-700">
-              <Link to="/notificationview" className="flex items-center space-x-2">
+            <li className="px-6 py-3 hover:bg-green-700 relative">
+              <Link to="/tnotificationview" className="flex items-center space-x-2">
                 <FaBell /> <span>Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/teditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>
+            <li className="px-6 py-3 hover:bg-green-700">
+              <Link to="/teditprofile" className="flex items-center space-x-2">
+                <FaIdCard />
+                <span>Profile</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/" className="flex items-center space-x-2">
                 <FaSignOutAlt /> <span>Logout</span>
@@ -142,12 +164,10 @@ const TeacherEventView = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Events</h2>
 
-          {/* Search Bar */}
           <div className="mb-6">
             <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
               <FaSearch className="text-gray-500" />
@@ -163,7 +183,6 @@ const TeacherEventView = () => {
 
           {message && <p className="mt-4 text-red-600">{message}</p>}
 
-          {/* Events List */}
           <div className="space-y-6">
             {currentEvents.map((event) => (
               <div
@@ -179,7 +198,6 @@ const TeacherEventView = () => {
                   <span className="font-medium">Date:</span> {new Date(event.date).toLocaleDateString()}
                 </p>
 
-                {/* Show description if the event is expanded */}
                 {expandedEventId === event.id && (
                   <p className="text-gray-600 mt-4">
                     <span className="font-medium">Description:</span> {event.description}
@@ -189,7 +207,6 @@ const TeacherEventView = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           {filteredEvents.length > eventsPerPage && (
             <div className="mt-6 flex justify-center space-x-2">
               {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }).map(

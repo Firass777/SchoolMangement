@@ -16,9 +16,11 @@ import {
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import axios from "axios";
 
 function TTimetable() {
   const [timetable, setTimetable] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
   const teacherEmail = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user")).email
     : "";
@@ -27,7 +29,29 @@ function TTimetable() {
     if (teacherEmail) {
       fetchTimetable();
     }
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, [teacherEmail]);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
 
   const fetchTimetable = async () => {
     try {
@@ -76,15 +100,12 @@ function TTimetable() {
     return acc;
   }, {});
 
-  // Function to generate and download PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
 
-    // Add title
     doc.setFontSize(18);
     doc.text("Teacher Timetable", 14, 22);
 
-    // Prepare data for the table
     const tableData = [];
     sortedTimeSlots.forEach((time) => {
       const row = [time];
@@ -95,7 +116,6 @@ function TTimetable() {
       tableData.push(row);
     });
 
-    // Add table to PDF
     autoTable(doc, {
       head: [["Time", ...daysOfWeek]],
       body: tableData,
@@ -105,13 +125,11 @@ function TTimetable() {
       headStyles: { fillColor: [34, 139, 34] }, 
     });
 
-    // Save the PDF
     doc.save("teacher_timetable.pdf");
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-green-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
@@ -165,18 +183,23 @@ function TTimetable() {
                 <span>Emails</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-6 py-3 hover:bg-green-700 relative">
               <Link to="/tnotificationview" className="flex items-center space-x-2">
                 <FaBell />
                 <span>Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/teditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>
+            <li className="px-6 py-3 hover:bg-green-700">
+              <Link to="/teditprofile" className="flex items-center space-x-2">
+                <FaIdCard />
+                <span>Profile</span>
+              </Link>
+            </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/" className="flex items-center space-x-2">
                 <FaSignOutAlt />
@@ -187,7 +210,6 @@ function TTimetable() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Teacher Timetable</h1>
@@ -200,10 +222,8 @@ function TTimetable() {
           </button>
         </div>
 
-        {/* Timetable */}
         <div className="overflow-x-auto">
           <div className="flex border border-gray-300 rounded-lg shadow-lg">
-            {/* Time column */}
             <div className="w-48 flex-shrink-0 bg-gray-100">
               <div className="h-12"></div>
               {sortedTimeSlots.map((time) => (
@@ -216,7 +236,6 @@ function TTimetable() {
               ))}
             </div>
 
-            {/* Days columns */}
             {daysOfWeek.map((day) => (
               <div key={day} className="flex-1 min-w-40">
                 <div className="h-12 flex items-center justify-center font-semibold text-white bg-green-700 border-b border-gray-300">

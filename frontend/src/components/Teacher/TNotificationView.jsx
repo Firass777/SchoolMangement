@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaSearch, FaChalkboardTeacher, FaClipboardList, FaClock, FaIdCard } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaChalkboardTeacher, FaBook, FaClipboardList } from 'react-icons/fa';
 
-const TNotificationView = () => {
+const TNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [notificationCount, setNotificationCount] = useState(0);
   const notificationsPerPage = 4;
 
   useEffect(() => {
@@ -25,6 +26,10 @@ const TNotificationView = () => {
 
         if (response.ok) {
           setNotifications(data.notifications);
+          // Update the count in state and localStorage when fetching notifications
+          const unreadCount = data.notifications.filter(n => !n.read_at).length;
+          setNotificationCount(unreadCount);
+          localStorage.setItem('notificationCount', unreadCount.toString());
         } else {
           setError(data.message || 'Failed to fetch notifications.');
         }
@@ -35,6 +40,38 @@ const TNotificationView = () => {
     };
 
     fetchNotifications();
+    
+    // Mark notifications as read when page is viewed
+    const markAsRead = async () => {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const email = userData?.email;
+      
+      if (!email) return;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/notifications/mark-as-read`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          // Clear the count in state and localStorage when marked as read
+          setNotificationCount(0);
+          localStorage.setItem('notificationCount', '0');
+        }
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    };
+
+    markAsRead();
+    
+    // Check for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter notifications based on search term
@@ -72,11 +109,11 @@ const TNotificationView = () => {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
-               <Link to="/ttimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>   
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock />
+                  <span>Time-Table</span>
+                </Link>
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/teacherstudents" className="flex items-center space-x-2">
                   <FaUserGraduate />
@@ -105,17 +142,22 @@ const TNotificationView = () => {
                 <Link to="/teachereventview" className="flex items-center space-x-2">
                   <FaClipboardList /> <span>Events</span>
                 </Link>
-              </li>          
+              </li>
               <li className="px-6 py-3 hover:bg-green-700">
                 <Link to="/temails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
                 </Link>
-              </li>                  
-              <li className="px-6 py-3 hover:bg-green-700">
+              </li>
+              <li className="px-6 py-3 hover:bg-green-700 relative">
                 <Link to="/tnotificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -173,10 +215,21 @@ const TNotificationView = () => {
               currentNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 border-green-500 hover:shadow-lg transition-shadow"
+                  className={`p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 ${
+                    !notification.read_at 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-300'
+                  } hover:shadow-lg transition-shadow`}
                 >
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-800">{notification.title}</h3>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {notification.title}
+                      {!notification.read_at && (
+                        <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                          New
+                        </span>
+                      )}
+                    </h3>
                     <p className="mt-2 text-gray-600">{notification.description}</p>
                   </div>
                   <span className="text-sm text-gray-500 ml-6 italic">
@@ -213,4 +266,4 @@ const TNotificationView = () => {
   );
 };
 
-export default TNotificationView;
+export default TNotification;
