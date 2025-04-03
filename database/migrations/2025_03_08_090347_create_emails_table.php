@@ -16,6 +16,7 @@ class CreateEmailsTable extends Migration
             $table->string('to'); 
             $table->string('title'); 
             $table->text('description'); 
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }

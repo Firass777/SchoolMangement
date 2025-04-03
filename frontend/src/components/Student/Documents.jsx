@@ -18,10 +18,10 @@ import {
 const Documents = () => {
   const [certificates, setCertificates] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const user = JSON.parse(localStorage.getItem('user'));
   const studentNIN = user.nin;
 
-  // Fetch notification count
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -41,28 +41,44 @@ const Documents = () => {
     }
   };
 
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
+
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, []);
 
-  console.log('Logged-in Student NIN:', studentNIN); 
-
-  // Fetch certificates for the logged-in student
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
         const response = await axios.get('http://localhost:8000/api/certificates');
-        console.log('API Response:', response.data); 
-
-        // Filter certificates for the logged-in student
         const studentCertificates = response.data.data.filter(
           (cert) => cert.student_nin === studentNIN
         );
-
         setCertificates(studentCertificates);
-        console.log('Certificates State:', studentCertificates); 
       } catch (error) {
         console.error('Error fetching certificates:', error);
       }
@@ -72,7 +88,6 @@ const Documents = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-purple-800 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -84,12 +99,11 @@ const Documents = () => {
                 <FaUserGraduate /> <span>Dashboard</span>
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
-                </Link>
-              </li>            
+            <li className="px-6 py-3 hover:bg-purple-700">
+              <Link to="/spayment" className="flex items-center space-x-2">
+                <FaMoneyCheck /> <span>Payment</span>
+              </Link>
+            </li>            
             <li className="px-6 py-3 hover:bg-purple-700">
               <Link to="/stimetable" className="flex items-center space-x-2">
                 <FaClock /> <span>Time-Table</span>
@@ -115,9 +129,14 @@ const Documents = () => {
                 <FaCalendarAlt /> <span>Events</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-purple-700">
+            <li className="px-6 py-3 hover:bg-purple-700 relative">
               <Link to="/semails" className="flex items-center space-x-2">
                 <FaEnvelope /> <span>Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-purple-700">
@@ -150,12 +169,9 @@ const Documents = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">My Certificates</h2>
-
-          {/* Certificates List */}
           {certificates.length > 0 ? (
             <div className="space-y-6">
               {certificates.map((cert) => (

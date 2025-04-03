@@ -7,7 +7,47 @@ const SNotification = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const notificationsPerPage = 4;
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      if (response.data) {
+        setNotificationCount(response.data.count);
+        localStorage.setItem('notificationCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -25,7 +65,6 @@ const SNotification = () => {
 
         if (response.ok) {
           setNotifications(data.notifications);
-          // Update the count in localStorage when fetching notifications
           const unreadCount = data.notifications.filter(n => !n.read_at).length;
           localStorage.setItem('notificationCount', unreadCount.toString());
         } else {
@@ -37,9 +76,6 @@ const SNotification = () => {
       }
     };
 
-    fetchNotifications();
-    
-    // Mark notifications as read when page is viewed
     const markAsRead = async () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       const email = userData?.email;
@@ -56,7 +92,6 @@ const SNotification = () => {
         });
 
         if (response.ok) {
-          // Clear the count in localStorage when marked as read
           localStorage.setItem('notificationCount', '0');
         }
       } catch (error) {
@@ -64,21 +99,24 @@ const SNotification = () => {
       }
     };
 
+    fetchNotifications();
     markAsRead();
-    
-    // Check for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    fetchNotificationCount();
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, []);
 
-  // Filter notifications based on search term
   const filteredNotifications = notifications.filter(
     (notification) =>
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       notification.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination logic
   const indexOfLastNotification = currentPage * notificationsPerPage;
   const indexOfFirstNotification = indexOfLastNotification - notificationsPerPage;
   const currentNotifications = filteredNotifications.slice(
@@ -86,13 +124,11 @@ const SNotification = () => {
     indexOfLastNotification
   );
 
-  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-purple-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -101,96 +137,91 @@ const SNotification = () => {
             <ul>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
+                  <FaUserGraduate /> <span>Dashboard</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
+                  <FaMoneyCheck /> <span>Payment</span>
                 </Link>
               </li>              
-             <li className="px-6 py-3 hover:bg-purple-700">
-               <Link to="/stimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>             
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/stimetable" className="flex items-center space-x-2">
+                  <FaClock /> <span>Time-Table</span>
+                </Link>
+              </li>             
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
+                  <FaChartLine /> <span>Grades</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
+                  <FaCalendarAlt /> <span>Attendance</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook />
-                  <span>Courses</span>
+                  <FaBook /> <span>Courses</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studenteventview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Events</span>
+                  <FaCalendarAlt /> <span>Events</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
+                  <FaEnvelope /> <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/documents" className="flex items-center space-x-2">
-                <FaFileInvoice /> <span>Documents</span>
-              </Link>
-            </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/documents" className="flex items-center space-x-2">
+                  <FaFileInvoice /> <span>Documents</span>
+                </Link>
+              </li>              
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
+                  <FaIdCard /> <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
+                  <FaSignOutAlt /> <span>Logout</span>
                 </Link>
               </li>
             </ul>
           </nav>
         </aside>
 
-
-        {/* Main Content */}
         <main className="flex-1 p-8 overflow-auto min-h-screen bg-gray-50">
-          {/* Header */}
           <div className="mb-6">
             <h2 className="text-4xl font-bold text-gray-900">Notifications</h2>
             <p className="text-lg text-gray-600 mt-2">Stay updated with the latest alerts.</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-400 text-red-700 rounded-lg shadow">
               {error}
             </div>
           )}
 
-          {/* Search Bar */}
           <div className="mb-6">
             <div className="relative">
               <input
@@ -204,7 +235,6 @@ const SNotification = () => {
             </div>
           </div>
 
-          {/* Notifications List */}
           <div className="space-y-6">
             {currentNotifications.length === 0 ? (
               <div className="p-6 bg-white shadow-md rounded-lg text-gray-500 text-center">
@@ -239,7 +269,6 @@ const SNotification = () => {
             )}
           </div>
 
-          {/* Pagination */}
           {filteredNotifications.length > notificationsPerPage && (
             <div className="mt-8 flex justify-center space-x-2">
               {Array.from({ length: Math.ceil(filteredNotifications.length / notificationsPerPage) }).map(

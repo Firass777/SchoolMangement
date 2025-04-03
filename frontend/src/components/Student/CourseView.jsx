@@ -9,6 +9,7 @@ const CoursesView = () => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
   // Fetch notification count
   const fetchNotificationCount = async () => {
@@ -30,10 +31,35 @@ const CoursesView = () => {
     }
   };
 
+  // Fetch email count
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
+
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, []);
 
   // Fetch courses based on class (from localStorage) and subject filter
@@ -140,10 +166,15 @@ const CoursesView = () => {
                   <span>Events</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/semails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
@@ -178,7 +209,6 @@ const CoursesView = () => {
             </ul>
           </nav>
         </aside>
-
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">

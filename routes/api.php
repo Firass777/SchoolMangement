@@ -139,3 +139,6 @@ Route::get('/attendance/recent/{studentNIN}', [AttendanceController::class, 'get
 Route::get('/notifications/{email}', [NotificationController::class, 'getNotifications']);
 Route::get('/notifications/unread-count/{email}', [NotificationController::class, 'getUnreadCount']);
 Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
+
+Route::get('/emails/unread-count/{email}', [EmailController::class, 'getUnreadCount']);
+Route::post('/emails/mark-as-read', [EmailController::class, 'markAsRead']);

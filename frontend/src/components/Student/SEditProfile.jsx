@@ -34,8 +34,8 @@ function EditProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [studentRecord, setStudentRecord] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
-  // Fetch notification count
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -55,13 +55,29 @@ function EditProfile() {
     }
   };
 
-  // Fetch the logged-in student's data from localStorage
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchStudentData = () => {
       try {
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
-
-        console.log("Logged-in User Data from localStorage:", loggedInUser);
 
         if (loggedInUser) {
           setFormData({
@@ -74,7 +90,6 @@ function EditProfile() {
             class: loggedInUser.class || "",
           });
 
-          // Fetch student record if NIN is available
           if (loggedInUser.nin) {
             fetchStudentRecord(loggedInUser.nin);
           }
@@ -89,8 +104,13 @@ function EditProfile() {
 
     fetchStudentData();
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, []);
 
   const fetchStudentRecord = async (nin) => {
@@ -118,7 +138,6 @@ function EditProfile() {
     setSuccess("");
 
     try {
-      // If password is blank, remove it from the form data
       const dataToSend = { ...formData };
       if (!dataToSend.password) {
         delete dataToSend.password;
@@ -134,11 +153,8 @@ function EditProfile() {
         }
       );
       setSuccess("Profile updated successfully!");
-
-      // Update the user data in localStorage
       const updatedUser = { ...formData, ...dataToSend };
       localStorage.setItem("user", JSON.stringify(updatedUser));
-
       setFormData({ ...formData, password: "" });
       setIsEditing(false);
     } catch (err) {
@@ -155,7 +171,6 @@ function EditProfile() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-purple-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -164,50 +179,47 @@ function EditProfile() {
             <ul>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
+                  <FaUserGraduate /> <span>Dashboard</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
+                  <FaMoneyCheck /> <span>Payment</span>
                 </Link>
               </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/stimetable" className="flex items-center space-x-2">
-                  <FaClock />
-                  <span>Time-Table</span>
+                  <FaClock /> <span>Time-Table</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartBar />
-                  <span>Grades</span>
+                  <FaChartBar /> <span>Grades</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
+                  <FaCalendarAlt /> <span>Attendance</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook />
-                  <span>Courses</span>
+                  <FaBook /> <span>Courses</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studenteventview" className="flex items-center space-x-2">
-                  <FaClipboardList />
-                  <span>Events</span>
+                  <FaClipboardList /> <span>Events</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
+                  <FaEnvelope /> <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
@@ -228,25 +240,21 @@ function EditProfile() {
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
+                  <FaIdCard /> <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
+                  <FaSignOutAlt /> <span>Logout</span>
                 </Link>
               </li>
             </ul>
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Profile</h2>
 
-          {/* User Information Section */}
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-gray-800">User Information</h3>
@@ -356,7 +364,6 @@ function EditProfile() {
             )}
           </div>
 
-          {/* Student Record Section */}
           {studentRecord && (
             <div className="bg-white shadow-md rounded-lg p-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Student Record</h3>
@@ -445,7 +452,6 @@ function EditProfile() {
             </div>
           )}
 
-          {/* Error and Success Messages */}
           {error && <div className="mt-6 p-4 bg-red-100 text-red-600 rounded">{error}</div>}
           {success && <div className="mt-6 p-4 bg-green-100 text-green-600 rounded">{success}</div>}
         </main>

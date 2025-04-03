@@ -11,8 +11,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const GradesView = () => {
   const [grades, setGrades] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
-  // Fetch notification count
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -32,7 +32,25 @@ const GradesView = () => {
     }
   };
 
-  // Fetch grades data
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchGrades = async () => {
       const studentData = JSON.parse(localStorage.getItem('user'));
@@ -57,18 +75,21 @@ const GradesView = () => {
 
     fetchGrades();
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, []);
 
-  // Prepare data for the chart
   const chartData = {
     labels: grades.map((grade) => grade.subject),
     datasets: [
       {
         label: 'Grades',
         data: grades.map((grade) => {
-          // Convert grades to numerical values for the chart (e.g., A=4, B=3, etc.)
           switch (grade.grade) {
             case 'A': return 4;
             case 'B': return 3;
@@ -97,7 +118,6 @@ const GradesView = () => {
     },
   };
 
-  // Function to download grades as PDF
   const handleDownloadPDF = () => {
     const element = document.getElementById('grades-table');
     const opt = {
@@ -113,7 +133,6 @@ const GradesView = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-purple-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -122,38 +141,32 @@ const GradesView = () => {
             <ul>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
+                  <FaUserGraduate /> <span>Dashboard</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
+                  <FaMoneyCheck /> <span>Payment</span>
                 </Link>
               </li>              
-             <li className="px-6 py-3 hover:bg-purple-700">
-               <Link to="/stimetable" className="flex items-center space-x-2">
-                 <FaClock />
-                 <span>Time-Table</span>
-               </Link>
-             </li>               
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/stimetable" className="flex items-center space-x-2">
+                  <FaClock /> <span>Time-Table</span>
+                </Link>
+              </li>               
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
+                  <FaChartLine /> <span>Grades</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
+                  <FaCalendarAlt /> <span>Attendance</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook />
-                  <span>Courses</span>
+                  <FaBook /> <span>Courses</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
@@ -161,17 +174,21 @@ const GradesView = () => {
                   <FaCalendarAlt /> <span>Events</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
+                  <FaEnvelope /> <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>   
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/documents" className="flex items-center space-x-2">
-                <FaFileInvoice /> <span>Documents</span>
-              </Link>
-            </li>                                 
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/documents" className="flex items-center space-x-2">
+                  <FaFileInvoice /> <span>Documents</span>
+                </Link>
+              </li>                                 
               <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/notificationview" className="flex items-center space-x-2">
                   <FaBell />
@@ -183,42 +200,35 @@ const GradesView = () => {
                   )}
                 </Link>
               </li>
-             <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
+                  <FaIdCard /> <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
+                  <FaSignOutAlt /> <span>Logout</span>
                 </Link>
               </li>
             </ul>
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
-          {/* Header */}
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Your Grades</h2>
             <p className="text-lg text-gray-600 mt-2">View your grades and performance below:</p>
           </div>
 
-          {/* Download Button */}
           <div className="mb-6 flex justify-end">
             <button
               onClick={handleDownloadPDF}
               className="flex items-center px-4 py-2 bg-purple-800 text-white rounded hover:bg-purple-700"
             >
-              <FaDownload className="mr-2" />
-              Download as PDF
+              <FaDownload className="mr-2" /> Download as PDF
             </button>
           </div>
 
-          {/* Grades Table */}
           <div id="grades-table" className="mb-6 p-6 bg-white shadow-md rounded-lg">
             {grades.length === 0 ? (
               <p className="text-gray-500">No grade records found.</p>
@@ -249,7 +259,6 @@ const GradesView = () => {
           </div>
 
           <div className="flex justify-center space-x-6">
-            {/* Grades Chart */}
             <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
               <div className="w-full h-64">
@@ -257,7 +266,6 @@ const GradesView = () => {
               </div>
             </div>
 
-            {/* Performance Summary */}
             <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Performance Summary</h3>
               {grades.length > 0 ? (

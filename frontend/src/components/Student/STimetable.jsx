@@ -21,11 +21,11 @@ import axios from "axios";
 function STimetable() {
   const [timetable, setTimetable] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const studentClass = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user")).class
     : "";
 
-  // Fetch notification count
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -45,13 +45,37 @@ function STimetable() {
     }
   };
 
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
+
   useEffect(() => {
     if (studentClass) {
       fetchTimetable();
     }
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, [studentClass]);
 
   const fetchTimetable = async () => {
@@ -101,15 +125,11 @@ function STimetable() {
     return acc;
   }, {});
 
-  // Function to generate and download PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
-
-    // Add title
     doc.setFontSize(18);
     doc.text("Student Timetable", 14, 22);
 
-    // Prepare data for the table
     const tableData = [];
     sortedTimeSlots.forEach((time) => {
       const row = [time];
@@ -120,7 +140,6 @@ function STimetable() {
       tableData.push(row);
     });
 
-    // Add table to PDF
     autoTable(doc, {
       head: [["Time", ...daysOfWeek]],
       body: tableData,
@@ -130,15 +149,11 @@ function STimetable() {
       headStyles: { fillColor: [128, 0, 128] }, 
     });
 
-    // Save the PDF
     doc.save("student_timetable.pdf");
   };
 
-
-
   return (
     <div className="flex min-h-screen bg-gray-100">
-        {/* Sidebar */}
         <aside className="w-64 bg-purple-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Student Dashboard</h1>
@@ -147,84 +162,79 @@ function STimetable() {
             <ul>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
+                  <FaUserGraduate /> <span>Dashboard</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
+                  <FaMoneyCheck /> <span>Payment</span>
                 </Link>
               </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/stimetable" className="flex items-center space-x-2">
-                  <FaClock />
-                  <span>Time-Table</span>
+                  <FaClock /> <span>Time-Table</span>
                 </Link>
               </li>              
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
+                  <FaChartLine /> <span>Grades</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
+                  <FaCalendarAlt /> <span>Attendance</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook  />
-                  <span>Courses</span>
+                  <FaBook /> <span>Courses</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/studenteventview" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Events</span>
-              </Link>
-            </li>
               <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/studenteventview" className="flex items-center space-x-2">
+                  <FaCalendarAlt /> <span>Events</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
                 <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
+                  <FaEnvelope /> <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>    
-            <li className="px-6 py-3 hover:bg-purple-700">
-              <Link to="/documents" className="flex items-center space-x-2">
-                <FaFileInvoice /> <span>Documents</span>
-              </Link>
-            </li>                                    
-            <li className="px-6 py-3 hover:bg-purple-700 relative">
-              <Link to="/notificationview" className="flex items-center space-x-2">
-                <FaBell />
-                <span>Notifications</span>
-                {notificationCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-             <li className="px-6 py-3 hover:bg-purple-700">
+              <li className="px-6 py-3 hover:bg-purple-700">
+                <Link to="/documents" className="flex items-center space-x-2">
+                  <FaFileInvoice /> <span>Documents</span>
+                </Link>
+              </li>                                    
+              <li className="px-6 py-3 hover:bg-purple-700 relative">
+                <Link to="/notificationview" className="flex items-center space-x-2">
+                  <FaBell />
+                  <span>Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-purple-700">
                 <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
+                  <FaIdCard /> <span>Profile</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-red-600">
                 <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
+                  <FaSignOutAlt /> <span>Logout</span>
                 </Link>
               </li>
             </ul>
           </nav>
         </aside>
 
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Student Timetable</h1>
@@ -237,10 +247,8 @@ function STimetable() {
           </button>
         </div>
 
-        {/* Timetable */}
         <div className="overflow-x-auto">
           <div className="flex border border-gray-300 rounded-lg shadow-lg">
-            {/* Time column */}
             <div className="w-48 flex-shrink-0 bg-gray-100">
               <div className="h-12"></div>
               {sortedTimeSlots.map((time) => (
@@ -253,7 +261,6 @@ function STimetable() {
               ))}
             </div>
 
-            {/* Days columns */}
             {daysOfWeek.map((day) => (
               <div key={day} className="flex-1 min-w-40">
                 <div className="h-12 flex items-center justify-center font-semibold text-white bg-purple-700 border-b border-gray-300">
