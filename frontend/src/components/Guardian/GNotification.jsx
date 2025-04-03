@@ -7,9 +7,18 @@ const GNotification = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const notificationsPerPage = 4;
 
   useEffect(() => {
+    fetchNotificationCount();
+    fetchEmailCount();
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchEmailCount();
+    }, 30000);
+    
     const fetchNotifications = async () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       const email = userData?.email;
@@ -28,6 +37,7 @@ const GNotification = () => {
           // Update the count in localStorage when fetching notifications
           const unreadCount = data.notifications.filter(n => !n.read_at).length;
           localStorage.setItem('notificationCount', unreadCount.toString());
+          setNotificationCount(unreadCount);
         } else {
           setError(data.message || 'Failed to fetch notifications.');
         }
@@ -58,6 +68,7 @@ const GNotification = () => {
         if (response.ok) {
           // Clear the count in localStorage when marked as read
           localStorage.setItem('notificationCount', '0');
+          setNotificationCount(0);
         }
       } catch (error) {
         console.error('Error marking notifications as read:', error);
@@ -66,10 +77,48 @@ const GNotification = () => {
 
     markAsRead();
     
-    // Check for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchNotificationCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/notifications/unread-count/${email}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setNotificationCount(data.count);
+        localStorage.setItem('notificationCount', data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setEmailCount(data.count);
+        localStorage.setItem('emailCount', data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
 
   // Filter notifications based on search term
   const filteredNotifications = notifications.filter(
@@ -134,17 +183,26 @@ const GNotification = () => {
                   <span>Events</span>
                 </Link>
               </li>  
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gnotification" className="flex items-center space-x-2">
                   <FaBell />
                   <span>Notifications</span>
-                  {/* No badge shown on the notifications page itself */}
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700">

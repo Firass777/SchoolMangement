@@ -27,11 +27,13 @@ const Gpayment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     fetchNotificationCount();
+    fetchEmailCount();
     
     if (user) {
       const childrenNin = JSON.parse(user.children_nin || '[]');
@@ -46,8 +48,11 @@ const Gpayment = () => {
       fetchSummary();
     }
 
-    // Set up polling for notifications
-    const interval = setInterval(fetchNotificationCount, 30000);
+    // Set up polling for notifications and emails
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchEmailCount();
+    }, 30000);
     return () => clearInterval(interval);
   }, [currentPage]);
 
@@ -64,6 +69,22 @@ const Gpayment = () => {
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    if (!user?.email) return;
+    
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${user.email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
     }
   };
 
@@ -222,10 +243,15 @@ const Gpayment = () => {
                   <span>Events</span>
                 </Link>
               </li>
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700 relative">

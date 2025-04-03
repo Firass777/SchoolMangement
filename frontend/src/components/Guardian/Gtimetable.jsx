@@ -19,13 +19,17 @@ function Gtimetable() {
   const [error, setError] = useState(null);
   const [activeChildIndex, setActiveChildIndex] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
     fetchNotificationCount();
+    fetchEmailCount();
     fetchData();
 
-    // Set up polling for notifications
-    const interval = setInterval(fetchNotificationCount, 30000);
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchEmailCount();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -48,6 +52,28 @@ function Gtimetable() {
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    const userData = localStorage.getItem("user");
+    if (!userData) return;
+    
+    const user = JSON.parse(userData);
+    const email = user?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
     }
   };
 
@@ -144,7 +170,7 @@ function Gtimetable() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar notificationCount={notificationCount} />
+        <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
         <div className="flex-1 p-6">Loading...</div>
       </div>
     );
@@ -153,7 +179,7 @@ function Gtimetable() {
   if (error) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar notificationCount={notificationCount} />
+        <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
         <div className="flex-1 p-6 text-red-500">{error}</div>
       </div>
     );
@@ -162,7 +188,7 @@ function Gtimetable() {
   if (childrenTimetables.length === 0) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar notificationCount={notificationCount} />
+        <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
         <div className="flex-1 p-6">No children timetables found</div>
       </div>
     );
@@ -181,7 +207,7 @@ function Gtimetable() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar notificationCount={notificationCount} />
+      <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Children's Timetables</h1>
@@ -257,7 +283,7 @@ function Gtimetable() {
   );
 }
 
-const Sidebar = ({ notificationCount }) => (
+const Sidebar = ({ notificationCount, emailCount }) => (
   <aside className="w-64 bg-orange-800 text-white flex flex-col">
     <div className="p-6">
       <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
@@ -300,10 +326,15 @@ const Sidebar = ({ notificationCount }) => (
             <span>Events</span>
           </Link>
         </li>
-        <li className="px-6 py-3 hover:bg-orange-700">
+        <li className="px-6 py-3 hover:bg-orange-700 relative">
           <Link to="/gemails" className="flex items-center space-x-2">
             <FaEnvelope />
             <span>Emails</span>
+            {emailCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {emailCount}
+              </span>
+            )}
           </Link>
         </li>
         <li className="px-6 py-3 hover:bg-orange-700 relative">

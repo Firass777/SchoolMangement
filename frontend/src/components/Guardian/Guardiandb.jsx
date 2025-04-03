@@ -28,13 +28,17 @@ function Guardiandb() {
     attendance: true
   });
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
     fetchData();
     fetchNotificationCount();
+    fetchEmailCount();
 
-    // Set up polling for notifications
-    const interval = setInterval(fetchNotificationCount, 30000);
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchEmailCount();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -54,6 +58,25 @@ function Guardiandb() {
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
     }
   };
 
@@ -160,7 +183,6 @@ function Guardiandb() {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-        {/* Sidebar */}
         <aside className="w-64 bg-orange-800 text-white flex flex-col">
           <div className="p-6">
             <h1 className="text-2xl font-bold">Guardian Dashboard</h1>
@@ -202,10 +224,15 @@ function Guardiandb() {
                   <span>Events</span>
                 </Link>
               </li>  
-              <li className="px-6 py-3 hover:bg-orange-700">
+              <li className="px-6 py-3 hover:bg-orange-700 relative">
                 <Link to="/gemails" className="flex items-center space-x-2">
                   <FaEnvelope />
                   <span>Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-orange-700 relative">
@@ -235,9 +262,7 @@ function Guardiandb() {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 overflow-auto min-h-screen">
-          {/* Header */}
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Guardian Dashboard</h2>
             <p className="text-lg text-gray-600 mt-2">
@@ -249,17 +274,14 @@ function Guardiandb() {
             </p>
           </div>
 
-          {/* Loading State */}
           {isLoading && (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
             </div>
           )}
 
-          {/* Content */}
           {!isLoading && (
             <div className="space-y-6">
-              {/* Payment Summary */}
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -357,7 +379,6 @@ function Guardiandb() {
                 </AnimatePresence>
               </motion.section>
 
-              {/* Grades Section */}
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -466,7 +487,6 @@ function Guardiandb() {
                 </AnimatePresence>
               </motion.section>
 
-              {/* Attendance Section */}
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
