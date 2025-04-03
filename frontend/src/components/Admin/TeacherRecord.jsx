@@ -46,10 +46,33 @@ function TeacherRecord() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
     fetchRecords();
+    fetchEmailCount();
   }, [currentPage, searchTerm]);
+
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      const data = await response.json();
+      if (data) {
+        setEmailCount(data.count);
+        localStorage.setItem('emailCount', data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
 
   const fetchRecords = async () => {
     try {
@@ -204,16 +227,21 @@ function TeacherRecord() {
                   <span>Teacher Record</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 hover:bg-blue-700 relative">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell />
                 <span>Notifications</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 hover:bg-blue-700 relative">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope />
                 <span>Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">

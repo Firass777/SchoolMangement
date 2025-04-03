@@ -32,11 +32,34 @@ const EventForm = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [eventsPerPage] = useState(4);
   const [showForm, setShowForm] = useState(false);
+  const [emailCount, setEmailCount] = useState(0);
 
   // Fetch all events on component mount
   useEffect(() => {
     fetchEvents();
+    fetchEmailCount();
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => clearInterval(emailInterval);
   }, []);
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -168,10 +191,15 @@ const EventForm = () => {
                 <span>Notifications</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 hover:bg-blue-700 relative">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope />
                 <span>Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">

@@ -30,6 +30,7 @@ function TimetableForm() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState({ type: "student", value: "" });
   const [editId, setEditId] = useState(null);
+  const [emailCount, setEmailCount] = useState(0);
 
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const timeSlots = [
@@ -39,6 +40,33 @@ function TimetableForm() {
     "13:35 - 15:00 PM",
     "15:05 - 17:00 PM",
   ];
+
+  useEffect(() => {
+    if (filter.value) {
+      fetchTimetable();
+    }
+    fetchEmailCount();
+  }, [filter]);
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      const data = await response.json();
+      if (data) {
+        setEmailCount(data.count);
+        localStorage.setItem('emailCount', data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -96,12 +124,6 @@ function TimetableForm() {
     setEditId(entry.id);
     setShowForm(true);
   };
-
-  useEffect(() => {
-    if (filter.value) {
-      fetchTimetable();
-    }
-  }, [filter]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -165,16 +187,21 @@ function TimetableForm() {
                   <span>Teacher Record</span>
                 </Link>
               </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 hover:bg-blue-700 relative">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell />
                 <span>Notifications</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-6 py-3 hover:bg-blue-700 relative">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope />
                 <span>Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
