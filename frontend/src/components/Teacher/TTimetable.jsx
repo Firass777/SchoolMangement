@@ -21,6 +21,7 @@ import axios from "axios";
 function TTimetable() {
   const [timetable, setTimetable] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const teacherEmail = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user")).email
     : "";
@@ -30,8 +31,13 @@ function TTimetable() {
       fetchTimetable();
     }
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
+    fetchEmailCount();
+    const notificationInterval = setInterval(fetchNotificationCount, 30000);
+    const emailInterval = setInterval(fetchEmailCount, 30000);
+    return () => {
+      clearInterval(notificationInterval);
+      clearInterval(emailInterval);
+    };
   }, [teacherEmail]);
 
   const fetchNotificationCount = async () => {
@@ -50,6 +56,25 @@ function TTimetable() {
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
+    
+    if (!email) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/emails/unread-count/${email}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
     }
   };
 
@@ -177,10 +202,15 @@ function TTimetable() {
                 <FaClipboardList /> <span>Events</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-6 py-3 hover:bg-green-700 relative">
               <Link to="/temails" className="flex items-center space-x-2">
                 <FaEnvelope />
                 <span>Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-green-700 relative">
