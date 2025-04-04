@@ -73,8 +73,6 @@ const StudentDB = () => {
         if (response.ok) {
           const sortedAttendance = data.attendances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           setAttendance(sortedAttendance);
-        } else {
-          alert(data.message || 'Failed to fetch attendance.');
         }
       } catch (error) {
         console.error('Error fetching attendance:', error);
@@ -91,8 +89,6 @@ const StudentDB = () => {
         if (response.ok) {
           const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           setGrades(sortedGrades);
-        } else {
-          alert(data.message || 'Failed to fetch grades.');
         }
       } catch (error) {
         console.error('Error fetching grades:', error);
@@ -435,31 +431,27 @@ const StudentDB = () => {
                 transition={{ duration: 0.5, delay: index * 0.2 }}
               >
                 <h3 className="text-xl font-bold text-gray-800 mb-4">{section.title}</h3>
-                {section.data.length === 0 ? (
-                  <p className="text-gray-500">No records found.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto">
-                      <thead className="bg-purple-800 text-white">
-                        <tr>
-                          {section.headers.map((header, idx) => (
-                            <th key={idx} className="px-6 py-3 text-left">{header}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {section.data.slice(0, 2).map((record) => (
-                          <tr key={record.id} className="border-b">
-                            <td className="px-6 py-3">{record.subject}</td>
-                            <td className="px-6 py-3">{record.status || record.grade}</td>
-                            <td className="px-6 py-3">{record.class}</td>
-                            <td className="px-6 py-3">{new Date(record.created_at).toLocaleDateString()}</td>
-                          </tr>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full table-auto">
+                    <thead className="bg-purple-800 text-white">
+                      <tr>
+                        {section.headers.map((header, idx) => (
+                          <th key={idx} className="px-6 py-3 text-left">{header}</th>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {section.data.slice(0, 2).map((record) => (
+                        <tr key={record.id} className="border-b">
+                          <td className="px-6 py-3">{record.subject}</td>
+                          <td className="px-6 py-3">{record.status || record.grade}</td>
+                          <td className="px-6 py-3">{record.class}</td>
+                          <td className="px-6 py-3">{new Date(record.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </motion.div>
             ))}
           </motion.main>

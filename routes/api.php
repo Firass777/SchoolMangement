@@ -75,9 +75,14 @@ Route::put('/teacher-timetable/update/{id}', [TimetableController::class, 'updat
 
 Route::post('/notification/send', [NotificationController::class, 'sendNotification']);
 Route::get('/notifications/{recipient}', [NotificationController::class, 'getNotifications']);
+Route::get('/notifications/{email}', [NotificationController::class, 'getNotifications']);
+Route::get('/notifications/unread-count/{email}', [NotificationController::class, 'getUnreadCount']);
+Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
 
 Route::post('/emails/send', [EmailController::class, 'sendEmail']);
 Route::get('/emails', [EmailController::class, 'getEmails']);
+Route::get('/emails/unread-count/{email}', [EmailController::class, 'getUnreadCount']);
+Route::post('/emails/mark-as-read', [EmailController::class, 'markAsRead']);
 
 Route::post('/events/add', [EventController::class, 'addEvent']);
 Route::get('/events', [EventController::class, 'getEvents']);
@@ -107,6 +112,8 @@ Route::get('grades/{studentNIN}', [GradesController::class, 'getGrades']);
 Route::get('grades/teacher/{teacherNin}', [GradesController::class, 'getGradesByTeacherNin']);
 Route::delete('grades/delete/{id}', [GradesController::class, 'deleteGrade']);
 Route::get('grades-with-names', [GradesController::class, 'getAllGradesWithNames']);
+Route::get('/grades/recent/{studentNIN}', [GradesController::class, 'getRecentGrades']);
+Route::get('/attendance/recent/{studentNIN}', [AttendanceController::class, 'getRecentAttendance']);
 
 
 Route::get('/attendance/students-count/{teacherNin}', [AttendanceController::class, 'getStudentsCountByTeacher']);
@@ -133,12 +140,3 @@ Route::post('/logout', [UsersController::class, 'logout']);
 Route::get('/users', [UsersController::class, 'index']);
 
 
-Route::get('/grades/recent/{studentNIN}', [GradesController::class, 'getRecentGrades']);
-Route::get('/attendance/recent/{studentNIN}', [AttendanceController::class, 'getRecentAttendance']);
-
-Route::get('/notifications/{email}', [NotificationController::class, 'getNotifications']);
-Route::get('/notifications/unread-count/{email}', [NotificationController::class, 'getUnreadCount']);
-Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
-
-Route::get('/emails/unread-count/{email}', [EmailController::class, 'getUnreadCount']);
-Route::post('/emails/mark-as-read', [EmailController::class, 'markAsRead']);

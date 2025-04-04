@@ -449,12 +449,6 @@ const AdminReports = () => {
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-blue-700">
-              <Link to="/aemails" className="flex items-center space-x-2">
-                <FaEnvelope />
-                <span>Emails</span>
-              </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/settings" className="flex items-center space-x-2">
                 <FaCog />
                 <span>Settings</span>

@@ -17,10 +17,11 @@ const AttendanceForm = () => {
   const [message, setMessage] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const attendancesPerPage = 5;
 
   const user = JSON.parse(localStorage.getItem('user'));
-  const teacherNin = user.nin;
+  const teacherNin = user?.nin;
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -39,7 +40,7 @@ const AttendanceForm = () => {
     const fetchAttendances = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
-        setAttendances(response.data.attendances);
+        setAttendances(response.data?.attendances || []);
       } catch (error) {
         console.error('Error fetching attendances:', error);
       }
@@ -66,8 +67,8 @@ const AttendanceForm = () => {
         `http://localhost:8000/api/notifications/unread-count/${email}`
       );
       if (response.data) {
-        setNotificationCount(response.data.count);
-        localStorage.setItem('notificationCount', response.data.count.toString());
+        setNotificationCount(response.data.count || 0);
+        localStorage.setItem('notificationCount', (response.data.count || 0).toString());
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
@@ -85,8 +86,8 @@ const AttendanceForm = () => {
         `http://localhost:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
-        setEmailCount(response.data.count);
-        localStorage.setItem('emailCount', response.data.count.toString());
+        setEmailCount(response.data.count || 0);
+        localStorage.setItem('emailCount', (response.data.count || 0).toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);
@@ -96,39 +97,48 @@ const AttendanceForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch('http://localhost:8000/api/attendance/add', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const response = await axios.post('http://localhost:8000/api/attendance/add', {
         student_nin: studentNIN,
         status,
         class: className,
         subject,
         teacher_nin: teacherNin,
-      }),
-    });
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      setMessage('Attendance added successfully!');
-      const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
-      setAttendances(updatedAttendances.data.attendances);
-    } else {
-      setMessage(data.message || 'Failed to add attendance.');
+      if (response.data) {
+        setMessage('Attendance added successfully!');
+        const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
+        setAttendances(updatedAttendances.data?.attendances || []);
+        // Reset form
+        setStudentNIN('');
+        setClassName('');
+        setSubject('');
+      }
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Failed to add attendance.');
     }
   };
 
   const handleDelete = async (id) => {
+    if (isDeleting) return;
+    
+    setIsDeleting(true);
     try {
-      await axios.delete(`http://localhost:8000/api/attendance/delete/${id}`);
-      setMessage('Attendance deleted successfully!');
-      const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
-      setAttendances(updatedAttendances.data.attendances);
+      const response = await axios.delete(`http://localhost:8000/api/attendance/${id}`);
+      
+      if (response.status === 200) {
+        setMessage('Attendance deleted successfully!');
+        // Optimistically update the UI
+        setAttendances(prev => prev.filter(att => att.id !== id));
+      } else {
+        setMessage('Failed to delete attendance.');
+      }
     } catch (error) {
-      setMessage('Failed to delete attendance.');
       console.error('Error:', error);
+      setMessage(error.response?.data?.message || 'Failed to delete attendance.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -146,6 +156,7 @@ const AttendanceForm = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
+      {/* Sidebar remains the same */}
       <div className="flex flex-1">
         <aside className="w-64 bg-green-800 text-white flex flex-col">
           <div className="p-6">
@@ -163,12 +174,6 @@ const AttendanceForm = () => {
                 <Link to="/ttimetable" className="flex items-center space-x-2">
                   <FaClock />
                   <span>Time-Table</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/teacherstudents" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Students</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -334,58 +339,65 @@ const AttendanceForm = () => {
                 Add Attendance
               </button>
             </form>
-            {message && <p className="mt-4 text-green-600">{message}</p>}
+            {message && (
+              <p className={`mt-4 ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                {message}
+              </p>
+            )}
           </div>
 
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Attendances</h3>
-            {currentAttendances.length > 0 ? (
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="bg-green-800 text-white">
-                    <th className="px-4 py-2">Student NIN</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Class</th>
-                    <th className="px-4 py-2">Subject</th>
-                    <th className="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentAttendances.map((attendance) => (
-                    <tr key={attendance.id} className="border-b hover:bg-gray-100">
-                      <td className="px-4 py-2">{attendance.student_nin}</td>
-                      <td className="px-4 py-2">{attendance.status}</td>
-                      <td className="px-4 py-2">{attendance.class}</td>
-                      <td className="px-4 py-2">{attendance.subject}</td>
-                      <td className="px-4 py-2">
-                        <button
-                          onClick={() => handleDelete(attendance.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
+            {attendances.length > 0 ? (
+              <>
+                <table className="w-full table-auto">
+                  <thead>
+                    <tr className="bg-green-800 text-white">
+                      <th className="px-4 py-2">Student NIN</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2">Class</th>
+                      <th className="px-4 py-2">Subject</th>
+                      <th className="px-4 py-2">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No attendance records found.</p>
-            )}
+                  </thead>
+                  <tbody>
+                    {currentAttendances.map((attendance) => (
+                      <tr key={attendance.id} className="border-b hover:bg-gray-100">
+                        <td className="px-4 py-2">{attendance.student_nin}</td>
+                        <td className="px-4 py-2">{attendance.status}</td>
+                        <td className="px-4 py-2">{attendance.class}</td>
+                        <td className="px-4 py-2">{attendance.subject}</td>
+                        <td className="px-4 py-2">
+                          <button
+                            onClick={() => handleDelete(attendance.id)}
+                            className="text-red-500 hover:text-red-700"
+                            disabled={isDeleting}
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-            <div className="flex justify-center mt-6">
-              {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`mx-1 px-4 py-2 rounded ${
-                    currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+                <div className="flex justify-center mt-6">
+                  {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`mx-1 px-4 py-2 rounded ${
+                        currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center py-8 text-gray-500">No attendance records found.</p>
+            )}
           </div>
         </main>
       </div>

@@ -125,12 +125,6 @@ const TEmails = () => {
               </Link>
             </li>             
             <li className="px-6 py-3 hover:bg-green-700">
-              <Link to="/teacherstudents" className="flex items-center space-x-2">
-                <FaUserGraduate />
-                <span>Students</span>
-              </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-green-700">
               <Link to="/attendanceform" className="flex items-center space-x-2">
                 <FaCalendarAlt />
                 <span>Attendance</span>

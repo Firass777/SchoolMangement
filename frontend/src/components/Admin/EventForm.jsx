@@ -202,12 +202,6 @@ const EventForm = () => {
                 )}
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
-              <Link to="/settings" className="flex items-center space-x-2">
-                <FaCog />
-                <span>Settings</span>
-              </Link>
-            </li>
             <li className="px-6 py-3 hover:bg-red-600">
               <Link to="/" className="flex items-center space-x-2">
                 <FaSignOutAlt />

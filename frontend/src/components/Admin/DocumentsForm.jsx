@@ -50,23 +50,47 @@ const DocumentsForm = () => {
   const formRef = useRef(null);
   const certFormRef = useRef(null);
 
+  // Load students data
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchStudents = async () => {
       try {
         const usersRes = await axios.get('http://localhost:8000/api/users');
         setStudents(usersRes.data.filter(user => user.role === 'student'));
+      } catch (error) {
+        console.error('Error loading students:', error);
+      }
+    };
+    fetchStudents();
+  }, []);
 
+  // Load certificates data
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
         const certRes = await axios.get('http://localhost:8000/api/certificates');
         setCertificates(certRes.data.data);
+      } catch (error) {
+        console.error('Error loading certificates:', error);
+      }
+    };
+    fetchCertificates();
+  }, []);
 
+  // Load documents data
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
         const docsRes = await axios.get('http://localhost:8000/api/documents');
         processDocuments(docsRes.data.documents);
       } catch (error) {
-        setMessage({ text: 'Failed to load data', type: 'error' });
+        console.error('Error loading documents:', error);
       }
     };
+    fetchDocuments();
+  }, []);
 
-    fetchInitialData();
+  // Email count
+  useEffect(() => {
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
@@ -103,7 +127,7 @@ const DocumentsForm = () => {
       const response = await axios.get('http://localhost:8000/api/documents');
       processDocuments(response.data.documents);
     } catch (error) {
-      setMessage({ text: 'Failed to load documents', type: 'error' });
+      console.error('Error loading documents:', error);
     }
   };
 
@@ -167,8 +191,7 @@ const DocumentsForm = () => {
     try {
       await axios.delete(`http://localhost:8000/api/certificates/delete/${id}`);
       setMessage({ text: 'Certificate deleted', type: 'success' });
-      const updatedCertificates = await axios.get('http://localhost:8000/api/certificates');
-      setCertificates(updatedCertificates.data.data);
+      setCertificates(certificates.filter(cert => cert.id !== id));
     } catch (error) {
       setMessage({ text: 'Delete failed', type: 'error' });
     }
@@ -324,12 +347,6 @@ const DocumentsForm = () => {
                     {emailCount}
                   </span>
                 )}
-              </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
-              <Link to="/settings" className="flex items-center space-x-2">
-                <FaCog />
-                <span>Settings</span>
               </Link>
             </li>
             <li className="px-6 py-3 hover:bg-red-600">

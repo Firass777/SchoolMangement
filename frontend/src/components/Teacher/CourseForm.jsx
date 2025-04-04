@@ -15,10 +15,11 @@ const AddCourseForm = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const coursesPerPage = 5;
 
   const user = JSON.parse(localStorage.getItem('user'));
-  const teacherNin = user.nin;
+  const teacherNin = user?.nin;
 
   useEffect(() => {
     fetchCourses();
@@ -43,8 +44,8 @@ const AddCourseForm = () => {
         `http://localhost:8000/api/notifications/unread-count/${email}`
       );
       if (response.data) {
-        setNotificationCount(response.data.count);
-        localStorage.setItem('notificationCount', response.data.count.toString());
+        setNotificationCount(response.data.count || 0);
+        localStorage.setItem('notificationCount', (response.data.count || 0).toString());
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
@@ -62,8 +63,8 @@ const AddCourseForm = () => {
         `http://localhost:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
-        setEmailCount(response.data.count);
-        localStorage.setItem('emailCount', response.data.count.toString());
+        setEmailCount(response.data.count || 0);
+        localStorage.setItem('emailCount', (response.data.count || 0).toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);
@@ -72,8 +73,8 @@ const AddCourseForm = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/courses/teacher/${teacherNin}`);
-      setCourses(response.data.courses);
+      const response = await axios.get(`http://localhost:8000/api/courses/teacher/${teacherNin}`);
+      setCourses(response.data?.courses || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
       setMessage('Failed to fetch courses.');
@@ -91,32 +92,46 @@ const AddCourseForm = () => {
     formData.append('teacher_nin', teacherNin);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/courses/add', formData, {
+      const response = await axios.post('http://localhost:8000/api/courses/add', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
       setMessage('Course added successfully!');
-      fetchCourses();
+      // Refresh the courses list after adding
+      await fetchCourses();
+      // Reset form
       setName('');
       setClassName('');
       setSubject('');
       setFile(null);
+      setShowAddForm(false);
     } catch (error) {
-      setMessage('Failed to add course.');
+      setMessage(error.response?.data?.message || 'Failed to add course.');
       console.error('Error:', error);
     }
   };
 
   const handleDelete = async (id) => {
+    if (isDeleting) return;
+    
+    setIsDeleting(true);
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/courses/delete/${id}`);
-      setMessage('Course deleted successfully!');
-      fetchCourses();
+      const response = await axios.delete(`http://localhost:8000/api/courses/delete/${id}`);
+      
+      if (response.status === 200) {
+        setMessage('Course deleted successfully!');
+        // Optimistically update the UI by filtering out the deleted course
+        setCourses(prev => prev.filter(course => course.id !== id));
+      } else {
+        setMessage('Failed to delete course.');
+      }
     } catch (error) {
-      setMessage('Failed to delete course.');
       console.error('Error:', error);
+      setMessage(error.response?.data?.message || 'Failed to delete course.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -153,12 +168,6 @@ const AddCourseForm = () => {
                 <Link to="/ttimetable" className="flex items-center space-x-2">
                   <FaClock />
                   <span>Time-Table</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-green-700">
-                <Link to="/teacherstudents" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Students</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-green-700">
@@ -302,63 +311,70 @@ const AddCourseForm = () => {
                   Add Course
                 </button>
               </form>
-              {message && <p className="mt-4 text-green-600">{message}</p>}
+              {message && (
+                <p className={`mt-4 ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                  {message}
+                </p>
+              )}
             </div>
           )}
 
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Courses</h3>
             {currentCourses.length > 0 ? (
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="bg-green-800 text-white">
-                    <th className="px-4 py-2">Course Name</th>
-                    <th className="px-4 py-2">Class</th>
-                    <th className="px-4 py-2">Subject</th>
-                    <th className="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentCourses.map((course) => (
-                    <tr key={course.id} className="border-b hover:bg-gray-100">
-                      <td className="px-4 py-2">{course.name}</td>
-                      <td className="px-4 py-2">{course.class}</td>
-                      <td className="px-4 py-2">{course.subject}</td>
-                      <td className="px-4 py-2">
-                        <a
-                          href={`http://127.0.0.1:8000/api/courses/download/${course.id}`}
-                          className="text-green-500 hover:underline mr-2"
-                        >
-                          Download
-                        </a>
-                        <button
-                          onClick={() => handleDelete(course.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
+              <>
+                <table className="w-full table-auto">
+                  <thead>
+                    <tr className="bg-green-800 text-white">
+                      <th className="px-4 py-2">Course Name</th>
+                      <th className="px-4 py-2">Class</th>
+                      <th className="px-4 py-2">Subject</th>
+                      <th className="px-4 py-2">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No courses found.</p>
-            )}
+                  </thead>
+                  <tbody>
+                    {currentCourses.map((course) => (
+                      <tr key={course.id} className="border-b hover:bg-gray-100">
+                        <td className="px-4 py-2">{course.name}</td>
+                        <td className="px-4 py-2">{course.class}</td>
+                        <td className="px-4 py-2">{course.subject}</td>
+                        <td className="px-4 py-2">
+                          <a
+                            href={`http://localhost:8000/api/courses/download/${course.id}`}
+                            className="text-green-500 hover:underline mr-2"
+                          >
+                            Download
+                          </a>
+                          <button
+                            onClick={() => handleDelete(course.id)}
+                            className="text-red-500 hover:text-red-700"
+                            disabled={isDeleting}
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-            <div className="flex justify-center mt-6">
-              {Array.from({ length: Math.ceil(filteredCourses.length / coursesPerPage) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`mx-1 px-4 py-2 rounded ${
-                    currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+                <div className="flex justify-center mt-6">
+                  {Array.from({ length: Math.ceil(filteredCourses.length / coursesPerPage) }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`mx-1 px-4 py-2 rounded ${
+                        currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center py-8 text-gray-500">No courses found.</p>
+            )}
           </div>
         </main>
       </div>
