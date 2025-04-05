@@ -11,6 +11,7 @@ import Register from './components/Register';
 import Admindb from './components/Admin/Admindb';
 import Student from './components/Admin/Student';  
 import Teacher from './components/Admin/Teacher';
+import Guardian from "./components/Admin/Guardian";
 import Reports from './components/Admin/Reports';
 import EventForm from "./components/Admin/EventForm";
 import AEmails from "./components/Admin/AEmails";
@@ -125,6 +126,7 @@ function App() {
           <Route path="/admindb" element={<Admindb />} />
           <Route path="/students" element={<Student />} /> 
           <Route path="/teachers" element={<Teacher />} /> 
+          <Route path="/parent" element={<Guardian />} /> 
           <Route path="/reports" element={<Reports />} />
           <Route path="/eventform" element={<EventForm />} />
           <Route path="/aemails" element={<AEmails />} />
