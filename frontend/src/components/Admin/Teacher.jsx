@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaCog, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice, FaFile, FaFileExcel } from "react-icons/fa";
+import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaUserFriends, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice, FaFile, FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
 function Teacher() {
@@ -219,6 +219,12 @@ function Teacher() {
                 <Link to="/teachers" className="flex items-center space-x-2">
                   <FaChalkboardTeacher />
                   <span>Teachers</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/parent" className="flex items-center space-x-2">
+                  <FaUserFriends />
+                  <span>Parents</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

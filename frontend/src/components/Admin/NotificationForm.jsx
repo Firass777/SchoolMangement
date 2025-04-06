@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaCog, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaUserFriends, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -96,6 +96,12 @@ const NotificationForm = () => {
                 <Link to="/teachers" className="flex items-center space-x-2">
                   <FaChalkboardTeacher />
                   <span>Teachers</span>
+                </Link>
+              </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/parent" className="flex items-center space-x-2">
+                  <FaUserFriends />
+                  <span>Parents</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">

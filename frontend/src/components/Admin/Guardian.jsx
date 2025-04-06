@@ -111,7 +111,7 @@ function Guardian() {
     } catch (err) {
       setLoading(false);
       if (err.response && err.response.data.errors) {
-        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to add guardian.");
+        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to add parent.");
       } else {
         setError("Something went wrong.");
       }
@@ -319,9 +319,9 @@ function Guardian() {
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/guardians" className="flex items-center space-x-2">
+                <Link to="/parent" className="flex items-center space-x-2">
                   <FaUserFriends />
-                  <span>Guardians</span>
+                  <span>Parents</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700">
@@ -357,7 +357,7 @@ function Guardian() {
               <li className="px-6 py-3 hover:bg-blue-700 relative">
                 <Link to="/notificationform" className="flex items-center space-x-2">
                   <FaBell />
-                  <span>Notifications</span>
+                  <span>tions</span>
                 </Link>
               </li>
               <li className="px-6 py-3 hover:bg-blue-700 relative">
@@ -402,7 +402,7 @@ function Guardian() {
                 className="bg-green-600 text-white px-4 py-2 rounded flex items-center"
                 onClick={() => setShowAddForm(!showAddForm)}
               >
-                <FaPlus className="mr-2" /> Add Guardian
+                <FaPlus className="mr-2" /> Add Parent
               </button>
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
@@ -416,7 +416,7 @@ function Guardian() {
           {/* Add Form */}
           {showAddForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Add Guardian</h2>
+              <h2 className="text-2xl font-bold mb-4">Add Parent</h2>
               <form onSubmit={handleAddSubmit}>
                 <input
                   type="text"
@@ -500,7 +500,7 @@ function Guardian() {
           {/* Update Form */}
           {showUpdateForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Update Guardian</h2>
+              <h2 className="text-2xl font-bold mb-4">Update Parent</h2>
               <form onSubmit={handleUpdateSubmit}>
                 <input
                   type="text"
@@ -583,7 +583,7 @@ function Guardian() {
           {/* Delete Form */}
           {showDeleteForm && (
             <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Delete Guardian</h2>
+              <h2 className="text-2xl font-bold mb-4">Delete Parent</h2>
               <p className="mb-4">
                 Are you sure you want to delete <strong>{formData.name}</strong>?
               </p>
@@ -597,9 +597,9 @@ function Guardian() {
             </div>
           )}
 
-          {/* Guardians List */}
+          {/* Parent List */}
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Guardians List</h2>
+            <h2 className="text-3xl font-bold text-gray-800">Parents List</h2>
             <div className="mt-4">
               {filteredGuardians.length === 0 ? (
                 <p>No guardians found.</p>

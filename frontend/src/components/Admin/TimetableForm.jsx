@@ -5,7 +5,7 @@ import {
   FaChalkboardTeacher,
   FaChartBar,
   FaEnvelope,
-  FaCog,
+  FaUserFriends,
   FaSignOutAlt,
   FaBell,
   FaSchool,
@@ -157,6 +157,12 @@ function TimetableForm() {
                 <span>Teachers</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/parent" className="flex items-center space-x-2">
+                  <FaUserFriends />
+                  <span>Parents</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/reports" className="flex items-center space-x-2">
                 <FaChartBar />

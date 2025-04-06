@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaEnvelope, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
+import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -51,6 +51,7 @@ const AdminReports = () => {
   });
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     AOS.init({
@@ -288,9 +289,6 @@ const AdminReports = () => {
     }
   };
 
-  // Rest of the component code remains the same...
-  // (All the chart data preparation and JSX rendering code from previous version)
-
   const studentGenderData = {
     labels: ['Male', 'Female'],
     datasets: [
@@ -352,21 +350,124 @@ const AdminReports = () => {
     ],
   };
 
-  const downloadPDF = () => {
-    const input = document.getElementById('report-content');
-    html2canvas(input, { scale: 2 }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.setFontSize(22);
-      pdf.text('School Management System Report', 10, 20);
+ const downloadPDF = async () => {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  `;
+  overlay.innerHTML = `
+    <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    <p style="margin-top: 20px; font-size: 18px; color: #333;">Generating PDF...</p>
+  `;
+  document.body.appendChild(overlay);
+    try {
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
 
-      pdf.addImage(imgData, 'PNG', 10, 30, imgWidth - 20, imgHeight - 20);
+      pdf.setFontSize(28);
+      pdf.setTextColor(40, 53, 147); 
+      pdf.text('School Management System Report', pageWidth / 2, 60, { align: 'center' });
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 90, { align: 'center' });
+      
 
-      pdf.save('school_report.pdf');
-    });
+      pdf.setFontSize(14);
+      pdf.text('Summary Statistics', 40, 140);
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(40, 145, pageWidth - 40, 145);
+      
+      pdf.setFontSize(12);
+      pdf.text(`Total Students: ${students}`, 40, 170);
+      pdf.text(`Total Teachers: ${teachers}`, 40, 190);
+      pdf.text(`Attendance Rate: ${attendanceRate}%`, 40, 210);
+      pdf.text(`Upcoming Events: ${upcomingEventsCount}`, 40, 230);
+      
+      // Capture each section separately for better quality
+      const sections = [
+        { id: 'payment-section', title: 'Payment Analytics' },
+        { id: 'student-section', title: 'Student Statistics' },
+        { id: 'attendance-section', title: 'Attendance Analysis' },
+        { id: 'grades-section', title: 'Academic Performance' },
+        { id: 'teacher-section', title: 'Teacher Workforce' },
+        { id: 'events-section', title: 'Events Overview' }
+      ];
+      
+      let currentY = 260;
+      
+      for (const section of sections) {
+        const element = document.getElementById(section.id);
+        if (!element) continue;
+        
+        // Add new page if needed
+        if (currentY > pageHeight - 100) {
+          pdf.addPage();
+          currentY = 40;
+        }
+        
+        // Add section title
+        pdf.setFontSize(18);
+        pdf.setTextColor(40, 53, 147);
+        pdf.text(section.title, 40, currentY);
+        currentY += 30;
+        
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth - 80;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Add new page if image doesn't fit
+        if (currentY + imgHeight > pageHeight - 40) {
+          pdf.addPage();
+          currentY = 40;
+        }
+        
+        pdf.addImage(imgData, 'PNG', 40, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 40;
+      }
+      
+      // Add footer
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(10);
+        pdf.setTextColor(150);
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 20,
+          { align: 'center' }
+        );
+      }
+      
+      pdf.save('school_management_report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      document.body.removeChild(overlay);
+      setPdfLoading(false);
+    }
   };
 
   if (loading) {
@@ -412,6 +513,12 @@ const AdminReports = () => {
                 <span>Teachers</span>
               </Link>
             </li>
+              <li className="px-6 py-3 hover:bg-blue-700">
+                <Link to="/parent" className="flex items-center space-x-2">
+                  <FaUserFriends />
+                  <span>Parents</span>
+                </Link>
+              </li>
             <li className="px-6 py-3 hover:bg-blue-700">
               <Link to="/reports" className="flex items-center space-x-2">
                 <FaChartBar />
@@ -470,34 +577,77 @@ const AdminReports = () => {
             <h1 className="text-3xl font-bold">School Reports</h1>
             <button
               onClick={downloadPDF}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-all duration-300"
+              disabled={pdfLoading}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-all duration-300 disabled:opacity-50"
               data-aos="zoom-in"
             >
-              <FaDownload />
-              <span>Download as PDF</span>
+              {pdfLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <FaDownload />
+                  <span>Download as PDF</span>
+                </>
+              )}
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
-              <h2 className="text-xl font-semibold">Total Students</h2>
-              <p className="text-3xl font-bold">{students}</p>
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:border-indigo-100" data-aos="fade-up">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-700">Total Students</h2>
+                  <p className="text-3xl font-bold text-indigo-600">{students}</p>
+                </div>
+                <div className="p-3 rounded-full bg-indigo-50 text-indigo-600">
+                  <FaUserGraduate className="text-xl" />
+                </div>
+              </div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
-              <h2 className="text-xl font-semibold">Total Teachers</h2>
-              <p className="text-3xl font-bold">{teachers}</p>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:border-indigo-100" data-aos="fade-up" data-aos-delay="100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-700">Total Teachers</h2>
+                  <p className="text-3xl font-bold text-purple-600">{teachers}</p>
+                </div>
+                <div className="p-3 rounded-full bg-purple-50 text-purple-600">
+                  <FaChalkboardTeacher className="text-xl" />
+                </div>
+              </div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
-              <h2 className="text-xl font-semibold">Attendance Today</h2>
-              <p className="text-3xl font-bold">{attendanceRate}%</p>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:border-indigo-100" data-aos="fade-up" data-aos-delay="200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-700">Attendance Rate</h2>
+                  <p className="text-3xl font-bold text-blue-600">{attendanceRate}%</p>
+                </div>
+                <div className="p-3 rounded-full bg-blue-50 text-blue-600">
+                  <FaClipboardList className="text-xl" />
+                </div>
+              </div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="300">
-              <h2 className="text-xl font-semibold">Upcoming Events</h2>
-              <p className="text-3xl font-bold">{upcomingEventsCount}</p>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:border-indigo-100" data-aos="fade-up" data-aos-delay="300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-700">Upcoming Events</h2>
+                  <p className="text-3xl font-bold text-pink-600">{upcomingEventsCount}</p>
+                </div>
+                <div className="p-3 rounded-full bg-pink-50 text-pink-600">
+                  <FaCalendarAlt className="text-xl" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Payment Section */}
+          <div id="payment-section" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:bg-blue-100">
@@ -550,35 +700,49 @@ const AdminReports = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center transition-all duration-300 hover:shadow-lg" data-aos="zoom-in">
-              <h2 className="text-xl font-bold mb-4">Gender Distribution</h2>
-              <div style={{ width: '100%', maxWidth: '300px', height: '300px' }}>
-                <Pie data={studentGenderData} />
+          {/* Student Section */}
+          <div id="student-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="zoom-in">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Student Gender Distribution</h2>
+              <div className="h-80 flex items-center justify-center">
+                <Pie 
+                  data={studentGenderData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'right',
+                      },
+                    },
+                  }}
+                />
               </div>
             </div>
 
             <div>
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6 transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
-                <h2 className="text-xl font-bold text-center mb-4">Class-wise Distribution</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 transition-all duration-300 hover:shadow-md" data-aos="fade-up">
+                <h2 className="text-xl font-bold text-gray-800 mb-6">Class Distribution</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {Object.entries(classDistribution).map(([className, count]) => (
-                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                      <h3 className="text-lg font-semibold">{className}</h3>
-                      <p className="text-2xl font-bold">{count} Student{count !== 1 ? 's' : ''}</p>
+                    <div key={className} className="bg-gray-50 p-4 rounded-lg transition-all duration-300 hover:bg-gray-100">
+                      <h3 className="text-lg font-semibold text-indigo-700">{className}</h3>
+                      <p className="text-2xl font-bold">{count} <span className="text-sm font-normal text-gray-500">Students</span></p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
-                <h2 className="text-xl font-bold text-center mb-4">Class Gender Distribution</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="fade-up" data-aos-delay="100">
+                <h2 className="text-xl font-bold text-gray-800 mb-6">Class Gender Breakdown</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {Object.entries(classGenderDistribution).map(([className, genderCount]) => (
-                    <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                      <h3 className="text-lg font-semibold">{className}</h3>
-                      <p>Male: {genderCount.male}</p>
-                      <p>Female: {genderCount.female}</p>
+                    <div key={className} className="bg-gray-50 p-4 rounded-lg transition-all duration-300 hover:bg-gray-100">
+                      <h3 className="text-lg font-semibold text-purple-700">{className}</h3>
+                      <div className="flex justify-between mt-2">
+                        <span className="text-blue-600 font-medium">♂ {genderCount.male}</span>
+                        <span className="text-pink-600 font-medium">♀ {genderCount.female}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -586,42 +750,158 @@ const AdminReports = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
-              <h2 className="text-xl font-bold mb-4">Average Student Attendance For Each Class</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
+          {/* Attendance Section */}
+          <div id="attendance-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-black-800">Class Attendance Rates</h2>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">High</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Medium</span>
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Low</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(classAttendance).map(([className, attendanceRate]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                    <h3 className="text-lg font-semibold">{className}</h3>
-                    <p className="text-2xl font-bold">{attendanceRate}%</p>
+                  <div key={className} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-blue-200 transition-all duration-300 group">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                        {className}
+                      </h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        attendanceRate > 90 ? 'bg-green-100 text-green-800' : 
+                        attendanceRate > 75 ? 'bg-blue-100 text-blue-800' : 
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {attendanceRate > 90 ? 'Excellent' : attendanceRate > 75 ? 'Good' : 'Needs Improvement'}
+                      </span>
+                    </div>
+                    
+                    <div className="mb-2">
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Attendance</span>
+                        <span className="font-medium">{attendanceRate}%</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            attendanceRate > 90 ? 'bg-green-500' : 
+                            attendanceRate > 75 ? 'bg-blue-500' : 
+                            'bg-yellow-500'
+                          }`} 
+                          style={{ width: `${attendanceRate}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0%</span>
+                      <span>100%</span>
+                    </div>
                   </div>
                 ))}
               </div>
+              
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <div className="flex justify-center">
+                  <p className="text-xs text-gray-500 font-semibold mt-2 text-center">
+                  {attendanceRate > 90
+                    ? 'Excellent attendance maintained.'
+                    : attendanceRate > 75
+                    ? 'Satisfactory attendance .'
+                    : attendanceRate > 50
+                    ? 'Attendance is moderate. Improvement needed.'
+                    : 'Attendance is below expected levels. Immediate action required.'}
+                 </p>
+                </div>
+              </div>
+
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-left">
-              <h2 className="text-xl font-bold mb-4">Daily Attendance Trends (Last 7 Days)</h2>
-              <Bar data={dailyAttendanceData} />
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="fade-left">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Weekly Attendance Trends</h2>
+              <div className="h-80">
+                <Bar 
+                  data={dailyAttendanceData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            return context.raw + '%';
+                          }
+                        }
+                      },
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                          callback: function(value) {
+                            return value + '%';
+                          }
+                        }
+                      }
+                    }
+                  }} 
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
-              <h2 className="text-xl font-bold mb-4">Average Grades for Each Class</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
+          {/* Grades Section */}
+          <div id="grades-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="fade-up">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Class Average Grades</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Object.entries(gradesData.averageGrades).map(([className, averageGrade]) => (
-                  <div key={className} className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                    <h3 className="text-lg font-semibold">{className}</h3>
-                    <p className="text-2xl font-bold">{averageGrade}</p>
+                  <div key={className} className="bg-gray-50 p-4 rounded-lg transition-all duration-300 hover:bg-gray-100">
+                    <h3 className="text-lg font-semibold text-indigo-700">{className}</h3>
+                    <div className="flex items-end mt-2">
+                      <p className="text-2xl font-bold">{averageGrade}</p>
+                      <span className="text-sm text-gray-500 ml-1">GPA</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="100">
-              <h2 className="text-xl font-bold mb-4">Average Grades for the Whole School</h2>
-              <p className="text-3xl font-bold">{gradesData.schoolAverage}</p>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="fade-up" data-aos-delay="100">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">School Academic Summary</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-indigo-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-2">School Average</h3>
+                  <p className="text-3xl font-bold text-indigo-600">{gradesData.schoolAverage}</p>
+                  <p className="text-sm text-indigo-500 mt-1">GPA across all classes</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h3 className="text-md font-semibold text-green-800 mb-1">Top Students</h3>
+                    {Object.entries(gradesData.topGrades).slice(0, 2).map(([className, topStudent]) => (
+                      <p key={className} className="text-sm text-gray-700">
+                        {topStudent.student_name} <span className="font-medium">({topStudent.grade})</span>
+                      </p>
+                    ))}
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h3 className="text-md font-semibold text-yellow-800 mb-1">Weak Students</h3>
+                    {Object.entries(gradesData.weakGraders).slice(0, 2).map(([className, weakStudent]) => (
+                      <p key={className} className="text-sm text-gray-700">
+                        {weakStudent.student_name} <span className="font-medium">({weakStudent.grade})</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
+          
 
             <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
               <h2 className="text-xl font-bold mb-4">Weak Graders in Each Class</h2>
@@ -648,117 +928,180 @@ const AdminReports = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8 transition-all duration-300 hover:shadow-lg" data-aos="zoom-in">
-            <h2 className="text-xl font-bold mb-4">Teacher Statistics</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                <h3 className="text-lg font-semibold mb-2">Gender Distribution</h3>
-                <div className="space-y-2">
-                  <p className="text-sm">Male: {teacherStats.gender.male}</p>
-                  <p className="text-sm">Female: {teacherStats.gender.female}</p>
-                </div>
+          {/* Teacher Section */}
+          <div id="teacher-section" className="bg-white p-6 rounded-2xl shadow-md border mb-10 border-gray-100 transition-all duration-300 hover:shadow-lg" data-aos="zoom-in">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Teacher Workforce Analytics</h2>
+                <p className="text-sm text-gray-500 mt-1">Comprehensive breakdown of teaching staff distribution</p>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                <h3 className="text-lg font-semibold mb-2">Subjects Distribution</h3>
-                <div className="space-y-2">
-                  {Object.entries(teacherStats.subjects).map(([subject, count]) => (
-                    <p key={subject} className="text-sm">
-                      {subject}: {count}
-                    </p>
-                  ))}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center text-sm">
+                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                  <span>Subjects</span>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm transition-all duration-300 hover:bg-gray-100">
-                <h3 className="text-lg font-semibold mb-2">Class Allocation</h3>
-                <div className="space-y-2">
-                  {Object.entries(teacherStats.classes).map(([className, count]) => (
-                    <p key={className} className="text-sm">
-                      {className}: {count}
-                    </p>
-                  ))}
+                <div className="flex items-center text-sm">
+                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                  <span>Classes</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-right">
-              <h2 className="text-xl font-bold mb-4">Teacher Subject Distribution</h2>
-              <div style={{ width: '100%', height: '300px' }}>
-                <Doughnut
-                  data={{
-                    labels: teacherSubjectChartData.labels,
-                    datasets: [
-                      {
-                        data: teacherSubjectChartData.datasets[0].data,
-                        backgroundColor: teacherSubjectChartData.datasets[0].backgroundColor,
-                        borderWidth: 1,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                      },
-                    },
-                  }}
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Gender Distribution Card */}
+              <div className="bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-200 transition-all duration-300">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Gender Distribution
+                  </h3>
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-center">
+                    <div className="h-24 w-24 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl font-bold text-blue-600">{teacherStats.gender.male}</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-600">Male Teachers</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-24 w-24 rounded-full bg-pink-50 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl font-bold text-pink-600">{teacherStats.gender.female}</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-600">Female Teachers</p>
+                  </div>
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 text-center">
+                    Total: {teacherStats.gender.male + teacherStats.gender.female} teachers
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-left">
-              <h2 className="text-xl font-bold mb-4">Teacher Class Allocation</h2>
-              <div style={{ width: '100%', height: '300px' }}>
-                <Line
-                  data={{
-                    labels: teacherClassChartData.labels,
-                    datasets: [
-                      {
-                        label: 'Teachers per Class',
-                        data: teacherClassChartData.datasets[0].data,
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: '#3b82f6',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#3b82f6',
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: {
-                          display: true,
-                          text: 'Number of Teachers',
+              {/* Subject Allocation Card */}
+              <div className="bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-200 transition-all duration-300">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                    </svg>
+                    Subject Allocation
+                  </h3>
+                  <span className="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    {Object.keys(teacherStats.subjects).length} subjects
+                  </span>
+                </div>
+                <div className="h-60">
+                  <Doughnut
+                    data={{
+                      labels: teacherSubjectChartData.labels,
+                      datasets: [{
+                        ...teacherSubjectChartData.datasets[0],
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        spacing: 2
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      cutout: '70%',
+                      plugins: {
+                        legend: {
+                          position: 'right',
+                          labels: {
+                            boxWidth: 12,
+                            padding: 16,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                          }
                         },
-                      },
-                      x: {
-                        title: {
-                          display: true,
-                          text: 'Class',
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return ` ${context.label}: ${context.raw} teachers`;
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Class Allocation Card */}
+              <div className="bg-white p-5 rounded-xl border border-gray-200 hover:border-purple-200 transition-all duration-300">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                    </svg>
+                    Class Allocation
+                  </h3>
+                  <span className="text-xs font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                    {Object.keys(teacherStats.classes).length} classes
+                  </span>
+                </div>
+                <div className="h-60">
+                  <Line
+                    data={{
+                      labels: teacherClassChartData.labels,
+                      datasets: [{
+                        ...teacherClassChartData.datasets[0],
+                        fill: true,
+                        tension: 0.3,
+                        pointHoverRadius: 6,
+                        pointBorderWidth: 2
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false
                         },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return ` ${context.dataset.label}: ${context.raw}`;
+                            }
+                          }
+                        }
                       },
-                    },
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                    },
-                  }}
-                />
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          grid: {
+                            drawTicks: false,
+                            color: '#f3f4f6'
+                          },
+                          ticks: {
+                            precision: 0
+                          }
+                        },
+                        x: {
+                          grid: {
+                            display: false
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Last analyzed: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>          
+
+          {/* Events Section */}
+          <div id="events-section" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-md mb-8 transition-all duration-300 hover:shadow-lg" data-aos="fade-up">
               <h2 className="text-xl font-bold mb-4">Monthly Events (This Year)</h2>
               <Bar data={monthlyEventsChartData} />
