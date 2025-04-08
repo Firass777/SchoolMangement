@@ -271,108 +271,110 @@ const DocumentsForm = () => {
   const paginateDocs = (pageNumber) => setDocCurrentPage(pageNumber);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <aside className="w-64 bg-blue-800 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-16 lg:w-64 bg-blue-800 text-white flex-shrink-0">
+        <div className="p-4 flex justify-center lg:justify-start">
+          <h1 className="text-xl font-bold hidden lg:block">Admin Dashboard</h1>
+          <h1 className="text-xl font-bold block lg:hidden">AD</h1>
         </div>
         <nav className="mt-6">
           <ul>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/admindb" className="flex items-center space-x-2">
-                <FaSchool />
-                <span>Dashboard</span>
+                <FaSchool className="text-xl" />
+                <span className="hidden lg:block">Dashboard</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/timetableform" className="flex items-center space-x-2">
-                <FaClock />
-                <span>Time-Table</span>
+                <FaClock className="text-xl" />
+                <span className="hidden lg:block">Time-Table</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>                        
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
-                <FaUserGraduate />
-                <span>Students</span>
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden lg:block">Students</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/teachers" className="flex items-center space-x-2">
-                <FaChalkboardTeacher />
-                <span>Teachers</span>
+                <FaChalkboardTeacher className="text-xl" />
+                <span className="hidden lg:block">Teachers</span>
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/parent" className="flex items-center space-x-2">
-                  <FaUserFriends />
-                  <span>Parents</span>
-                </Link>
-              </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/parent" className="flex items-center space-x-2">
+                <FaUserFriends className="text-xl" />
+                <span className="hidden lg:block">Parents</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/reports" className="flex items-center space-x-2">
-                <FaChartBar />
-                <span>Reports</span>
+                <FaChartBar className="text-xl" />
+                <span className="hidden lg:block">Reports</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/eventform" className="flex items-center space-x-2">
-                <FaClipboardList />
-                <span>Event Management</span>
+                <FaClipboardList className="text-xl" />
+                <span className="hidden lg:block">Event Management</span>
               </Link>
             </li>
-            <li className="px-6 py-3 bg-blue-700">
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/documentsform" className="flex items-center space-x-2">
-                <FaFileInvoice />
-                <span>Documents</span>
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden lg:block">Documents</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>   
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/recordform" className="flex items-center space-x-2">
-                <FaFile />
-                <span>Student Record</span>
+                <FaFile className="text-xl" />
+                <span className="hidden lg:block">Student Record</span>
               </Link>
-            </li>  
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>        
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/teacherrecord" className="flex items-center space-x-2">
-                <FaFile />
-                <span>Teacher Record</span>
+                <FaFile className="text-xl" />
+                <span className="hidden lg:block">Teacher Record</span>
               </Link>
-            </li>               
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li> 
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
               <Link to="/notificationform" className="flex items-center space-x-2">
-                <FaBell />
-                <span>Notifications</span>
+                <FaBell className="text-xl" />
+                <span className="hidden lg:block">Notifications</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700 relative">
+            <li className="px-4 py-3 hover:bg-blue-700 relative flex justify-center lg:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
-                <FaEnvelope />
-                <span>Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <FaEnvelope className="text-xl" />
+                  <span className="hidden lg:block"> Emails</span>
+                    {emailCount > 0 && (
+                    <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                )}
+                  )}
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-red-600">
+            <li className="px-4 py-3 hover:bg-red-600 flex justify-center lg:justify-start">
               <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt />
-                <span>Logout</span>
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden lg:block">Logout</span>
               </Link>
             </li>
           </ul>
         </nav>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Document Management</h1>
-            <div className="flex gap-1 bg-white p-1 rounded-full shadow-md">
+      <main className="flex-1 flex flex-col overflow-hidden p-4">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <h1 className="text-2xl font-bold text-gray-800">Document Management</h1>
+            <div className="flex gap-1 bg-white p-1 rounded-full shadow-md w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab('certificates')}
-                className={`px-6 py-2 rounded-full text-sm font-medium ${
+                className={`flex-1 sm:flex-none px-4 py-1 rounded-full text-sm font-medium ${
                   activeTab === 'certificates' 
                     ? 'bg-blue-600 text-white shadow-inner'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -382,7 +384,7 @@ const DocumentsForm = () => {
               </button>
               <button
                 onClick={() => setActiveTab('documents')}
-                className={`px-6 py-2 rounded-full text-sm font-medium ${
+                className={`flex-1 sm:flex-none px-4 py-1 rounded-full text-sm font-medium ${
                   activeTab === 'documents'
                     ? 'bg-blue-600 text-white shadow-inner'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -394,7 +396,7 @@ const DocumentsForm = () => {
           </div>
 
           {message.text && (
-            <div className={`mb-6 p-4 rounded-lg ${
+            <div className={`mb-4 p-3 rounded-lg ${
               message.type === 'error' 
                 ? 'bg-red-100 text-red-700 border-l-4 border-red-500' 
                 : 'bg-green-100 text-green-700 border-l-4 border-green-500'
@@ -404,16 +406,16 @@ const DocumentsForm = () => {
           )}
 
           {activeTab === 'certificates' ? (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <button
                   onClick={() => setShowCertForm(!showCertForm)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto"
                 >
                   {showCertForm ? <FaTimes /> : <FaPlus />}
                   {showCertForm ? 'Close Form' : 'Add Certificates'}
                 </button>
-                <div className="relative w-64">
+                <div className="relative w-full sm:w-64">
                   <FaSearch className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
@@ -426,8 +428,8 @@ const DocumentsForm = () => {
               </div>
 
               {showCertForm && (
-                <div className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
-                  <form ref={certFormRef} onSubmit={handleCertificateUpload} className="space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-md border border-blue-100">
+                  <form ref={certFormRef} onSubmit={handleCertificateUpload} className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Student:</label>
                       <select
@@ -494,75 +496,77 @@ const DocumentsForm = () => {
               )}
 
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-blue-800 text-white">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Student NIN</th>
-                      <th className="px-6 py-3 text-left">Year</th>
-                      <th className="px-6 py-3 text-center">Inscription</th>
-                      <th className="px-6 py-3 text-center">Attendance</th>
-                      <th className="px-6 py-3 text-center">Success</th>
-                      <th className="px-6 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentCertificates.length > 0 ? (
-                      currentCertificates.map((cert) => (
-                        <tr key={cert.id} className="border-b hover:bg-gray-50">
-                          <td className="px-6 py-4">{cert.student_nin}</td>
-                          <td className="px-6 py-4">{cert.year}</td>
-                          <td className="px-6 py-4 text-center">
-                            {cert.inscription_pdf && (
-                              <a
-                                href={`http://localhost:8000/storage/${cert.inscription_pdf}`}
-                                download
-                                className="text-blue-600 hover:text-blue-800"
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-blue-800 text-white">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-sm">Student NIN</th>
+                        <th className="px-4 py-2 text-left text-sm">Year</th>
+                        <th className="px-4 py-2 text-center text-sm">Inscription</th>
+                        <th className="px-4 py-2 text-center text-sm">Attendance</th>
+                        <th className="px-4 py-2 text-center text-sm">Success</th>
+                        <th className="px-4 py-2 text-center text-sm">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentCertificates.length > 0 ? (
+                        currentCertificates.map((cert) => (
+                          <tr key={cert.id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">{cert.student_nin}</td>
+                            <td className="px-4 py-3 text-sm">{cert.year}</td>
+                            <td className="px-4 py-3 text-center">
+                              {cert.inscription_pdf && (
+                                <a
+                                  href={`http://localhost:8000/storage/${cert.inscription_pdf}`}
+                                  download
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  <FaDownload />
+                                </a>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {cert.attendance_pdf && (
+                                <a
+                                  href={`http://localhost:8000/storage/${cert.attendance_pdf}`}
+                                  download
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  <FaDownload />
+                                </a>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {cert.success_pdf && (
+                                <a
+                                  href={`http://localhost:8000/storage/${cert.success_pdf}`}
+                                  download
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  <FaDownload />
+                                </a>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => handleDeleteCertificate(cert.id)}
+                                className="text-red-600 hover:text-red-800"
                               >
-                                <FaDownload />
-                              </a>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            {cert.attendance_pdf && (
-                              <a
-                                href={`http://localhost:8000/storage/${cert.attendance_pdf}`}
-                                download
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <FaDownload />
-                              </a>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            {cert.success_pdf && (
-                              <a
-                                href={`http://localhost:8000/storage/${cert.success_pdf}`}
-                                download
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <FaDownload />
-                              </a>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => handleDeleteCertificate(cert.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <FaTrash />
-                            </button>
+                                <FaTrash />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="p-4 text-center text-gray-500 text-sm">
+                            No certificates found
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="p-4 text-center text-gray-500">
-                          No certificates found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {filteredCertificates.length > certificatesPerPage && (
@@ -572,7 +576,7 @@ const DocumentsForm = () => {
                       <button
                         key={index + 1}
                         onClick={() => paginate(index + 1)}
-                        className={`px-3 py-1 rounded ${
+                        className={`px-3 py-1 rounded text-sm ${
                           currentPage === index + 1
                             ? 'bg-blue-600 text-white'
                             : 'bg-white text-blue-800 border border-blue-200'
@@ -586,11 +590,11 @@ const DocumentsForm = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowDocForm(!showDocForm)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   {showDocForm ? <FaTimes /> : <FaUpload />}
                   {showDocForm ? 'Close Form' : 'Upload Document'}
@@ -598,8 +602,8 @@ const DocumentsForm = () => {
               </div>
 
               {showDocForm && (
-                <div className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
-                  <form ref={formRef} onSubmit={handleDocumentUpload} className="space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-md border border-blue-100">
+                  <form ref={formRef} onSubmit={handleDocumentUpload} className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Uploader: <span className="font-semibold">{uploadedBy}</span>
@@ -624,26 +628,24 @@ const DocumentsForm = () => {
                 </div>
               )}
 
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  Document Classification{' '}
-                  <span className="text-sm font-bold bg-purple-100 text-purple-800 px-2 py-1 rounded-md">
-                    [IA-Powered]
-                  </span>
-                </h2>
+              <div className="bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                  <h2 className="text-lg font-semibold">
+                    Document Classification{' '}
+                    <span className="text-sm font-bold bg-purple-100 text-purple-800 px-2 py-1 rounded-md">
+                      [IA-Powered]
+                    </span>
+                  </h2>
                 
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <FaSearch className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search documents..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                  <div className="relative w-full sm:w-64">
+                    <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search documents..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
                 </div>
 
@@ -651,21 +653,21 @@ const DocumentsForm = () => {
                   <table className="w-full border-collapse">
                     <thead className="bg-blue-800 text-white">
                       <tr>
-                        <th className="p-3 text-left">File Name</th>
-                        <th className="p-3 text-left">Status</th>
-                        <th className="p-3 text-left">Uploaded By</th>
-                        <th className="p-3 text-left">Actions</th>
+                        <th className="p-3 text-left text-sm">File Name</th>
+                        <th className="p-3 text-left text-sm">Status</th>
+                        <th className="p-3 text-left text-sm">Uploaded By</th>
+                        <th className="p-3 text-left text-sm">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {currentDocuments.length > 0 ? (
                         currentDocuments.map((doc) => (
                           <tr key={doc.id} className="hover:bg-gray-50">
-                            <td className="p-3 max-w-xs truncate">{doc.file_name}</td>
-                            <td className="p-3">
+                            <td className="p-3 max-w-xs truncate text-sm">{doc.file_name}</td>
+                            <td className="p-3 text-sm">
                               {renderStatusBadge(doc)}
                             </td>
-                            <td className="p-3">{doc.uploaded_by}</td>
+                            <td className="p-3 text-sm">{doc.uploaded_by}</td>
                             <td className="p-3">
                               <div className="flex space-x-4">
                                 <a
@@ -687,7 +689,7 @@ const DocumentsForm = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="p-4 text-center text-gray-500">
+                          <td colSpan="4" className="p-4 text-center text-gray-500 text-sm">
                             No documents found
                           </td>
                         </tr>
@@ -703,7 +705,7 @@ const DocumentsForm = () => {
                         <button
                           key={index + 1}
                           onClick={() => paginateDocs(index + 1)}
-                          className={`px-3 py-1 rounded ${
+                          className={`px-3 py-1 rounded text-sm ${
                             docCurrentPage === index + 1
                               ? 'bg-blue-600 text-white'
                               : 'bg-white text-blue-800 border border-blue-200'

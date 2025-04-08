@@ -15,12 +15,12 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement,
   Title, Tooltip, Legend, ArcElement);
 
 const DashboardCard = ({ title, value, icon: Icon, color }) => (
-  <div className={`p-6 ${color} text-white rounded-lg shadow-md flex items-center justify-between hover:shadow-lg transition-shadow duration-300`}>
+  <div className={`p-4 sm:p-6 ${color} text-white rounded-lg shadow-md flex items-center justify-between hover:shadow-lg transition-shadow duration-300`}>
     <div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-2xl font-bold">{value}</p>
+      <h3 className="text-base sm:text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-xl sm:text-2xl font-bold">{value}</p>
     </div>
-    <Icon className="text-4xl opacity-75" />
+    <Icon className="text-3xl sm:text-4xl opacity-75" />
   </div>
 );
 
@@ -194,6 +194,7 @@ const StudentDB = () => {
 
   const attendanceChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
@@ -210,6 +211,7 @@ const StudentDB = () => {
 
   const gradesChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: false,
@@ -256,207 +258,209 @@ const StudentDB = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100 animate-fade-in">
-      <div className="flex flex-1">
-        <aside className="w-64 bg-purple-800 text-white flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          </div>
-          <nav className="mt-6">
-            <ul>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate />
-                  <span>Dashboard</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck />
-                  <span>Payment</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/stimetable" className="flex items-center space-x-2">
-                  <FaClock />
-                  <span>Time-Table</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine />
-                  <span>Grades</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt />
-                  <span>Attendance</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook />
-                  <span>Courses</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studenteventview" className="flex items-center space-x-2">
-                  <FaCalendarAlt /> <span>Events</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope />
-                  <span>Emails</span>
-                  {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {emailCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/documents" className="flex items-center space-x-2">
-                  <FaFileInvoice /> <span>Documents</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/notificationview" className="flex items-center space-x-2">
-                  <FaBell />
-                  <span>Notifications</span>
-                  {notificationCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard />
-                  <span>Profile</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+    <div className="flex min-h-screen bg-gray-100 animate-fade-in">
+      {/* Sidebar */}
+      <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">SD</h1>
+        </div>
+        <nav className="mt-6">
+          <ul>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studentdb" className="flex items-center space-x-2">
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden sm:block">Dashboard</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/spayment" className="flex items-center space-x-2">
+                <FaMoneyCheck className="text-xl" />
+                <span className="hidden sm:block">Payment</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/stimetable" className="flex items-center space-x-2">
+                <FaClock className="text-xl" />
+                <span className="hidden sm:block">Time-Table</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/gradesview" className="flex items-center space-x-2">
+                <FaChartLine className="text-xl" />
+                <span className="hidden sm:block">Grades</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/attendanceview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Attendance</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/courseview" className="flex items-center space-x-2">
+                <FaBook className="text-xl" />
+                <span className="hidden sm:block">Courses</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studenteventview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Events</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/semails" className="flex items-center space-x-2">
+                <FaEnvelope className="text-xl" />
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/documents" className="flex items-center space-x-2">
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden sm:block">Documents</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/notificationview" className="flex items-center space-x-2">
+                <FaBell className="text-xl" />
+                <span className="hidden sm:block">Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/seditprofile" className="flex items-center space-x-2">
+                <FaIdCard className="text-xl" />
+                <span className="hidden sm:block">Profile</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+              <Link to="/" className="flex items-center space-x-2">
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden sm:block">Logout</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <motion.main
-            className="flex-1 p-6 overflow-auto min-h-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.div className="mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
-              <h2 className="text-3xl font-bold text-gray-800">Welcome to Your Dashboard</h2>
-              <p className="text-lg text-gray-600 mt-2">Here's an overview of your performance:</p>
-            </motion.div>
+      <main className="flex-1 p-4 lg:p-6 overflow-x-auto">
+        <motion.main
+          className="flex-1 p-4 lg:p-6 overflow-x-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div className="mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Welcome to Your Dashboard</h2>
+            <p className="text-base sm:text-lg text-gray-600 mt-2">Here's an overview of your performance:</p>
+          </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              {[{
-                title: "Total Payments", 
-                value: `$${payments.total.toFixed(2)}`, 
-                icon: FaMoneyBillWave,
-                color: "bg-gradient-to-r from-purple-800 via-purple-500 to-green-400 text-white"
-              }, {
-                title: "Amount Due", 
-                value: `$${payments.amountDue.toFixed(2)}`, 
-                icon: FaRegClock,
-                  color: "bg-gradient-to-r from-purple-600 via-purple-500 to-yellow-300 text-white"
-              }, {
-                title: "Performance Prediction", 
-                value: prediction, 
-                icon: FaMagic,
-                color: prediction === "Likely to Pass"
-                  ? "bg-gradient-to-r from-green-600 via-green-500 to-red-400 text-white"
-                  : "bg-gradient-to-r from-red-600 via-red-500 to-green-400 text-white"
-              }].map((card, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
-                >
-                  <DashboardCard {...card} />
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <motion.div
-                className="p-6 bg-white shadow-md rounded-lg"
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Attendance Overview</h3>
-                <div className="w-full h-96 flex items-center justify-center">
-                  <Pie data={attendanceChartData} options={attendanceChartOptions} />
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="p-6 bg-white shadow-md rounded-lg"
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
-                <div className="w-full h-96">
-                  <Line data={gradesChartData} options={gradesChartOptions} />
-                </div>
-              </motion.div>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
             {[{
-              title: "Recent Attendance", data: attendance,
-              headers: ["Subject", "Status", "Class", "Date"]
+              title: "Total Payments", 
+              value: `$${payments.total.toFixed(2)}`, 
+              icon: FaMoneyBillWave,
+              color: "bg-gradient-to-r from-purple-800 via-purple-500 to-green-400 text-white"
             }, {
-              title: "Recent Grades", data: grades,
-              headers: ["Subject", "Grade", "Class", "Date"]
-            }].map((section, index) => (
+              title: "Amount Due", 
+              value: `$${payments.amountDue.toFixed(2)}`, 
+              icon: FaRegClock,
+              color: "bg-gradient-to-r from-purple-600 via-purple-500 to-yellow-300 text-white"
+            }, {
+              title: "Performance Prediction", 
+              value: prediction, 
+              icon: FaMagic,
+              color: prediction === "Likely to Pass"
+                ? "bg-gradient-to-r from-green-600 via-green-500 to-red-400 text-white"
+                : "bg-gradient-to-r from-red-600 via-red-500 to-green-400 text-white"
+            }].map((card, index) => (
               <motion.div
                 key={index}
-                className="mb-6 p-6 bg-white shadow-md rounded-lg"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
               >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">{section.title}</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full table-auto">
-                    <thead className="bg-purple-800 text-white">
-                      <tr>
-                        {section.headers.map((header, idx) => (
-                          <th key={idx} className="px-6 py-3 text-left">{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {section.data.slice(0, 2).map((record) => (
-                        <tr key={record.id} className="border-b">
-                          <td className="px-6 py-3">{record.subject}</td>
-                          <td className="px-6 py-3">{record.status || record.grade}</td>
-                          <td className="px-6 py-3">{record.class}</td>
-                          <td className="px-6 py-3">{new Date(record.created_at).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DashboardCard {...card} />
               </motion.div>
             ))}
-          </motion.main>
-        </main>
-      </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+            <motion.div
+              className="p-4 sm:p-6 bg-white shadow-md rounded-lg"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center">Attendance Overview</h3>
+              <div className="w-full h-64 sm:h-96 flex items-center justify-center">
+                <Pie data={attendanceChartData} options={attendanceChartOptions} />
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="p-4 sm:p-6 bg-white shadow-md rounded-lg"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
+              <div className="w-full h-64 sm:h-96">
+                <Line data={gradesChartData} options={gradesChartOptions} />
+              </div>
+            </motion.div>
+          </div>
+
+          {[{
+            title: "Recent Attendance", data: attendance,
+            headers: ["Subject", "Status", "Class", "Date"]
+          }, {
+            title: "Recent Grades", data: grades,
+            headers: ["Subject", "Grade", "Class", "Date"]
+          }].map((section, index) => (
+            <motion.div
+              key={index}
+              className="mb-6 p-4 sm:p-6 bg-white shadow-md rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.2 }}
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">{section.title}</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead className="bg-purple-800 text-white">
+                    <tr>
+                      {section.headers.map((header, idx) => (
+                        <th key={idx} className="px-4 sm:px-6 py-2 sm:py-3 text-left">{header}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {section.data.slice(0, 2).map((record) => (
+                      <tr key={record.id} className="border-b">
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">{record.subject}</td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">{record.status || record.grade}</td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">{record.class}</td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">{new Date(record.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          ))}
+        </motion.main>
+      </main>
     </div>
   );
 };

@@ -107,6 +107,7 @@ const GradesView = () => {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
@@ -131,179 +132,189 @@ const GradesView = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
-      <div className="flex flex-1">
-        <aside className="w-64 bg-purple-800 text-white flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          </div>
-          <nav className="mt-6">
-            <ul>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate /> <span>Dashboard</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck /> <span>Payment</span>
-                </Link>
-              </li>              
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/stimetable" className="flex items-center space-x-2">
-                  <FaClock /> <span>Time-Table</span>
-                </Link>
-              </li>               
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine /> <span>Grades</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt /> <span>Attendance</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook /> <span>Courses</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studenteventview" className="flex items-center space-x-2">
-                  <FaCalendarAlt /> <span>Events</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope /> <span>Emails</span>
-                  {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {emailCount}
-                    </span>
-                  )}
-                </Link>
-              </li>   
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/documents" className="flex items-center space-x-2">
-                  <FaFileInvoice /> <span>Documents</span>
-                </Link>
-              </li>                                 
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/notificationview" className="flex items-center space-x-2">
-                  <FaBell />
-                  <span>Notifications</span>
-                  {notificationCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard /> <span>Profile</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt /> <span>Logout</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+    <div className="flex min-h-screen bg-gray-100">
+      <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">SD</h1>
+        </div>
+        <nav className="mt-6">
+          <ul>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studentdb" className="flex items-center space-x-2">
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden sm:block">Dashboard</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/spayment" className="flex items-center space-x-2">
+                <FaMoneyCheck className="text-xl" />
+                <span className="hidden sm:block">Payment</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/stimetable" className="flex items-center space-x-2">
+                <FaClock className="text-xl" />
+                <span className="hidden sm:block">Time-Table</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/gradesview" className="flex items-center space-x-2">
+                <FaChartLine className="text-xl" />
+                <span className="hidden sm:block">Grades</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/attendanceview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Attendance</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/courseview" className="flex items-center space-x-2">
+                <FaBook className="text-xl" />
+                <span className="hidden sm:block">Courses</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studenteventview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Events</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/semails" className="flex items-center space-x-2">
+                <FaEnvelope className="text-xl" />
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/documents" className="flex items-center space-x-2">
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden sm:block">Documents</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/notificationview" className="flex items-center space-x-2">
+                <FaBell className="text-xl" />
+                <span className="hidden sm:block">Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/seditprofile" className="flex items-center space-x-2">
+                <FaIdCard className="text-xl" />
+                <span className="hidden sm:block">Profile</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+              <Link to="/" className="flex items-center space-x-2">
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden sm:block">Logout</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Your Grades</h2>
-            <p className="text-lg text-gray-600 mt-2">View your grades and performance below:</p>
-          </div>
+      <main className="flex-1 p-4 sm:p-6 overflow-x-auto">
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Your Grades</h2>
+          <p className="text-base sm:text-lg text-gray-600 mt-2">View your grades and performance below:</p>
+        </div>
 
-          <div className="mb-6 flex justify-end">
-            <button
-              onClick={handleDownloadPDF}
-              className="flex items-center px-4 py-2 bg-purple-800 text-white rounded hover:bg-purple-700"
-            >
-              <FaDownload className="mr-2" /> Download as PDF
-            </button>
-          </div>
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={handleDownloadPDF}
+            className="flex items-center px-4 py-2 bg-purple-800 text-white rounded hover:bg-purple-700"
+          >
+            <FaDownload className="mr-2" /> Download as PDF
+          </button>
+        </div>
 
-          <div id="grades-table" className="mb-6 p-6 bg-white shadow-md rounded-lg">
-            {grades.length === 0 ? (
-              <p className="text-gray-500">No grade records found.</p>
-            ) : (
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="min-w-full table-auto">
-                  <thead className="bg-purple-800 text-white">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Subject</th>
-                      <th className="px-6 py-3 text-left">Grade</th>
-                      <th className="px-6 py-3 text-left">Class</th>
-                      <th className="px-6 py-3 text-left">Date</th>
+        <div id="grades-table" className="mb-6 p-4 sm:p-6 bg-white shadow-md rounded-lg">
+          {grades.length === 0 ? (
+            <p className="text-gray-500">No grade records found.</p>
+          ) : (
+            <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+              <table className="min-w-full table-auto">
+                <thead className="bg-purple-800 text-white">
+                  <tr>
+                    <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm">Subject</th>
+                    <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm">Grade</th>
+                    <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm">Class</th>
+                    <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grades.map((grade) => (
+                    <tr key={grade.id} className="border-b">
+                      <td className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">{grade.subject}</td>
+                      <td className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">{grade.grade}</td>
+                      <td className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">{grade.class}</td>
+                      <td className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">{new Date(grade.created_at).toLocaleDateString()}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {grades.map((grade) => (
-                      <tr key={grade.id} className="border-b">
-                        <td className="px-6 py-3">{grade.subject}</td>
-                        <td className="px-6 py-3">{grade.grade}</td>
-                        <td className="px-6 py-3">{grade.class}</td>
-                        <td className="px-6 py-3">{new Date(grade.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-center space-y-6 sm:space-y-0 sm:space-x-6">
+          <div className="w-full sm:w-1/2 p-4 sm:p-6 bg-white shadow-md rounded-lg">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
+            <div className="w-full h-64">
+              <Bar data={chartData} options={chartOptions} />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-1/2 p-4 sm:p-6 bg-white shadow-md rounded-lg">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Performance Summary</h3>
+            {grades.length > 0 ? (
+              <>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Your average grade is{' '}
+                  <span className="font-semibold text-purple-800">
+                    {(
+                      grades.reduce((acc, grade) => {
+                        switch (grade.grade) {
+                          case 'A': return acc + 4;
+                          case 'B': return acc + 3;
+                          case 'C': return acc + 2;
+                          case 'D': return acc + 1;
+                          default: return acc;
+                        }
+                      }, 0) / grades.length
+                    ).toFixed(2)}
+                  </span>
+                  .
+                </p>
+                <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                  {grades.some((g) => g.grade === 'A') ? (
+                    "Great job! Keep up the excellent work!"
+                  ) : grades.some((g) => g.grade === 'D') ? (
+                    "Consider reviewing your weaker subjects to improve."
+                  ) : (
+                    "You're doing well, keep pushing forward!"
+                  )}
+                </p>
+              </>
+            ) : (
+              <p className="text-gray-500 text-sm sm:text-base">No grade records found.</p>
             )}
           </div>
-
-          <div className="flex justify-center space-x-6">
-            <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Grades Overview</h3>
-              <div className="w-full h-64">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
-            </div>
-
-            <div className="w-1/3 p-6 bg-white shadow-md rounded-lg">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Performance Summary</h3>
-              {grades.length > 0 ? (
-                <>
-                  <p className="text-gray-600">
-                    Your average grade is{' '}
-                    <span className="font-semibold text-purple-800">
-                      {(
-                        grades.reduce((acc, grade) => {
-                          switch (grade.grade) {
-                            case 'A': return acc + 4;
-                            case 'B': return acc + 3;
-                            case 'C': return acc + 2;
-                            case 'D': return acc + 1;
-                            default: return acc;
-                          }
-                        }, 0) / grades.length
-                      ).toFixed(2)}
-                    </span>
-                    .
-                  </p>
-                  <p className="text-gray-600 mt-2">
-                    {grades.some((g) => g.grade === 'A') ? (
-                      "Great job! Keep up the excellent work!"
-                    ) : grades.some((g) => g.grade === 'D') ? (
-                      "Consider reviewing your weaker subjects to improve."
-                    ) : (
-                      "You're doing well, keep pushing forward!"
-                    )}
-                  </p>
-                </>
-              ) : (
-                <p className="text-gray-500">No grade records found.</p>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

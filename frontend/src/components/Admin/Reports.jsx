@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaCog, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
+import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaEnvelope, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -483,88 +483,90 @@ const AdminReports = () => {
 
   return (
     <div className="flex">
-      <aside className="w-64 bg-blue-800 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      {/* Sidebar */}
+      <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Admin Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">AD</h1>
         </div>
         <nav className="mt-6">
           <ul>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/admindb" className="flex items-center space-x-2">
-                <FaSchool />
-                <span>Dashboard</span>
+                <FaSchool className="text-xl" />
+                <span className="hidden sm:block">Dashboard</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/timetableform" className="flex items-center space-x-2">
-                <FaClock />
-                <span>Time-Table</span>
+                <FaClock className="text-xl" />
+                <span className="hidden sm:block">Time-Table</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>                        
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
-                <FaUserGraduate />
-                <span>Students</span>
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden sm:block">Students</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/teachers" className="flex items-center space-x-2">
-                <FaChalkboardTeacher />
-                <span>Teachers</span>
+                <FaChalkboardTeacher className="text-xl" />
+                <span className="hidden sm:block">Teachers</span>
               </Link>
             </li>
-              <li className="px-6 py-3 hover:bg-blue-700">
-                <Link to="/parent" className="flex items-center space-x-2">
-                  <FaUserFriends />
-                  <span>Parents</span>
-                </Link>
-              </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
+              <Link to="/parent" className="flex items-center space-x-2">
+                <FaUserFriends className="text-xl" />
+                <span className="hidden sm:block">Parents</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/reports" className="flex items-center space-x-2">
-                <FaChartBar />
-                <span>Reports</span>
+                <FaChartBar className="text-xl" />
+                <span className="hidden sm:block">Reports</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/eventform" className="flex items-center space-x-2">
-                <FaClipboardList />
-                <span>Event Management</span>
+                <FaClipboardList className="text-xl" />
+                <span className="hidden sm:block">Event Management</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/documentsform" className="flex items-center space-x-2">
-                <FaFileInvoice />
-                <span>Documents</span>
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden sm:block">Documents</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>   
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/recordform" className="flex items-center space-x-2">
-                <FaFile />
-                <span>Student Record</span>
+                <FaFile className="text-xl" />
+                <span className="hidden sm:block">Student Record</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li>        
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/teacherrecord" className="flex items-center space-x-2">
-                <FaFile />
-                <span>Teacher Record</span>
+                <FaFile className="text-xl" />
+                <span className="hidden sm:block">Teacher Record</span>
               </Link>
-            </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
+            </li> 
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/notificationform" className="flex items-center space-x-2">
-                <FaBell />
-                <span>Notifications</span>
+                <FaBell className="text-xl" />
+                <span className="hidden sm:block">Notifications</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-blue-700">
-              <Link to="/settings" className="flex items-center space-x-2">
-                <FaCog />
-                <span>Settings</span>
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
+              <Link to="/aemails" className="flex items-center space-x-2">
+                <FaEnvelope className="text-xl" />
+                <span className="hidden sm:block">Emails</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-red-600">
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
               <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt />
-                <span>Logout</span>
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden sm:block">Logout</span>
               </Link>
             </li>
           </ul>

@@ -154,107 +154,120 @@ function STimetable() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-        <aside className="w-64 bg-purple-800 text-white flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          </div>
-          <nav className="mt-6">
-            <ul>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studentdb" className="flex items-center space-x-2">
-                  <FaUserGraduate /> <span>Dashboard</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/spayment" className="flex items-center space-x-2">
-                  <FaMoneyCheck /> <span>Payment</span>
-                </Link>
-              </li>              
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/stimetable" className="flex items-center space-x-2">
-                  <FaClock /> <span>Time-Table</span>
-                </Link>
-              </li>              
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/gradesview" className="flex items-center space-x-2">
-                  <FaChartLine /> <span>Grades</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/attendanceview" className="flex items-center space-x-2">
-                  <FaCalendarAlt /> <span>Attendance</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/courseview" className="flex items-center space-x-2">
-                  <FaBook /> <span>Courses</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/studenteventview" className="flex items-center space-x-2">
-                  <FaCalendarAlt /> <span>Events</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/semails" className="flex items-center space-x-2">
-                  <FaEnvelope /> <span>Emails</span>
-                  {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {emailCount}
-                    </span>
-                  )}
-                </Link>
-              </li>    
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/documents" className="flex items-center space-x-2">
-                  <FaFileInvoice /> <span>Documents</span>
-                </Link>
-              </li>                                    
-              <li className="px-6 py-3 hover:bg-purple-700 relative">
-                <Link to="/notificationview" className="flex items-center space-x-2">
-                  <FaBell />
-                  <span>Notifications</span>
-                  {notificationCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-purple-700">
-                <Link to="/seditprofile" className="flex items-center space-x-2">
-                  <FaIdCard /> <span>Profile</span>
-                </Link>
-              </li>
-              <li className="px-6 py-3 hover:bg-red-600">
-                <Link to="/" className="flex items-center space-x-2">
-                  <FaSignOutAlt /> <span>Logout</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+      <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">SD</h1>
+        </div>
+        <nav className="mt-6">
+          <ul>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studentdb" className="flex items-center space-x-2">
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden sm:block">Dashboard</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/spayment" className="flex items-center space-x-2">
+                <FaMoneyCheck className="text-xl" />
+                <span className="hidden sm:block">Payment</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/stimetable" className="flex items-center space-x-2">
+                <FaClock className="text-xl" />
+                <span className="hidden sm:block">Time-Table</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/gradesview" className="flex items-center space-x-2">
+                <FaChartLine className="text-xl" />
+                <span className="hidden sm:block">Grades</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/attendanceview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Attendance</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/courseview" className="flex items-center space-x-2">
+                <FaBook className="text-xl" />
+                <span className="hidden sm:block">Courses</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/studenteventview" className="flex items-center space-x-2">
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Events</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/semails" className="flex items-center space-x-2">
+                <FaEnvelope className="text-xl" />
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/documents" className="flex items-center space-x-2">
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden sm:block">Documents</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+              <Link to="/notificationview" className="flex items-center space-x-2">
+                <FaBell className="text-xl" />
+                <span className="hidden sm:block">Notifications</span>
+                {notificationCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+              <Link to="/seditprofile" className="flex items-center space-x-2">
+                <FaIdCard className="text-xl" />
+                <span className="hidden sm:block">Profile</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+              <Link to="/" className="flex items-center space-x-2">
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden sm:block">Logout</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Student Timetable</h1>
+      <div className="flex-1 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Student Timetable</h1>
           <button
             onClick={downloadPDF}
-            className="flex items-center bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800 transition duration-200"
+            className="flex items-center bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800 transition duration-200 w-full sm:w-auto"
           >
             <FaDownload className="mr-2" />
             Download PDF
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop View */}
+        <div className="hidden sm:block overflow-x-auto">
           <div className="flex border border-gray-300 rounded-lg shadow-lg">
-            <div className="w-48 flex-shrink-0 bg-gray-100">
+            <div className="w-32 sm:w-48 flex-shrink-0 bg-gray-100">
               <div className="h-12"></div>
               {sortedTimeSlots.map((time) => (
                 <div
                   key={time}
-                  className="h-20 flex items-center justify-end pr-4 text-sm text-gray-700 border-b border-gray-300"
+                  className="h-20 flex items-center justify-end pr-2 sm:pr-4 text-xs sm:text-sm text-gray-700 border-b border-gray-300"
                 >
                   {time}
                 </div>
@@ -262,8 +275,8 @@ function STimetable() {
             </div>
 
             {daysOfWeek.map((day) => (
-              <div key={day} className="flex-1 min-w-40">
-                <div className="h-12 flex items-center justify-center font-semibold text-white bg-purple-700 border-b border-gray-300">
+              <div key={day} className="flex-1 min-w-32 sm:min-w-40">
+                <div className="h-12 flex items-center justify-center font-semibold text-white bg-purple-700 border-b border-gray-300 text-xs sm:text-base">
                   {day}
                 </div>
                 {sortedTimeSlots.map((time) => {
@@ -271,15 +284,15 @@ function STimetable() {
                   return (
                     <div
                       key={`${day}-${time}`}
-                      className="h-20 p-2 border-b border-gray-400 bg-white hover:bg-gray-100 transition"
+                      className="h-20 p-1 sm:p-2 border-b border-gray-400 bg-white hover:bg-gray-100 transition"
                     >
                       {entry ? (
-                        <div className="bg-purple-100 p-2 rounded-lg shadow-sm border border-purple-100">
-                          <p className="text-sm font-medium text-purple-900">{entry.subject}</p>
+                        <div className="bg-purple-100 p-1 sm:p-2 rounded-lg shadow-sm border border-purple-100">
+                          <p className="text-xs sm:text-sm font-medium text-purple-900">{entry.subject}</p>
                           <p className="text-xs text-gray-600">{entry.location}</p>
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-400 text-center mt-6">-</p>
+                        <p className="text-xs sm:text-sm text-gray-400 text-center mt-4 sm:mt-6">-</p>
                       )}
                     </div>
                   );
@@ -287,6 +300,33 @@ function STimetable() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Mobile View */}
+        <div className="block sm:hidden space-y-6">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="bg-white rounded-lg shadow-md p-4">
+              <h2 className="text-lg font-semibold text-purple-700 mb-4">{day}</h2>
+              <div className="space-y-4">
+                {sortedTimeSlots.map((time) => {
+                  const entry = groupedTimetable[day]?.[time];
+                  return (
+                    <div key={`${day}-${time}`} className="flex flex-col border-b border-gray-200 pb-2">
+                      <p className="text-sm font-medium text-gray-700">{time}</p>
+                      {entry ? (
+                        <div className="mt-1">
+                          <p className="text-sm font-medium text-purple-900">{entry.subject}</p>
+                          <p className="text-xs text-gray-600">{entry.location}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400 mt-1">-</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
