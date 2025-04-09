@@ -126,10 +126,10 @@ const SEmails = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-16 lg:w-64 bg-purple-800 text-white flex-shrink-0">
-        <div className="p-4 flex justify-center lg:justify-start">
-          <h1 className="text-xl font-bold hidden lg:block">Student Dashboard</h1>
-          <h1 className="text-xl font-bold block lg:hidden">SD</h1>
+      <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">SD</h1>
         </div>
         <nav className="mt-6">
           <ul>

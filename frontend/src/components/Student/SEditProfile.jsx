@@ -5,7 +5,6 @@ import {
   FaUserGraduate,
   FaBook,
   FaCalendarAlt,
-  FaChartBar,
   FaChartLine,
   FaEnvelope,
   FaSignOutAlt,

@@ -17,6 +17,7 @@ const Spayment = () => {
 
   const user = JSON.parse(localStorage.getItem('user'));
 
+  // Fetch notification count
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -55,6 +56,7 @@ const Spayment = () => {
     }
   };
 
+  // Fetch paginated payments from the backend
   const fetchPayments = async (page) => {
     setIsLoading(true);
     try {
@@ -74,6 +76,7 @@ const Spayment = () => {
     }
   };
 
+  // Fetch all payments for the summary
   const fetchAllPayments = async () => {
     try {
       const response = await fetch(`http://localhost:8000/api/get-all-payments?user_id=${user.id}`);
@@ -137,6 +140,7 @@ const Spayment = () => {
   
       const { url } = await response.json();
       
+      // Save payment details in local storage
       const paymentDetails = {
         user_id: user.id,
         amount: amount,
@@ -146,21 +150,25 @@ const Spayment = () => {
       };
       localStorage.setItem('latestPayment', JSON.stringify(paymentDetails));
   
+      // Redirect to payment URL
       window.location.href = url;
     } catch (error) {
       console.error('Payment error:', error);
     }
   };
 
+  // Calculate payment statistics using all payments
   const totalPaymentsCount = allPayments.length;
   const averagePaymentAmount = totalPaymentsCount > 0 ? (totalPayments / totalPaymentsCount).toFixed(2) : 0;
   const lastPaymentDate = totalPaymentsCount > 0 ? new Date(allPayments[0].created_at).toLocaleDateString() : 'N/A';
 
+  // Animation variants for table rows
   const rowVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
 
+  // Animation variants for cards
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { opacity: 1, scale: 1 },

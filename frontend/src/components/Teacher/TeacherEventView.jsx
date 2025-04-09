@@ -116,57 +116,64 @@ const TeacherEventView = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <aside className="w-64 bg-green-800 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
+      <aside className="w-16 sm:w-64 bg-green-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Teacher Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">TD</h1>
         </div>
         <nav className="mt-6">
           <ul>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/teacherdb" className="flex items-center space-x-2">
-                <FaChalkboardTeacher /> <span>Dashboard</span>
+                <FaChalkboardTeacher className="text-xl" />
+                <span className="hidden sm:block">Dashboard</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/ttimetable" className="flex items-center space-x-2">
-                <FaClock />
-                <span>Time-Table</span>
+                <FaClock className="text-xl" />
+                <span className="hidden sm:block">Time-Table</span>
               </Link>
-            </li>             
-            <li className="px-6 py-3 hover:bg-green-700">
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/attendanceform" className="flex items-center space-x-2">
-                <FaCalendarAlt /> <span>Attendance</span>
+                <FaCalendarAlt className="text-xl" />
+                <span className="hidden sm:block">Attendance</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/gradesform" className="flex items-center space-x-2">
-                <FaChartLine /> <span>Grades</span>
+                <FaChartLine className="text-xl" />
+                <span className="hidden sm:block">Grades</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/courseform" className="flex items-center space-x-2">
-                <FaBook /> <span>Courses</span>
+                <FaBook className="text-xl" />
+                <span className="hidden sm:block">Courses</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/teachereventview" className="flex items-center space-x-2">
-                <FaClipboardList /> <span>Events</span>
+                <FaClipboardList className="text-xl" />
+                <span className="hidden sm:block">Events</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700 relative">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
               <Link to="/temails" className="flex items-center space-x-2">
-                <FaEnvelope />
-                <span>Emails</span>
+                <FaEnvelope className="text-xl" />
+                <span className="hidden sm:block">Emails</span>
                 {emailCount > 0 && (
                   <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
                 )}
               </Link>
-            </li>            
-            <li className="px-6 py-3 hover:bg-green-700 relative">
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
               <Link to="/tnotificationview" className="flex items-center space-x-2">
-                <FaBell /> <span>Notifications</span>
+                <FaBell className="text-xl" />
+                <span className="hidden sm:block">Notifications</span>
                 {notificationCount > 0 && (
                   <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {notificationCount}
@@ -174,15 +181,16 @@ const TeacherEventView = () => {
                 )}
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-green-700">
+            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
               <Link to="/teditprofile" className="flex items-center space-x-2">
-                <FaIdCard />
-                <span>Profile</span>
+                <FaIdCard className="text-xl" />
+                <span className="hidden sm:block">Profile</span>
               </Link>
             </li>
-            <li className="px-6 py-3 hover:bg-red-600">
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
               <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt /> <span>Logout</span>
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden sm:block">Logout</span>
               </Link>
             </li>
           </ul>
