@@ -7,6 +7,8 @@ import Home from './components/Home';
 import Login from './components/Login';
 import AboutUs from "./components/Aboutus";
 import Register from './components/Register';
+import Access from "./components/Acess";
+
 import Admindb from './components/Admin/Admindb';
 import Student from './components/Admin/Student';  
 import Teacher from './components/Admin/Teacher';
@@ -128,6 +130,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/aboutus" element={<AboutUs />} />
+          <Route path="/access" element={<Access />} />
 
           <Route path="/admindb" element={<Admindb />} />
           <Route path="/students" element={<Student />} /> 

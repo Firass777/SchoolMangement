@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link ,useNavigate } from 'react-router-dom';
 import {
   FaSchool,
   FaClock,
@@ -24,6 +24,7 @@ import {
 } from 'react-icons/fa';
 
 const DocumentsForm = () => {
+    const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [selectedStudentNIN, setSelectedStudentNIN] = useState('');
   const [year, setYear] = useState('');
@@ -91,10 +92,17 @@ const DocumentsForm = () => {
 
   // Email count
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, []);
+  }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link , Navigate, useNavigate } from "react-router-dom";
 import {
   FaUserGraduate,
   FaChalkboardTeacher,
@@ -26,6 +26,7 @@ function TimetableForm() {
     location: "",
   });
 
+  const navigate = useNavigate();
   const [timetableData, setTimetableData] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState({ type: "student", value: "" });
@@ -42,11 +43,18 @@ function TimetableForm() {
   ];
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "admin") {
+        navigate("/access");
+        return;
+      }
+
     if (filter.value) {
       fetchTimetable();
     }
     fetchEmailCount();
-  }, [filter]);
+  }, [filter , navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem('user'));

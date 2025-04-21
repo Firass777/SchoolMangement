@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaEnvelope, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import html2canvas from 'html2canvas';
@@ -10,6 +10,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 const AdminReports = () => {
+  const navigate = useNavigate();
   const [students, setStudents] = useState(0);
   const [teachers, setTeachers] = useState(0);
   const [attendanceRate, setAttendanceRate] = useState(0);
@@ -54,12 +55,18 @@ const AdminReports = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
+     // Access Checking
+     const userData = JSON.parse(localStorage.getItem("user"));
+     if (!userData || userData.role !== "admin") {
+       navigate("/access");
+       return;
+     }   
     AOS.init({
       duration: 1000,
       once: true
     });
     fetchAllData();
-  }, []);
+  }, [navigate]);
 
   const fetchAllData = async () => {
     try {

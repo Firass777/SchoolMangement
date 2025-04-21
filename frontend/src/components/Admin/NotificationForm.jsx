@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaUserFriends, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate  } from 'react-router-dom';
 import axios from 'axios';
 
 const NotificationForm = () => {
+  const navigate = useNavigate();
   const [to, setTo] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -11,10 +12,17 @@ const NotificationForm = () => {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, []);
+  }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

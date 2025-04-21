@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import {
@@ -22,6 +22,7 @@ import "chart.js/auto";
 import axios from "axios";
 
 function Admindb() {
+  const navigate = useNavigate();
   const [students, setStudents] = useState(0);
   const [teachers, setTeachers] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -40,12 +41,19 @@ function Admindb() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     AOS.init({ duration: 1000 });
     fetchDashboardData();
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, []);
+  }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -121,18 +129,15 @@ function Admindb() {
       const monthlyRevenueData = await monthlyRevenueResponse.json();
       const weeklyRevenueData = await weeklyRevenueResponse.json();
 
-      // Calculate total revenue from student records (sum of all payment_amount)
       const totalPaymentAmount = studentRecordsData.data.reduce((sum, record) => {
         const amount = parseFloat(record.payment_amount) || 0;
         return sum + amount;
       }, 0);
       setTotalRevenue(totalPaymentAmount);
 
-      // Calculate payment stats
       const totalPaid = parseFloat(paymentsData.totalPayments) || 0;
       const totalUnpaid = Math.max(0, totalPaymentAmount - totalPaid);
       
-      // Get latest 4 payments
       const latestPayments = paymentsData.payments?.slice(0, 4) || [];
       
       setPaymentStats({

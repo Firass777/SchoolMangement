@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 import {
   FaUserGraduate,
   FaChalkboardTeacher,
@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 
 const EventForm = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
@@ -36,11 +37,18 @@ const EventForm = () => {
 
   // Fetch all events on component mount
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+    
     fetchEvents();
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, []);
+  }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

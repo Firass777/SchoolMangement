@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaSchool,
@@ -51,6 +51,7 @@ function RecordForm() {
     remarks: "",
   });
 
+  const navigate = useNavigate();
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -61,11 +62,18 @@ function RecordForm() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     fetchRecords();
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

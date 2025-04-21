@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaPaperPlane, FaUserFriends, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell, FaSearch, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
 
 const AEmails = () => {
+  const navigate = useNavigate();
   const [emails, setEmails] = useState([]);
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
@@ -19,6 +20,13 @@ const AEmails = () => {
   const userEmail = JSON.parse(localStorage.getItem('user')).email;
 
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     const fetchEmails = async () => {
       try {
         const response = await axios.get('http://localhost:8000/api/emails', {
@@ -44,7 +52,7 @@ const AEmails = () => {
     fetchEmailCount();
     const emailInterval = setInterval(fetchEmailCount, 30000);
     return () => clearInterval(emailInterval);
-  }, [userEmail]);
+  }, [userEmail, navigate]);
 
   const fetchEmailCount = async () => {
     try {

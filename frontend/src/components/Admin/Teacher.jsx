@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUserGraduate, FaSchool, FaChalkboardTeacher, FaChartBar, FaUserFriends, FaEnvelope, FaSignOutAlt, FaBell, FaSearch, FaPlus, FaClipboardList, FaTrash, FaEdit, FaClock, FaFileInvoice, FaFile, FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
 function Teacher() {
+  const navigate = useNavigate();
   const [teacherData, setTeacherData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,9 +27,16 @@ function Teacher() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "admin") {
+        navigate("/access");
+        return;
+      }
+
     fetchteachers();
     fetchEmailCount();
-  }, []);
+  }, [navigate]);
 
 
   const fetchEmailCount = async () => {

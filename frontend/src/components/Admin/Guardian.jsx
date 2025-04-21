@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as XLSX from "xlsx"; 
 import {
@@ -7,7 +7,6 @@ import {
   FaSchool,
   FaChalkboardTeacher,
   FaChartBar,
-  FaCog,
   FaEnvelope,
   FaSignOutAlt,
   FaBell,
@@ -24,6 +23,7 @@ import {
 } from "react-icons/fa";
 
 function Guardian() {
+  const navigate = useNavigate(); 
   const [guardianData, setGuardianData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -47,9 +47,16 @@ function Guardian() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+    // Access Checking
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "admin") {
+      navigate("/access");
+      return;
+    }
+
     fetchGuardians();
     fetchEmailCount();
-  }, []);
+  }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem('user'));

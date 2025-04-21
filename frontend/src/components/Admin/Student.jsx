@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as XLSX from "xlsx"; 
 import {
@@ -23,6 +23,7 @@ import {
 } from "react-icons/fa";
 
 function Student() {
+  const navigate = useNavigate();
   const [studentData, setStudentData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -45,9 +46,16 @@ function Student() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "admin") {
+        navigate("/access");
+        return;
+      }
+
     fetchStudents();
     fetchEmailCount();
-  }, []);
+  }, [navigate]);
 
 
   const fetchEmailCount = async () => {
