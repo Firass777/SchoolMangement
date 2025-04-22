@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 
 function GGrades() {
+  const navigate = useNavigate();
   const [childrenRecords, setChildrenRecords] = useState([]);
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [grades, setGrades] = useState([]);
@@ -25,6 +26,13 @@ function GGrades() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchNotificationCount();
     fetchEmailCount();
     const interval = setInterval(() => {
@@ -33,7 +41,7 @@ function GGrades() {
     }, 30000);
     fetchParentData();
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

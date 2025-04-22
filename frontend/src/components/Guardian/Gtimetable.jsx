@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 
 function Gtimetable() {
+  const navigate = useNavigate();
   const [childrenTimetables, setChildrenTimetables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +23,13 @@ function Gtimetable() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchNotificationCount();
     fetchEmailCount();
     fetchData();
@@ -31,7 +39,7 @@ function Gtimetable() {
       fetchEmailCount();
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = localStorage.getItem("user");

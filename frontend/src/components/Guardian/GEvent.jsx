@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { 
   FaUserGraduate, 
   FaCalendarAlt, 
@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 
 const GEvent = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [message, setMessage] = useState('');
@@ -26,6 +27,13 @@ const GEvent = () => {
   const eventsPerPage = 4;
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchNotificationCount();
     fetchEmailCount();
     const interval = setInterval(() => {
@@ -61,7 +69,7 @@ const GEvent = () => {
     
     fetchEvents();
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaMoneyCheck } from 'react-icons/fa';
 
 const GNotification = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,6 +13,13 @@ const GNotification = () => {
   const notificationsPerPage = 4;
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchNotificationCount();
     fetchEmailCount();
     const interval = setInterval(() => {
@@ -78,7 +86,7 @@ const GNotification = () => {
     markAsRead();
     
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

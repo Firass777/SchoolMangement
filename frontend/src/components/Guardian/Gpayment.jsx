@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   FaUserGraduate,
@@ -16,6 +16,7 @@ import {
 import { motion } from 'framer-motion'; 
 
 const Gpayment = () => {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [selectedChild, setSelectedChild] = useState('');
   const [children, setChildren] = useState([]);
@@ -32,6 +33,14 @@ const Gpayment = () => {
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
+
     fetchNotificationCount();
     fetchEmailCount();
     
@@ -54,7 +63,7 @@ const Gpayment = () => {
       fetchEmailCount();
     }, 30000);
     return () => clearInterval(interval);
-  }, [currentPage]);
+  }, [currentPage , navigate]);
 
   const fetchNotificationCount = async () => {
     if (!user?.email) return;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 
 function GAttendance() {
+  const navigate = useNavigate();
   const [childrenRecords, setChildrenRecords] = useState([]);
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [attendances, setAttendances] = useState([]);
@@ -25,6 +26,13 @@ function GAttendance() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchNotificationCount();
     fetchEmailCount();
     const interval = setInterval(() => {
@@ -33,7 +41,7 @@ function GAttendance() {
     }, 30000);
     fetchParentData();
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 function Guardiandb() {
+  const navigate = useNavigate();
   const [children, setChildren] = useState([]);
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +32,13 @@ function Guardiandb() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
+      // Access Checking
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || userData.role !== "parent") {
+        navigate("/access");
+        return;
+      }
+
     fetchData();
     fetchNotificationCount();
     fetchEmailCount();
@@ -40,7 +48,7 @@ function Guardiandb() {
       fetchEmailCount();
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
