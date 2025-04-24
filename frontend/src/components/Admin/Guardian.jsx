@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link , useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import * as XLSX from "xlsx"; 
+import * as XLSX from "xlsx";
 import {
   FaUserGraduate,
   FaSchool,
@@ -18,12 +18,12 @@ import {
   FaClock,
   FaFileInvoice,
   FaFile,
-  FaFileExcel, 
+  FaFileExcel,
   FaUserFriends,
 } from "react-icons/fa";
 
 function Guardian() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [guardianData, setGuardianData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -47,7 +47,6 @@ function Guardian() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
-    // Access Checking
     const userData = JSON.parse(localStorage.getItem("user"));
     if (!userData || userData.role !== "admin") {
       navigate("/access");
@@ -59,9 +58,9 @@ function Guardian() {
   }, [navigate]);
 
   const fetchEmailCount = async () => {
-    const userData = JSON.parse(localStorage.getItem('user'));
+    const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
-    
+
     if (!email) return;
 
     try {
@@ -71,7 +70,7 @@ function Guardian() {
       const data = await response.json();
       if (data) {
         setEmailCount(data.count);
-        localStorage.setItem('emailCount', data.count.toString());
+        localStorage.setItem("emailCount", data.count.toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);
@@ -95,23 +94,20 @@ function Guardian() {
     setSuccess("");
 
     try {
-      // Filter out empty children_nin entries
-      const filteredChildrenNin = formData.children_nin.filter(nin => nin.trim() !== "");
-      
+      const filteredChildrenNin = formData.children_nin.filter((nin) => nin.trim() !== "");
       const response = await axios.post("http://127.0.0.1:8000/api/register", {
         ...formData,
-        children_nin: filteredChildrenNin
+        children_nin: filteredChildrenNin,
       });
-      
-      setSuccess("Guardian added successfully!");
+      setSuccess("Parent added successfully!");
       setShowAddForm(false);
-      setFormData({ 
-        name: "", 
-        email: "", 
-        nin: "", 
-        password: "", 
-        role: "parent", 
-        children_nin: [] 
+      setFormData({
+        name: "",
+        email: "",
+        nin: "",
+        password: "",
+        role: "parent",
+        children_nin: [],
       });
       setChildrenCount(1);
       fetchGuardians();
@@ -134,35 +130,32 @@ function Guardian() {
     setSuccess("");
 
     try {
-      // Filter out empty children_nin entries
-      const filteredChildrenNin = formData.children_nin.filter(nin => nin.trim() !== "");
-      
-      const dataToSend = { 
+      const filteredChildrenNin = formData.children_nin.filter((nin) => nin.trim() !== "");
+      const dataToSend = {
         ...formData,
-        children_nin: filteredChildrenNin
+        children_nin: filteredChildrenNin,
       };
-      
       if (!dataToSend.password) {
         delete dataToSend.password;
       }
 
       const response = await axios.put(`http://127.0.0.1:8000/api/users/${formData.id}`, dataToSend);
-      setSuccess("Guardian updated successfully!");
+      setSuccess("Parent updated successfully!");
       setShowUpdateForm(false);
-      setFormData({ 
-        id: "", 
-        name: "", 
-        email: "", 
-        nin: "", 
-        password: "", 
-        role: "parent", 
-        children_nin: [] 
+      setFormData({
+        id: "",
+        name: "",
+        email: "",
+        nin: "",
+        password: "",
+        role: "parent",
+        children_nin: [],
       });
       setChildrenCount(1);
       fetchGuardians();
     } catch (err) {
       if (err.response && err.response.data.errors) {
-        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to update guardian.");
+        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to update parent.");
       } else {
         setError("Something went wrong.");
       }
@@ -179,20 +172,20 @@ function Guardian() {
 
     try {
       const response = await axios.delete(`http://127.0.0.1:8000/api/users/${formData.id}`);
-      setSuccess("Guardian deleted successfully!");
+      setSuccess("Parent deleted successfully!");
       setShowDeleteForm(false);
-      setFormData({ 
-        id: "", 
-        name: "", 
-        email: "", 
-        nin: "", 
-        password: "", 
-        role: "parent", 
-        children_nin: [] 
+      setFormData({
+        id: "",
+        name: "",
+        email: "",
+        nin: "",
+        password: "",
+        role: "parent",
+        children_nin: [],
       });
       fetchGuardians();
     } catch (err) {
-      setError("Failed to delete guardian.");
+      setError("Failed to delete parent.");
     } finally {
       setLoading(false);
     }
@@ -226,10 +219,11 @@ function Guardian() {
     if (showUpdateForm && formData.id === guardian.id) {
       setShowUpdateForm(false);
     } else {
-      const childrenNin = guardian.children_nin ? 
-        (Array.isArray(guardian.children_nin) ? guardian.children_nin : JSON.parse(guardian.children_nin)) : 
-        [];
-      
+      const childrenNin = guardian.children_nin
+        ? Array.isArray(guardian.children_nin)
+          ? guardian.children_nin
+          : JSON.parse(guardian.children_nin)
+        : [];
       setFormData({
         id: guardian.id,
         name: guardian.name,
@@ -277,8 +271,8 @@ function Guardian() {
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredGuardians);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Guardians");
-    XLSX.writeFile(workbook, "Guardians.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Parents");
+    XLSX.writeFile(workbook, "Parents.xlsx");
   };
 
   const formatChildrenNin = (childrenNin) => {
@@ -292,9 +286,7 @@ function Guardian() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
-      <div className="flex flex-1">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-gray-50 font-inter">
       <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
         <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
           <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Admin Dashboard</h1>
@@ -313,7 +305,7 @@ function Guardian() {
                 <FaClock className="text-xl" />
                 <span className="hidden sm:block">Time-Table</span>
               </Link>
-            </li>                        
+            </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate className="text-xl" />
@@ -349,19 +341,19 @@ function Guardian() {
                 <FaFileInvoice className="text-xl" />
                 <span className="hidden sm:block">Documents</span>
               </Link>
-            </li>   
+            </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/recordform" className="flex items-center space-x-2">
                 <FaFile className="text-xl" />
                 <span className="hidden sm:block">Student Record</span>
               </Link>
-            </li>        
+            </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/teacherrecord" className="flex items-center space-x-2">
                 <FaFile className="text-xl" />
                 <span className="hidden sm:block">Teacher Record</span>
               </Link>
-            </li> 
+            </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell className="text-xl" />
@@ -371,12 +363,12 @@ function Guardian() {
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
-                  <span className="hidden sm:block"> Emails</span>
-                    {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                  )}
+                )}
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
@@ -389,96 +381,103 @@ function Guardian() {
         </nav>
       </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          {/* Search Bar */}
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex items-center bg-white p-4 rounded-md shadow-md">
-              <FaSearch className="text-gray-600" />
-              <input
-                type="text"
-                className="ml-4 w-full p-2 border rounded-md"
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
+        <div className="mx-auto max-w-full sm:max-w-7xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Parent Management</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage parent records and information</p>
             </div>
-
-            {/* Buttons to Show Forms and Export to Excel */}
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Search parents..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full"
+                />
+                <FaSearch className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              </div>
               <button
-                className="bg-green-600 text-white px-4 py-2 rounded flex items-center"
                 onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition w-full sm:w-auto justify-center"
               >
                 <FaPlus className="mr-2" /> Add Parent
               </button>
               <button
-                className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
                 onClick={exportToExcel}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition w-full sm:w-auto justify-center"
               >
-                <FaFileExcel className="mr-2" /> Export to Excel
+                <FaFileExcel className="mr-2" /> Export
               </button>
             </div>
           </div>
 
-          {/* Add Form */}
           {showAddForm && (
-            <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4 ">Add Parent</h2>
-              <form onSubmit={handleAddSubmit}>
-                <input
-                  type="text"
-                  placeholder="Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="National ID Number (NIN)"
-                  name="nin"
-                  value={formData.nin}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium">Children NINs</label>
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Add New Parent</h3>
+              <form onSubmit={handleAddSubmit} className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">National ID (NIN)</label>
+                  <input
+                    type="text"
+                    name="nin"
+                    value={formData.nin}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Children NINs</label>
                   {Array.from({ length: childrenCount }).map((_, index) => (
-                    <div key={index} className="flex mb-2">
+                    <div key={index} className="flex mb-2 items-center">
                       <input
                         type="text"
                         placeholder={`Child ${index + 1} NIN`}
                         value={formData.children_nin[index] || ""}
                         onChange={(e) => handleChildNinChange(index, e.target.value)}
-                        className="flex-1 p-2 border rounded"
+                        className="flex-1 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                       {index === childrenCount - 1 && (
                         <button
                           type="button"
                           onClick={addChildField}
-                          className="ml-2 bg-blue-500 text-white px-3 rounded"
+                          className="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                         >
                           +
                         </button>
@@ -487,7 +486,7 @@ function Guardian() {
                         <button
                           type="button"
                           onClick={() => removeChildField(index)}
-                          className="ml-2 bg-red-500 text-white px-3 rounded"
+                          className="ml-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                         >
                           -
                         </button>
@@ -495,73 +494,91 @@ function Guardian() {
                     </div>
                   ))}
                 </div>
-                
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
-                  {loading ? "Adding..." : "Add"}
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    disabled={loading}
+                  >
+                    {loading ? "Adding..." : "Add Parent"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
-              {error && <div className="text-red-500 mt-3">{error}</div>}
-              {success && <div className="text-green-500 mt-3">{success}</div>}
+              {error && <div className="text-red-500 text-xs sm:text-sm mt-3">{error}</div>}
+              {success && <div className="text-green-500 text-xs sm:text-sm mt-3">{success}</div>}
             </div>
           )}
 
-          {/* Update Form */}
           {showUpdateForm && (
-            <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Update Parent</h2>
-              <form onSubmit={handleUpdateSubmit}>
-                <input
-                  type="text"
-                  placeholder="Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="National ID Number (NIN)"
-                  name="nin"
-                  value={formData.nin}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="New Password (leave blank to keep current)"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded mb-2"
-                />
-                
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium">Children NINs</label>
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Update Parent</h3>
+              <form onSubmit={handleUpdateSubmit} className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">National ID (NIN)</label>
+                  <input
+                    type="text"
+                    name="nin"
+                    value={formData.nin}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">New Password (optional)</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Children NINs</label>
                   {Array.from({ length: childrenCount }).map((_, index) => (
-                    <div key={index} className="flex mb-2">
+                    <div key={index} className="flex mb-2 items-center">
                       <input
                         type="text"
                         placeholder={`Child ${index + 1} NIN`}
                         value={formData.children_nin[index] || ""}
                         onChange={(e) => handleChildNinChange(index, e.target.value)}
-                        className="flex-1 p-2 border rounded"
+                        className="flex-1 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                       {index === childrenCount - 1 && (
                         <button
                           type="button"
                           onClick={addChildField}
-                          className="ml-2 bg-blue-500 text-white px-3 rounded"
+                          className="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                         >
                           +
                         </button>
@@ -570,7 +587,7 @@ function Guardian() {
                         <button
                           type="button"
                           onClick={() => removeChildField(index)}
-                          className="ml-2 bg-red-500 text-white px-3 rounded"
+                          className="ml-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                         >
                           -
                         </button>
@@ -578,94 +595,114 @@ function Guardian() {
                     </div>
                   ))}
                 </div>
-                
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
-                  {loading ? "Updating..." : "Update"}
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    disabled={loading}
+                  >
+                    {loading ? "Updating..." : "Update Parent"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUpdateForm(false)}
+                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
-              {error && <div className="text-red-500 mt-3">{error}</div>}
-              {success && <div className="text-green-500 mt-3">{success}</div>}
+              {error && <div className="text-red-500 text-xs sm:text-sm mt-3">{error}</div>}
+              {success && <div className="text-green-500 text-xs sm:text-sm mt-3">{success}</div>}
             </div>
           )}
 
-          {/* Delete Form */}
           {showDeleteForm && (
-            <div className="p-6 bg-white shadow-md rounded-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">Delete Parent</h2>
-              <p className="mb-4">
-                Are you sure you want to delete <strong>{formData.name}</strong>?
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Delete Parent</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                Are you sure you want to delete <span className="font-medium">{formData.name}</span>?
               </p>
               <form onSubmit={handleDeleteSubmit}>
-                <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded" disabled={loading}>
-                  {loading ? "Deleting..." : "Delete"}
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                    disabled={loading}
+                  >
+                    {loading ? "Deleting..." : "Delete"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteForm(false)}
+                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
-              {error && <div className="text-red-500 mt-3">{error}</div>}
-              {success && <div className="text-green-500 mt-3">{success}</div>}
+              {error && <div className="text-red-500 text-xs sm:text-sm mt-3">{error}</div>}
+              {success && <div className="text-green-500 text-xs sm:text-sm mt-3">{success}</div>}
             </div>
           )}
 
-          {/* Parent List */}
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Parents List</h2>
-            <div className="mt-4">
-              {filteredGuardians.length === 0 ? (
-                <p>No guardians found.</p>
-              ) : (
-                <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                  <table className="min-w-full table-auto">
-                    <thead className="bg-blue-800 text-white">
-                      <tr>
-                        <th className="px-6 py-3 text-left">ID</th>
-                        <th className="px-6 py-3 text-left">Name</th>
-                        <th className="px-6 py-3 text-left">Email</th>
-                        <th className="px-6 py-3 text-left">NIN</th>
-                        <th className="px-6 py-3 text-left">Children NINs</th>
-                        <th className="px-6 py-3 text-left">Actions</th>
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Parent List</h3>
+            {filteredGuardians.length === 0 ? (
+              <p className="text-gray-500 text-xs sm:text-sm">No parents found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-600">
+                      <th className="p-2 sm:p-3 text-left font-medium">ID</th>
+                      <th className="p-2 sm:p-3 text-left font-medium">Name</th>
+                      <th className="p-2 sm:p-3 text-left font-medium">Email</th>
+                      <th className="p-2 sm:p-3 text-left font-medium">NIN</th>
+                      <th className="p-2 sm:p-3 text-left font-medium">Children NINs</th>
+                      <th className="p-2 sm:p-3 text-left font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentGuardians.map((guardian) => (
+                      <tr key={guardian.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="p-2 sm:p-3 text-gray-800">{guardian.id}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{guardian.name}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{guardian.email}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{guardian.nin}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{formatChildrenNin(guardian.children_nin)}</td>
+                        <td className="p-2 sm:p-3">
+                          <button
+                            onClick={() => handleEditClick(guardian)}
+                            className="text-blue-600 hover:text-blue-800 mr-2 sm:mr-3"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(guardian)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {currentGuardians.map((guardian) => (
-                        <tr key={guardian.id} className="border-b">
-                          <td className="px-6 py-3">{guardian.id}</td>
-                          <td className="px-6 py-3">{guardian.name}</td>
-                          <td className="px-6 py-3">{guardian.email}</td>
-                          <td className="px-6 py-3">{guardian.nin}</td>
-                          <td className="px-6 py-3">{formatChildrenNin(guardian.children_nin)}</td>
-                          <td className="px-6 py-3">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 mr-2"
-                              onClick={() => handleEditClick(guardian)}
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              className="text-red-600 hover:text-red-800"
-                              onClick={() => handleDeleteClick(guardian)}
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          {/* Pagination */}
           {filteredGuardians.length > guardiansPerPage && (
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-6 flex-wrap gap-2">
               {Array.from({ length: Math.ceil(filteredGuardians.length / guardiansPerPage) }).map((_, index) => (
                 <button
                   key={index + 1}
                   onClick={() => paginate(index + 1)}
-                  className={`px-4 py-2 mx-1 rounded text-sm ${
+                  className={`px-3 py-1 rounded text-xs sm:text-sm ${
                     currentPage === index + 1
                       ? "bg-blue-600 text-white"
-                      : "bg-white text-blue-600 border border-blue-600 hover:bg-blue-50"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
                   {index + 1}
@@ -673,8 +710,8 @@ function Guardian() {
               ))}
             </div>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
