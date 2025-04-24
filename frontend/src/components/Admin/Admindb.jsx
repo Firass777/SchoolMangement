@@ -16,6 +16,8 @@ import {
   FaClock,
   FaFileInvoice,
   FaFile,
+  FaCalendarAlt,
+  FaUsers,
 } from "react-icons/fa";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
@@ -41,7 +43,6 @@ function Admindb() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
-    // Access Checking
     const userData = JSON.parse(localStorage.getItem("user"));
     if (!userData || userData.role !== "admin") {
       navigate("/access");
@@ -196,7 +197,7 @@ function Admindb() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
+    <div className="flex flex-col h-full bg-gray-50">
       <div className="flex flex-1">
         <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
           <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
@@ -292,77 +293,103 @@ function Admindb() {
           </nav>
         </aside>
 
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Welcome, Admin!</h2>
-            <p className="text-gray-600">Manage your school efficiently.</p>
+        <main className="flex-1 p-8 overflow-auto min-h-screen bg-gray-50">
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold text-gray-900">Admin Dashboard</h2>
+            <p className="text-gray-500 mt-2">Efficiently manage your school operations</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
-              <FaUserGraduate className="text-blue-600 text-4xl mr-4" />
-              <div>
-                <h3 className="text-2xl font-semibold">{students}</h3>
-                <p className="text-gray-600">Total Students</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center">
+                <FaUserGraduate className="text-blue-500 text-3xl mr-4" />
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">{students}</h3>
+                  <p className="text-gray-500">Total Students</p>
+                </div>
               </div>
             </div>
-            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
-              <FaChalkboardTeacher className="text-green-600 text-4xl mr-4" />
-              <div>
-                <h3 className="text-2xl font-semibold">{teachers}</h3>
-                <p className="text-gray-600">Total Teachers</p>
+            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center">
+                <FaChalkboardTeacher className="text-green-500 text-3xl mr-4" />
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">{teachers}</h3>
+                  <p className="text-gray-500">Total Teachers</p>
+                </div>
               </div>
             </div>
-            <div className="bg-white shadow-lg p-6 rounded-lg flex items-center">
-              <FaMoneyBillWave className="text-yellow-500 text-4xl mr-4" />
-              <div>
-                <h3 className="text-2xl font-semibold">${totalRevenue.toLocaleString()}</h3>
-                <p className="text-gray-600">Total Revenue</p>
+            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center">
+                <FaMoneyBillWave className="text-yellow-500 text-3xl mr-4" />
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</h3>
+                  <p className="text-gray-500">Total Revenue</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center">
+                <FaEnvelope className="text-purple-500 text-3xl mr-4" />
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">{emailCount}</h3>
+                  <p className="text-gray-500">Unread Emails</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="col-span-2 bg-white p-6 shadow-lg rounded-lg">
-              <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="col-span-2 bg-white p-6 rounded-xl shadow-md">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Financial Overview</h3>
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="text-lg font-semibold text-blue-800">Total Paid</h4>
-                  <p className="text-2xl font-bold">${paymentStats.totalPaid.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">${paymentStats.totalPaid.toLocaleString()}</p>
                 </div>
                 <div className="bg-red-50 p-4 rounded-lg">
                   <h4 className="text-lg font-semibold text-red-800">Total Unpaid</h4>
-                  <p className="text-2xl font-bold">${paymentStats.totalUnpaid.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">${paymentStats.totalUnpaid.toLocaleString()}</p>
                 </div>
               </div>
-              <div className="h-64">
+              <div className="h-80">
                 <Line 
                   data={monthlyRevenueChartData} 
                   options={{
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                       title: {
                         display: true,
-                        text: 'Monthly Revenue',
-                        font: {
-                          size: 16
-                        }
+                        text: 'Monthly Revenue Trend',
+                        font: { size: 16 },
+                        padding: { bottom: 20 }
                       },
+                      legend: { display: false }
                     },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Revenue ($)' }
+                      },
+                      x: {
+                        title: { display: true, text: 'Month' }
+                      }
+                    }
                   }} 
                 />
               </div>
             </div>
-            <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h4 className="text-lg font-semibold mb-4">Latest Payments</h4>
+            <div className="bg-white p-6 rounded-xl shadow-md">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Payments</h3>
               {paymentStats.latestPayments.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {paymentStats.latestPayments.map((payment, index) => (
-                    <div key={index} className="border-b pb-2">
-                      <p className="font-medium">${payment.amount.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(payment.created_at).toLocaleDateString()}
-                      </p>
-                      <p className={`text-sm ${
+                    <div key={index} className="flex justify-between items-center border-b pb-3">
+                      <div>
+                        <p className="font-medium text-gray-800">${payment.amount.toLocaleString()}</p>
+                        <p className="text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <p className={`text-sm font-semibold ${
                         payment.status === 'paid' ? 'text-green-600' : 'text-yellow-600'
                       } capitalize`}>
                         {payment.status}
@@ -371,144 +398,181 @@ function Admindb() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600">No payments found</p>
+                <p className="text-gray-500">No payments found</p>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h3 className="text-xl font-bold mb-4">Attendance Overview</h3>
-              <div className="h-64 flex items-center justify-center">
-                <Pie data={attendanceChartData} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-md">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Attendance Overview</h3>
+              <div className="h-64">
+                <Pie 
+                  data={attendanceChartData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { position: 'bottom' }
+                    }
+                  }}
+                />
               </div>
             </div>
-            <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h3 className="text-xl font-bold mb-4">Weekly Revenue</h3>
-              <div className="h-64 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-xl shadow-md">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Weekly Revenue</h3>
+              <div className="h-64">
                 <Bar 
                   data={weeklyRevenueChartData} 
                   options={{
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                       title: {
                         display: true,
-                        text: 'Weekly Revenue (Last 4 Weeks)',
-                        font: {
-                          size: 16
-                        }
+                        text: 'Last 4 Weeks Revenue',
+                        font: { size: 16 },
+                        padding: { bottom: 20 }
                       },
+                      legend: { display: false }
                     },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Revenue ($)' }
+                      },
+                      x: {
+                        title: { display: true, text: 'Week' }
+                      }
+                    }
                   }}
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
-            <h3 className="text-xl font-bold mb-4">Latest Events</h3>
-            {latestEvents.length > 0 ? (
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-left">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestEvents.map((event, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-3">{event.name}</td>
-                      <td className="p-3">{new Date(event.date).toLocaleDateString()}</td>
-                      <td className="p-3">{event.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="text-gray-600">No events found.</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h3 className="text-xl font-bold mb-4">Latest Students</h3>
-              {latestStudents.length > 0 ? (
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Email</th>
-                      <th className="p-3 text-left">Registered On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestStudents.map((student, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="p-3">{student.name}</td>
-                        <td className="p-3">{student.email}</td>
-                        <td className="p-3">{new Date(student.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-600">No students found.</p>
-              )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800">Upcoming Events</h2>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {latestEvents.length > 0 ? (
+                  latestEvents.map((event, index) => (
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start">
+                        <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 mr-4">
+                          <FaCalendarAlt />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{event.name}</h3>
+                          <p className="text-sm text-gray-500 mt-1">{event.description}</p>
+                          <p className="text-xs text-indigo-600 mt-2">
+                            {new Date(event.date).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">No upcoming events</div>
+                )}
+              </div>
             </div>
 
-            <div className="bg-white p-6 shadow-lg rounded-lg">
-              <h3 className="text-xl font-bold mb-4">Latest Teachers</h3>
-              {latestTeachers.length > 0 ? (
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Email</th>
-                      <th className="p-3 text-left">Registered On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestTeachers.map((teacher, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="p-3">{teacher.name}</td>
-                        <td className="p-3">{teacher.email}</td>
-                        <td className="p-3">{new Date(teacher.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-600">No teachers found.</p>
-              )}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800">New Students</h2>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {latestStudents.length > 0 ? (
+                  latestStudents.map((student, index) => (
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium mr-4">
+                          {student.name.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{student.name}</h3>
+                          <p className="text-sm text-gray-500">{student.email}</p>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(student.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">No new students</div>
+                )}
+              </div>
             </div>
           </div>
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800">New Teachers</h2>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {latestTeachers.length > 0 ? (
+                  latestTeachers.map((teacher, index) => (
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium mr-4">
+                          {teacher.name.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{teacher.name}</h3>
+                          <p className="text-sm text-gray-500">{teacher.email}</p>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(teacher.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">No new teachers</div>
+                )}
+              </div>
+            </div>
 
-          <div className="bg-white p-6 shadow-lg rounded-lg mb-6">
-            <h3 className="text-xl font-bold mb-4">Latest Courses</h3>
-            {latestCourses.length > 0 ? (
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Class</th>
-                    <th className="p-3 text-left">Subject</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestCourses.map((course, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-3">{course.name}</td>
-                      <td className="p-3">{course.class}</td>
-                      <td className="p-3">{course.subject}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="text-gray-600">No courses found.</p>
-            )}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800">Recent Courses</h2>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {latestCourses.length > 0 ? (
+                  latestCourses.map((course, index) => (
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start">
+                        <div className="p-2 rounded-lg bg-green-50 text-green-600 mr-4">
+                          <FaUsers />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{course.name}</h3>
+                          <div className="flex mt-2">
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded mr-2">
+                              {course.class}
+                            </span>
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                              {course.subject}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">No recent courses</div>
+                )}
+              </div>
+            </div>
           </div>
         </main>
       </div>
