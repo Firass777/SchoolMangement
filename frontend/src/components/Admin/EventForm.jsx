@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link , useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaUserGraduate,
   FaChalkboardTeacher,
@@ -18,6 +18,10 @@ import {
   FaPlus,
   FaFileInvoice,
   FaFile,
+  FaCalendarAlt,
+  FaUsers,
+  FaInfoCircle,
+  FaTimes
 } from "react-icons/fa";
 
 const EventForm = () => {
@@ -34,6 +38,7 @@ const EventForm = () => {
   const [eventsPerPage] = useState(4);
   const [showForm, setShowForm] = useState(false);
   const [emailCount, setEmailCount] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch all events on component mount
   useEffect(() => {
@@ -76,11 +81,9 @@ const EventForm = () => {
       const response = await axios.get("http://localhost:8000/api/events", {
         params: { role: userRole },
       });
-      console.log("API Response:", response.data); 
       const sortedEvents = response.data.events.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
-      console.log("Sorted Events:", sortedEvents); 
       setEvents(sortedEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -100,8 +103,21 @@ const EventForm = () => {
       });
 
       setMessage("Event added successfully!");
-      fetchEvents(); 
-      setShowForm(false); 
+      setShowSuccess(true);
+      // Reset form fields
+      setName("");
+      setDate("");
+      setDescription("");
+      setType("Event");
+      setVisibleTo([]);
+      
+      fetchEvents();
+      setShowForm(false);
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 5000);
     } catch (error) {
       setMessage("Failed to add event.");
       console.error("Error:", error);
@@ -120,167 +136,208 @@ const EventForm = () => {
   const filteredEvents = events.filter((event) =>
     event.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  console.log("Filtered Events:", filteredEvents); 
 
   // Pagination logic
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-  console.log("Current Events (Pagination):", currentEvents); 
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // Function to get color based on event type
+  const getEventTypeColor = (type) => {
+    switch (type.toLowerCase()) {
+      case 'event':
+        return 'bg-blue-100 text-blue-800';
+      case 'training':
+        return 'bg-green-100 text-green-800';
+      case 'meeting':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
-       {/* Sidebar */}
-       <aside className="w-16 lg:w-64 bg-blue-800 text-white flex-shrink-0">
-         <div className="p-4 flex justify-center lg:justify-start">
-           <h1 className="text-xl font-bold hidden lg:block">Admin Dashboard</h1>
-           <h1 className="text-xl font-bold block lg:hidden">AD</h1>
-         </div>
-         <nav className="mt-6">
-           <ul>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/admindb" className="flex items-center space-x-2">
-                 <FaSchool className="text-xl" />
-                 <span className="hidden lg:block">Dashboard</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/timetableform" className="flex items-center space-x-2">
-                 <FaClock className="text-xl" />
-                 <span className="hidden lg:block">Time-Table</span>
-               </Link>
-             </li>                        
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/students" className="flex items-center space-x-2">
-                 <FaUserGraduate className="text-xl" />
-                 <span className="hidden lg:block">Students</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/teachers" className="flex items-center space-x-2">
-                 <FaChalkboardTeacher className="text-xl" />
-                 <span className="hidden lg:block">Teachers</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/parent" className="flex items-center space-x-2">
-                 <FaUserFriends className="text-xl" />
-                 <span className="hidden lg:block">Parents</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/reports" className="flex items-center space-x-2">
-                 <FaChartBar className="text-xl" />
-                 <span className="hidden lg:block">Reports</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/eventform" className="flex items-center space-x-2">
-                 <FaClipboardList className="text-xl" />
-                 <span className="hidden lg:block">Event Management</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/documentsform" className="flex items-center space-x-2">
-                 <FaFileInvoice className="text-xl" />
-                 <span className="hidden lg:block">Documents</span>
-               </Link>
-             </li>   
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/recordform" className="flex items-center space-x-2">
-                 <FaFile className="text-xl" />
-                 <span className="hidden lg:block">Student Record</span>
-               </Link>
-             </li>        
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/teacherrecord" className="flex items-center space-x-2">
-                 <FaFile className="text-xl" />
-                 <span className="hidden lg:block">Teacher Record</span>
-               </Link>
-             </li> 
-             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-               <Link to="/notificationform" className="flex items-center space-x-2">
-                 <FaBell className="text-xl" />
-                 <span className="hidden lg:block">Notifications</span>
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-blue-700 relative flex justify-center lg:justify-start">
-               <Link to="/aemails" className="flex items-center space-x-2">
-                 <FaEnvelope className="text-xl" />
-                 <span className="hidden lg:block">Emails</span>
-                 {emailCount > 0 && (
-                   <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                     {emailCount}
-                   </span>
-                 )}
-               </Link>
-             </li>
-             <li className="px-4 py-3 hover:bg-red-600 flex justify-center lg:justify-start">
-               <Link to="/" className="flex items-center space-x-2">
-                 <FaSignOutAlt className="text-xl" />
-                 <span className="hidden lg:block">Logout</span>
-               </Link>
-             </li>
-           </ul>
-         </nav>
-       </aside>
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar - Unchanged from original */}
+      <aside className="w-16 lg:w-64 bg-blue-800 text-white flex-shrink-0">
+        <div className="p-4 flex justify-center lg:justify-start">
+          <h1 className="text-xl font-bold hidden lg:block">Admin Dashboard</h1>
+          <h1 className="text-xl font-bold block lg:hidden">AD</h1>
+        </div>
+        <nav className="mt-6">
+          <ul>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/admindb" className="flex items-center space-x-2">
+                <FaSchool className="text-xl" />
+                <span className="hidden lg:block">Dashboard</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/timetableform" className="flex items-center space-x-2">
+                <FaClock className="text-xl" />
+                <span className="hidden lg:block">Time-Table</span>
+              </Link>
+            </li>                        
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/students" className="flex items-center space-x-2">
+                <FaUserGraduate className="text-xl" />
+                <span className="hidden lg:block">Students</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/teachers" className="flex items-center space-x-2">
+                <FaChalkboardTeacher className="text-xl" />
+                <span className="hidden lg:block">Teachers</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/parent" className="flex items-center space-x-2">
+                <FaUserFriends className="text-xl" />
+                <span className="hidden lg:block">Parents</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/reports" className="flex items-center space-x-2">
+                <FaChartBar className="text-xl" />
+                <span className="hidden lg:block">Reports</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/eventform" className="flex items-center space-x-2">
+                <FaClipboardList className="text-xl" />
+                <span className="hidden lg:block">Event Management</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/documentsform" className="flex items-center space-x-2">
+                <FaFileInvoice className="text-xl" />
+                <span className="hidden lg:block">Documents</span>
+              </Link>
+            </li>   
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/recordform" className="flex items-center space-x-2">
+                <FaFile className="text-xl" />
+                <span className="hidden lg:block">Student Record</span>
+              </Link>
+            </li>        
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/teacherrecord" className="flex items-center space-x-2">
+                <FaFile className="text-xl" />
+                <span className="hidden lg:block">Teacher Record</span>
+              </Link>
+            </li> 
+            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+              <Link to="/notificationform" className="flex items-center space-x-2">
+                <FaBell className="text-xl" />
+                <span className="hidden lg:block">Notifications</span>
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-blue-700 relative flex justify-center lg:justify-start">
+              <Link to="/aemails" className="flex items-center space-x-2">
+                <FaEnvelope className="text-xl" />
+                <span className="hidden lg:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="px-4 py-3 hover:bg-red-600 flex justify-center lg:justify-start">
+              <Link to="/" className="flex items-center space-x-2">
+                <FaSignOutAlt className="text-xl" />
+                <span className="hidden lg:block">Logout</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden p-4">
-        <div className="p-4 bg-white shadow-md rounded-lg flex-1">
-          <h2 className="text-xl font-bold mb-4">Event Management</h2>
-
-          {/* Add Event Button */}
+      {/* Main Content - Redesigned */}
+      <main className="flex-1 flex flex-col overflow-hidden p-6">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Event Management</h1>
+            <p className="text-gray-600">Create and manage school events</p>
+          </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center px-3 py-1 bg-blue-800 text-white rounded hover:bg-blue-700 mb-4"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
           >
             <FaPlus className="mr-2" />
             {showForm ? "Hide Form" : "Add Event"}
           </button>
+        </div>
 
-          {/* Add Event Form */}
-          {showForm && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3">Add New Event</h3>
-              <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Success Message */}
+        {showSuccess && (
+          <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded shadow-md">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <FaInfoCircle className="mr-2" />
+                <p>Event added successfully!</p>
+              </div>
+              <button 
+                onClick={() => setShowSuccess(false)}
+                className="text-green-700 hover:text-green-900"
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Add Event Form - Redesigned */}
+        {showForm && (
+          <div className="mb-8 bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Create New Event</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-700 text-sm">Event Name:</label>
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Event Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full p-2 border rounded text-sm"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter event name"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 text-sm">Event Date:</label>
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Event Date</label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-2 border rounded text-sm"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows="3"
+                  placeholder="Enter event description"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-700 text-sm">Description:</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 border rounded text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 text-sm">Event Type:</label>
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Event Type</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="w-full p-2 border rounded text-sm"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="Event">Event</option>
@@ -288,97 +345,178 @@ const EventForm = () => {
                     <option value="Meeting">Meeting</option>
                   </select>
                 </div>
+                
                 <div>
-                  <label className="block text-gray-700 text-sm">Visible To:</label>
-                  <div className="space-y-1">
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Visible To</label>
+                  <div className="flex flex-wrap gap-2">
                     {["all", "admin", "teacher", "student", "parent"].map((role) => (
-                      <label key={role} className="flex items-center text-sm">
+                      <label key={role} className="inline-flex items-center">
                         <input
                           type="checkbox"
                           checked={visibleTo.includes(role)}
                           onChange={() => handleCheckboxChange(role)}
-                          className="mr-2"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                        <span className="ml-2 text-sm text-gray-700">
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </span>
                       </label>
                     ))}
                   </div>
                 </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
-                  className="w-full py-2 bg-blue-800 text-white rounded hover:bg-blue-700 text-sm"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
                 >
-                  Add Event
-                </button>
-              </form>
-              {message && <p className="mt-3 text-green-600 text-sm">{message}</p>}
-            </div>
-          )}
-
-          {/* Event List */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">All Events</h3>
-
-            {/* Search Bar */}
-            <div className="mb-4">
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-800 text-sm"
-                />
-                <button className="p-2 bg-blue-800 text-white rounded-r hover:bg-blue-700">
-                  <FaSearch />
+                  Create Event
                 </button>
               </div>
-            </div>
+            </form>
+          </div>
+        )}
 
-            {/* Event Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white shadow-md rounded-lg">
-                <thead className="bg-blue-800 text-white">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-sm">Name</th>
-                    <th className="px-4 py-2 text-left text-sm">Date</th>
-                    <th className="px-4 py-2 text-left text-sm">Type</th>
-                    <th className="px-4 py-2 text-left text-sm">Visible To</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentEvents.map((event) => (
-                    <tr key={event.id} className="border-b">
-                      <td className="px-4 py-3 text-sm">{event.name}</td>
-                      <td className="px-4 py-3 text-sm">{new Date(event.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-sm">{event.type}</td>
-                      <td className="px-4 py-3 text-sm">{event.visible_to.join(", ")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Search and Filter Section */}
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search events by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm"
-              >
-                <FaArrowLeft />
-              </button>
-              <span className="text-sm">Page {currentPage}</span>
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={indexOfLastEvent >= filteredEvents.length}
-                className="px-3 py-1 bg-blue-800 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm"
-              >
-                <FaArrowRight />
-              </button>
+            <div className="flex items-center text-sm text-gray-600">
+              <span>Showing {filteredEvents.length} events</span>
             </div>
           </div>
         </div>
+
+        {/* Events List - Card Layout */}
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+            {currentEvents.map((event) => (
+              <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
+                <div className={`p-4 ${getEventTypeColor(event.type)}`}>
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-lg truncate">{event.name}</h3>
+                    <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
+                      {event.type}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center text-gray-600 mb-3">
+                    <FaCalendarAlt className="mr-2" />
+                    <span>{new Date(event.date).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      weekday: 'short'
+                    })}</span>
+                  </div>
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-2">{event.description}</p>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <FaUsers className="mr-2" />
+                    <span>Visible to: {event.visible_to.join(", ")}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <FaClipboardList className="text-5xl mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">No events found</h3>
+            <p className="text-gray-500">
+              {searchTerm ? 
+                "No events match your search criteria" : 
+                "There are currently no events scheduled"}
+            </p>
+          </div>
+        )}
+
+        {/* Pagination - Redesigned */}
+        {filteredEvents.length > eventsPerPage && (
+          <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg shadow-md">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={indexOfLastEvent >= filteredEvents.length}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{indexOfFirstEvent + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {indexOfLastEvent > filteredEvents.length ? filteredEvents.length : indexOfLastEvent}
+                  </span>{' '}
+                  of <span className="font-medium">{filteredEvents.length}</span> results
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <FaArrowLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => paginate(index + 1)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === index + 1
+                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={indexOfLastEvent >= filteredEvents.length}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <FaArrowRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
