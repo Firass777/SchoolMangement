@@ -161,94 +161,94 @@ const EventForm = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar - Unchanged from original */}
-      <aside className="w-16 lg:w-64 bg-blue-800 text-white flex-shrink-0">
-        <div className="p-4 flex justify-center lg:justify-start">
-          <h1 className="text-xl font-bold hidden lg:block">Admin Dashboard</h1>
-          <h1 className="text-xl font-bold block lg:hidden">AD</h1>
+      <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
+        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Admin Dashboard</h1>
+          <h1 className="text-xl font-bold block sm:hidden">AD</h1>
         </div>
         <nav className="mt-6">
           <ul>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/admindb" className="flex items-center space-x-2">
                 <FaSchool className="text-xl" />
-                <span className="hidden lg:block">Dashboard</span>
+                <span className="hidden sm:block">Dashboard</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/timetableform" className="flex items-center space-x-2">
                 <FaClock className="text-xl" />
-                <span className="hidden lg:block">Time-Table</span>
+                <span className="hidden sm:block">Time-Table</span>
               </Link>
             </li>                        
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate className="text-xl" />
-                <span className="hidden lg:block">Students</span>
+                <span className="hidden sm:block">Students</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/teachers" className="flex items-center space-x-2">
                 <FaChalkboardTeacher className="text-xl" />
-                <span className="hidden lg:block">Teachers</span>
+                <span className="hidden sm:block">Teachers</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/parent" className="flex items-center space-x-2">
                 <FaUserFriends className="text-xl" />
-                <span className="hidden lg:block">Parents</span>
+                <span className="hidden sm:block">Parents</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/reports" className="flex items-center space-x-2">
                 <FaChartBar className="text-xl" />
-                <span className="hidden lg:block">Reports</span>
+                <span className="hidden sm:block">Reports</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/eventform" className="flex items-center space-x-2">
                 <FaClipboardList className="text-xl" />
-                <span className="hidden lg:block">Event Management</span>
+                <span className="hidden sm:block">Event Management</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/documentsform" className="flex items-center space-x-2">
                 <FaFileInvoice className="text-xl" />
-                <span className="hidden lg:block">Documents</span>
+                <span className="hidden sm:block">Documents</span>
               </Link>
             </li>   
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/recordform" className="flex items-center space-x-2">
                 <FaFile className="text-xl" />
-                <span className="hidden lg:block">Student Record</span>
+                <span className="hidden sm:block">Student Record</span>
               </Link>
             </li>        
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/teacherrecord" className="flex items-center space-x-2">
                 <FaFile className="text-xl" />
-                <span className="hidden lg:block">Teacher Record</span>
+                <span className="hidden sm:block">Teacher Record</span>
               </Link>
             </li> 
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/notificationform" className="flex items-center space-x-2">
                 <FaBell className="text-xl" />
-                <span className="hidden lg:block">Notifications</span>
+                <span className="hidden sm:block">Notifications</span>
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-blue-700 relative flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
-                <span className="hidden lg:block">Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="hidden sm:block"> Emails</span>
+                    {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                )}
+                  )}
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-red-600 flex justify-center lg:justify-start">
+            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
               <Link to="/" className="flex items-center space-x-2">
                 <FaSignOutAlt className="text-xl" />
-                <span className="hidden lg:block">Logout</span>
+                <span className="hidden sm:block">Logout</span>
               </Link>
             </li>
           </ul>

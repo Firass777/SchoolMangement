@@ -10,9 +10,9 @@ const NotificationForm = () => {
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [emailCount, setEmailCount] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // Access Checking
     const userData = JSON.parse(localStorage.getItem("user"));
     if (!userData || userData.role !== "admin") {
       navigate("/access");
@@ -55,10 +55,11 @@ const NotificationForm = () => {
       });
 
       if (response.status === 201) {
-        alert('Notification sent successfully!');
+        setIsSuccess(true);
         setTo('');
         setTitle('');
         setDescription('');
+        setTimeout(() => setIsSuccess(false), 3000);
       }
     } catch (error) {
       if (error.response) {
@@ -73,10 +74,8 @@ const NotificationForm = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
-      <div className="flex flex-1">
-      {/* Sidebar */}
-      <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
+    <div className="flex min-h-screen bg-gray-50">
+      <aside className="w-16 sm:w-64 bg-blue-800 text-white flex-shrink-0">
         <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
           <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Admin Dashboard</h1>
           <h1 className="text-xl font-bold block sm:hidden">AD</h1>
@@ -170,65 +169,93 @@ const NotificationForm = () => {
         </nav>
       </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Send Notification</h2>
-            <p className="text-gray-600">Send a notification to students or all users.</p>
+      <main className="flex-1 p-8 overflow-auto">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Notification Center</h1>
+            <p className="text-gray-600">Send important updates and announcements to users</p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
+          {isSuccess && (
+            <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md shadow-sm">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Notification sent successfully!</span>
+              </div>
             </div>
           )}
 
-          {/* Notification Form */}
-          <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700">To:</label>
-                <input
-                  type="text"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Enter email or 'all'"
-                  required
-                />
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md shadow-sm">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
               </div>
+            </div>
+          )}
 
-              <div className="mb-4">
-                <label className="block text-gray-700">Title:</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Enter title"
-                  required
-                />
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Create New Notification</h2>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter email address or 'all' for all users"
+                      required
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">Use 'all' to send to all users</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Notification title"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows="5"
+                    placeholder="Write your notification message here..."
+                    required
+                  ></textarea>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Send Notification
+                  </button>
+                </div>
               </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Description:</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Enter description"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Send Notification
-              </button>
             </form>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
