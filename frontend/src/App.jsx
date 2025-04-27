@@ -1,4 +1,4 @@
-import { Link, Routes, Route } from "react-router-dom";
+import { Link, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react"; 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -58,6 +58,7 @@ import GNotification from "./components/Guardian/GNotification";
 function App() {
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const location = useLocation();
 
   useEffect(() => {
     AOS.init();
@@ -82,6 +83,8 @@ function App() {
   // Calculate opacity based on scroll position
   const navbarOpacity = Math.max(0, 1 - scrollY / 1000);
 
+  const showNavLinks = ['/', '/login', '/register'].includes(location.pathname);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 overflow-x-hidden flex flex-col">
       {/* Navbar - Hidden on mobile */}
@@ -91,7 +94,7 @@ function App() {
           style={{ opacity: navbarOpacity }}
         >
           <div className="container mx-auto flex justify-between items-center py-4 px-6">
-            {/* Logo and SchoolManager Header */}
+            {/* Header */}
             <div className="flex items-center space-x-2">
               <img 
                 src="src/images/logo.jpg" 
@@ -101,24 +104,26 @@ function App() {
               <h1 className="text-2xl font-bold text-blue-600">National University</h1>
             </div>
 
-            {/* Navigation Links */}
-            <ul className="flex space-x-6">
-              <li>
-                <Link to="/" className="text-gray-700 hover:text-blue-500 font-medium">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="text-gray-700 hover:text-blue-500 font-medium">
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="text-gray-700 hover:text-blue-500 font-medium">
-                  Register
-                </Link>
-              </li>
-            </ul>
+            {/* Navigation */}
+            {showNavLinks && (
+              <ul className="flex space-x-6">
+                <li>
+                  <Link to="/" className="text-gray-700 hover:text-blue-500 font-medium">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="text-gray-700 hover:text-blue-500 font-medium">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/register" className="text-gray-700 hover:text-blue-500 font-medium">
+                    Register
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
         </nav>
       )}
@@ -182,7 +187,7 @@ function App() {
 
       {/* Footer Section */}
       <footer className="py-6 bg-gray-800 text-white text-center mt-auto">
-        <p>&copy; 2025 National University. All Rights Reserved.</p>
+        <p>© 2025 National University. All Rights Reserved.</p>
       </footer>
     </div>
   );
