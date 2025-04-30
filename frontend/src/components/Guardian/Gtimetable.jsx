@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -10,8 +10,13 @@ import {
   FaEnvelope,
   FaClock,
   FaIdCard,
-  FaMoneyCheck
+  FaMoneyCheck,
+  FaDownload,
+  FaChevronLeft,
+  FaChevronRight
 } from "react-icons/fa";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function Gtimetable() {
   const navigate = useNavigate();
@@ -22,13 +27,35 @@ function Gtimetable() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
 
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const timeSlots = [
+    "08:30 - 10:00 AM",
+    "10:05 - 11:35 AM",
+    "12:00 - 13:30 PM",
+    "13:35 - 15:00 PM",
+    "15:05 - 17:00 PM",
+  ];
+
+  const subjectColors = {
+    "Math": "bg-indigo-100 border-indigo-300 text-indigo-800",
+    "French": "bg-emerald-100 border-emerald-300 text-emerald-800",
+    "English": "bg-amber-100 border-amber-300 text-amber-800",
+    "IoT": "bg-rose-100 border-rose-300 text-rose-800",
+    "React": "bg-blue-100 border-blue-300 text-blue-800",
+    "default": "bg-gray-100 border-gray-300 text-gray-800"
+  };
+
+  const getSubjectColor = (subject) => {
+    const baseSubject = subject?.split(' ')[0]; 
+    return subjectColors[baseSubject] || subjectColors.default;
+  };
+
   useEffect(() => {
-      // Access Checking
-      const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
-        return;
-      }
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || userData.role !== "parent") {
+      navigate("/access");
+      return;
+    }
 
     fetchNotificationCount();
     fetchEmailCount();
@@ -154,15 +181,6 @@ function Gtimetable() {
     }
   };
 
-  const parseTime = (timeRange) => {
-    const startTime = timeRange.split(" - ")[0];
-    const [time, modifier] = startTime.split(" ");
-    let [hours, minutes] = time.split(":");
-    if (modifier === "PM" && hours !== "12") hours = String(Number(hours) + 12);
-    if (modifier === "AM" && hours === "12") hours = "00";
-    return new Date(`1970-01-01 ${hours}:${minutes}:00`);
-  };
-
   const handleNextChild = () => {
     setActiveChildIndex((prevIndex) => 
       prevIndex < childrenTimetables.length - 1 ? prevIndex + 1 : 0
@@ -175,11 +193,44 @@ function Gtimetable() {
     );
   };
 
+  const downloadPDF = () => {
+    const activeChild = childrenTimetables[activeChildIndex];
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`${activeChild.name}'s Timetable - Class ${activeChild.class}`, 14, 22);
+
+    const tableData = [];
+    timeSlots.forEach((time) => {
+      const row = [time];
+      daysOfWeek.forEach((day) => {
+        const entry = activeChild.timetable.find(e => e.day === day && e.time === time);
+        row.push(entry ? `${entry.subject}\n${entry.location}` : "-");
+      });
+      tableData.push(row);
+    });
+
+    autoTable(doc, {
+      head: [["Time", ...daysOfWeek]],
+      body: tableData,
+      startY: 30,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [128, 0, 128] },
+    });
+
+    doc.save(`${activeChild.name}_timetable.pdf`);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
-        <div className="flex-1 p-4 sm:p-6">Loading...</div>
+        <div className="flex-1 p-4 sm:p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading timetables...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -203,10 +254,6 @@ function Gtimetable() {
   }
 
   const activeChild = childrenTimetables[activeChildIndex];
-  const timeSlots = [...new Set(activeChild.timetable.map((entry) => entry.time))];
-  const sortedTimeSlots = timeSlots.sort((a, b) => parseTime(a) - parseTime(b));
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
   const groupedTimetable = activeChild.timetable.reduce((acc, entry) => {
     if (!acc[entry.day]) acc[entry.day] = {};
     acc[entry.day][entry.time] = entry;
@@ -219,22 +266,33 @@ function Gtimetable() {
       <div className="flex-1 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Children's Timetables</h1>
-          {childrenTimetables.length > 1 && (
-            <div className="flex space-x-4 w-full sm:w-auto">
-              <button
-                onClick={handlePrevChild}
-                className="flex-1 sm:flex-none bg-orange-700 text-white px-4 py-2 rounded-lg hover:bg-orange-800 transition"
-              >
-                Previous
-              </button>
-              <button
-                onClick={handleNextChild}
-                className="flex-1 sm:flex-none bg-orange-700 text-white px-4 py-2 rounded-lg hover:bg-orange-800 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <div className="flex items-center space-x-4 w-full sm:w-auto">
+            {childrenTimetables.length > 1 && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={handlePrevChild}
+                  className="flex items-center justify-center bg-orange-700 text-white p-2 rounded-lg hover:bg-orange-800 transition"
+                  aria-label="Previous child"
+                >
+                  <FaChevronLeft />
+                </button>
+                <button
+                  onClick={handleNextChild}
+                  className="flex items-center justify-center bg-orange-700 text-white p-2 rounded-lg hover:bg-orange-800 transition"
+                  aria-label="Next child"
+                >
+                  <FaChevronRight />
+                </button>
+              </div>
+            )}
+            <button
+              onClick={downloadPDF}
+              className="flex items-center bg-orange-700 text-white px-4 py-2 rounded-lg hover:bg-orange-800 transition w-full sm:w-auto"
+            >
+              <FaDownload className="mr-2" />
+              Download PDF
+            </button>
+          </div>
         </div>
 
         <div className="mb-4 sm:mb-6">
@@ -246,73 +304,59 @@ function Gtimetable() {
           </h2>
         </div>
 
-        {/* Desktop View */}
-        <div className="hidden sm:block overflow-x-auto">
-          <div className="flex border border-gray-300 rounded-lg shadow-lg">
-            <div className="w-32 sm:w-48 flex-shrink-0 bg-gray-100">
-              <div className="h-12"></div>
-              {sortedTimeSlots.map((time) => (
-                <div
-                  key={time}
-                  className="h-20 flex items-center justify-end pr-2 sm:pr-4 text-xs sm:text-sm text-gray-700 border-b border-gray-300"
-                >
-                  {time}
+        {/* Visual Timetable */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+          <div className="p-6">
+            {activeChild.timetable.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="mx-auto h-24 w-24 text-gray-400">
+                  <FaClock className="w-full h-full" />
                 </div>
-              ))}
-            </div>
-            {daysOfWeek.map((day) => (
-              <div key={day} className="flex-1 min-w-32 sm:min-w-40">
-                <div className="h-12 flex items-center justify-center font-semibold text-white bg-orange-700 border-b border-gray-300 text-xs sm:text-base">
-                  {day}
-                </div>
-                {sortedTimeSlots.map((time) => {
-                  const entry = groupedTimetable[day]?.[time];
-                  return (
-                    <div
-                      key={`${day}-${time}`}
-                      className="h-20 p-1 sm:p-2 border-b border-gray-400 bg-white hover:bg-gray-100 transition"
-                    >
-                      {entry ? (
-                        <div className="bg-orange-100 p-1 sm:p-2 rounded-lg shadow-sm border border-orange-200">
-                          <p className="text-xs sm:text-sm font-medium text-orange-900">{entry.subject}</p>
-                          <p className="text-xs text-gray-600">{entry.location}</p>
-                        </div>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-400 text-center mt-4 sm:mt-6">-</p>
-                      )}
-                    </div>
-                  );
-                })}
+                <h3 className="mt-2 text-lg font-medium text-gray-900">
+                  No timetable data available for {activeChild.name}
+                </h3>
+                <p className="mt-1 text-gray-500">
+                  The timetable will appear here once available
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="min-w-full">
+                  {/* Timetable Header */}
+                  <div className="grid grid-cols-8 border-b border-gray-200 text-sm font-medium text-gray-700 bg-gray-50">
+                    <div className="col-span-1 p-3"></div>
+                    {daysOfWeek.map(day => (
+                      <div key={day} className="p-3 text-center">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
 
-        {/* Mobile View */}
-        <div className="block sm:hidden space-y-6">
-          {daysOfWeek.map((day) => (
-            <div key={day} className="bg-white rounded-lg shadow-md p-4">
-              <h2 className="text-lg font-semibold text-orange-700 mb-4">{day}</h2>
-              <div className="space-y-4">
-                {sortedTimeSlots.map((time) => {
-                  const entry = groupedTimetable[day]?.[time];
-                  return (
-                    <div key={`${day}-${time}`} className="flex flex-col border-b border-gray-200 pb-2">
-                      <p className="text-sm font-medium text-gray-700">{time}</p>
-                      {entry ? (
-                        <div className="mt-1">
-                          <p className="text-sm font-medium text-orange-900">{entry.subject}</p>
-                          <p className="text-xs text-gray-600">{entry.location}</p>
+                  {/* Timetable Rows */}
+                  {timeSlots.map(time => (
+                    <div key={time} className="grid grid-cols-8 border-b border-gray-200 last:border-b-0">
+                      <div className="col-span-1 p-3 font-medium text-sm text-gray-700 bg-gray-50 border-r border-gray-200 flex flex-col justify-center">
+                        <span className="font-semibold">{time.split(' - ')[0]}</span>
+                        <span className="text-xs text-gray-500">{time.split(' - ')[1]}</span>
+                      </div>
+                      {daysOfWeek.map(day => (
+                        <div key={`${day}-${time}`} className="p-2 border-r border-gray-200 last:border-r-0 min-h-[80px]">
+                          {groupedTimetable[day]?.[time] && (
+                            <div 
+                              className={`mb-2 last:mb-0 p-2 rounded-lg border ${getSubjectColor(groupedTimetable[day][time].subject)} shadow-xs hover:shadow-sm transition-shadow`}
+                            >
+                              <div className="font-medium text-sm">{groupedTimetable[day][time].subject}</div>
+                              <div className="text-xs mt-1">{groupedTimetable[day][time].location}</div>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 mt-1">-</p>
-                      )}
+                      ))}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
       </div>
     </div>
