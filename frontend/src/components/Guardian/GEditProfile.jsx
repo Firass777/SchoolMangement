@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -39,6 +39,7 @@ function ParentProfile() {
   const [needsReload, setNeedsReload] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   const safeParseJSON = (jsonString, fallback = []) => {
     try {
@@ -50,21 +51,65 @@ function ParentProfile() {
   };
 
   useEffect(() => {
-      // Access Checking
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
 
-    fetchNotificationCount();
-    fetchEmailCount();
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-      fetchEmailCount();
-    }, 30000);
-    fetchParentData();
-    return () => clearInterval(interval);
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchNotificationCount();
+        fetchEmailCount();
+        fetchParentData();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchNotificationCount();
+          fetchEmailCount();
+          fetchParentData();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchNotificationCount = async () => {
@@ -261,6 +306,17 @@ function ParentProfile() {
       prevIndex > 0 ? prevIndex - 1 : prevIndex
     );
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -465,7 +521,7 @@ function ParentProfile() {
                   <p className="text-gray-800">{childrenRecords[currentChildIndex].enrollment_date}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600 font-semibold">Parent Name</p>
+                  <p className= "text-gray-600 font-semibold">Parent Name</p>
                   <p className="text-gray-800">{childrenRecords[currentChildIndex].parent_name}</p>
                 </div>
                 <div>
@@ -505,7 +561,7 @@ function ParentProfile() {
           ) : formData.children_nin.length > 0 ? (
             <div className="bg-white shadow-md rounded-lg p-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Children Records</h3>
-              <p className="text-gray-600">No matching student records found for the provided NINs.</p>
+              <p className="text-gray-600">No matching student records found .</p>
             </div>
           ) : null}
 
@@ -518,86 +574,86 @@ function ParentProfile() {
 }
 
 const Sidebar = ({ notificationCount, emailCount }) => (
-     <aside className="w-16 sm:w-64 bg-orange-800 text-white flex flex-col transition-all duration-300">
-        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
-          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Guardian Dashboard</h1>
-          <h1 className="text-xl font-bold block sm:hidden">GD</h1>
-        </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/guardiandb" className="flex items-center space-x-2">
-                <FaUserGraduate className="text-xl" />
-                <span className="hidden sm:block">Dashboard</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gpayment" className="flex items-center space-x-2">
-                <FaMoneyCheck className="text-xl" />
-                <span className="hidden sm:block">Payment</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/ggrades" className="flex items-center space-x-2">
-                <FaChartLine className="text-xl" />
-                <span className="hidden sm:block">Grades</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gattendance" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Attendance</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock className="text-xl" />
-                <span className="hidden sm:block">Time-Table</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gevent" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Events</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
-              <Link to="/gemails" className="flex items-center space-x-2">
-                <FaEnvelope className="text-xl" />
-                <span className="hidden sm:block">Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {emailCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
-              <Link to="/gnotification" className="flex items-center space-x-2">
-                <FaBell className="text-xl" />
-                <span className="hidden sm:block">Notifications</span>
-                {notificationCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/geditprofile" className="flex items-center space-x-2">
-                <FaIdCard className="text-xl" />
-                <span className="hidden sm:block">Profile</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt className="text-xl" />
-                <span className="hidden sm:block">Logout</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+  <aside className="w-16 sm:w-64 bg-orange-800 text-white flex flex-col transition-all duration-300">
+    <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+      <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Guardian Dashboard</h1>
+      <h1 className="text-xl font-bold block sm:hidden">GD</h1>
+    </div>
+    <nav className="mt-6">
+      <ul>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/guardiandb" className="flex items-center space-x-2">
+            <FaUserGraduate className="text-xl" />
+            <span className="hidden sm:block">Dashboard</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gpayment" className="flex items-center space-x-2">
+            <FaMoneyCheck className="text-xl" />
+            <span className="hidden sm:block">Payment</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/ggrades" className="flex items-center space-x-2">
+            <FaChartLine className="text-xl" />
+            <span className="hidden sm:block">Grades</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gattendance" className="flex items-center space-x-2">
+            <FaCalendarAlt className="text-xl" />
+            <span className="hidden sm:block">Attendance</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gtimetable" className="flex items-center space-x-2">
+            <FaClock className="text-xl" />
+            <span className="hidden sm:block">Time-Table</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gevent" className="flex items-center space-x-2">
+            <FaCalendarAlt className="text-xl" />
+            <span className="hidden sm:block">Events</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
+          <Link to="/gemails" className="flex items-center space-x-2">
+            <FaEnvelope className="text-xl" />
+            <span className="hidden sm:block">Emails</span>
+            {emailCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {emailCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
+          <Link to="/gnotification" className="flex items-center space-x-2">
+            <FaBell className="text-xl" />
+            <span className="hidden sm:block">Notifications</span>
+            {notificationCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/geditprofile" className="flex items-center space-x-2">
+            <FaIdCard className="text-xl" />
+            <span className="hidden sm:block">Profile</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+          <Link to="/" className="flex items-center space-x-2">
+            <FaSignOutAlt className="text-xl" />
+            <span className="hidden sm:block">Logout</span>
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 );
 
 export default ParentProfile;

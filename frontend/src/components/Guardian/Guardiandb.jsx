@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link , useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -21,6 +21,7 @@ function Guardiandb() {
   const [children, setChildren] = useState([]);
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [childrenGrades, setChildrenGrades] = useState({});
   const [childrenAttendances, setChildrenAttendances] = useState({});
   const [expandedSection, setExpandedSection] = useState({
@@ -32,22 +33,65 @@ function Guardiandb() {
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
-      // Access Checking
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
 
-    fetchData();
-    fetchNotificationCount();
-    fetchEmailCount();
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchData();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
 
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-      fetchEmailCount();
-    }, 30000);
-    return () => clearInterval(interval);
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchData();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchNotificationCount = async () => {
@@ -58,7 +102,7 @@ function Guardiandb() {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${email}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${email}`
       );
       if (response.data) {
         setNotificationCount(response.data.count);
@@ -77,7 +121,7 @@ function Guardiandb() {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
         setEmailCount(response.data.count);
@@ -96,18 +140,18 @@ function Guardiandb() {
       const childrenNin = JSON.parse(user.children_nin || '[]');
       if (childrenNin.length > 0) {
         const childrenResponse = await axios.get(
-          `http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`
+          `http://127.0.0.1:8000/api/get-children?nins=${childrenNin.join(',')}`
         );
         setChildren(childrenResponse.data);
 
         const gradesPromises = childrenResponse.data.map(child => 
-          axios.get(`http://localhost:8000/api/grades/recent/${child.nin}`)
+          axios.get(`http://127.0.0.1:8000/api/grades/recent/${child.nin}`)
             .then(res => ({ nin: child.nin, name: child.name, grades: res.data.grades }))
             .catch(() => ({ nin: child.nin, name: child.name, grades: [] }))
         );
 
         const attendancePromises = childrenResponse.data.map(child =>
-          axios.get(`http://localhost:8000/api/attendance/recent/${child.nin}`)
+          axios.get(`http://127.0.0.1:8000/api/attendance/recent/${child.nin}`)
             .then(res => ({ nin: child.nin, name: child.name, attendances: res.data.attendances }))
             .catch(() => ({ nin: child.nin, name: child.name, attendances: [] }))
         );
@@ -129,7 +173,7 @@ function Guardiandb() {
       }
 
       const summaryResponse = await axios.get(
-        `http://localhost:8000/api/get-parent-payment-summary`,
+        `http://127.0.0.1:8000/api/get-parent-payment-summary`,
         { params: { user: JSON.stringify(user) } }
       );
       setSummary(summaryResponse.data);
@@ -165,6 +209,17 @@ function Guardiandb() {
       [section]: !prev[section]
     }));
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link , useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   FaUserGraduate,
@@ -29,41 +29,86 @@ const Gpayment = () => {
   const [summary, setSummary] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
-      // Access Checking
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
 
-
-    fetchNotificationCount();
-    fetchEmailCount();
-    
-    if (user) {
-      const childrenNin = JSON.parse(user.children_nin || '[]');
-      if (childrenNin.length > 0) {
-        axios.get(`http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`)
-          .then(response => setChildren(response.data))
-          .catch(error => console.error('Error fetching children:', error));
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchNotificationCount();
+        fetchEmailCount();
+        fetchParentData();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
       }
-      
-      fetchPayments(currentPage);
-      fetchAllPayments();
-      fetchSummary();
-    }
 
-    // Set up polling for notifications and emails
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-      fetchEmailCount();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [currentPage , navigate]);
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchNotificationCount();
+          fetchEmailCount();
+          fetchParentData();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
+
+  const fetchParentData = async () => {
+    if (!user) return;
+
+    const childrenNin = JSON.parse(user.children_nin || '[]');
+    if (childrenNin.length > 0) {
+      axios.get(`http://localhost:8000/api/get-children?nins=${childrenNin.join(',')}`)
+        .then(response => setChildren(response.data))
+        .catch(error => console.error('Error fetching children:', error));
+    }
+    
+    fetchPayments(currentPage);
+    fetchAllPayments();
+    fetchSummary();
+  };
 
   const fetchNotificationCount = async () => {
     if (!user?.email) return;
@@ -157,7 +202,7 @@ const Gpayment = () => {
     }
   
     if (!amount || isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount.');
+      alert('Please enterammy valid amount.');
       return;
     }
 
@@ -205,6 +250,17 @@ const Gpayment = () => {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { opacity: 1, scale: 1 },
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">

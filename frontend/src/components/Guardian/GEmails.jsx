@@ -28,27 +28,79 @@ const GEmails = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('inbox');
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [emailCount, setEmailCount] = useState(0);
 
-  const userEmail = JSON.parse(localStorage.getItem('user')).email;
+  const userEmail = JSON.parse(localStorage.getItem('user'))?.email;
 
   useEffect(() => {
-      // Access Checking
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
 
-    fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    fetchEmails();
-    return () => clearInterval(interval);
-  }, [userEmail, navigate]);
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchNotificationCount();
+        fetchEmailCount();
+        fetchEmails();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchNotificationCount();
+          fetchEmailCount();
+          fetchEmails();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
+    if (!userEmail) return;
+
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${userEmail}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${userEmail}`
       );
       if (response.data) {
         setNotificationCount(response.data.count);
@@ -56,6 +108,22 @@ const GEmails = () => {
       }
     } catch (error) {
       console.error("Error fetching notification count:", error);
+    }
+  };
+
+  const fetchEmailCount = async () => {
+    if (!userEmail) return;
+
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/emails/unread-count/${userEmail}`
+      );
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching email count:", error);
     }
   };
 
@@ -121,6 +189,17 @@ const GEmails = () => {
     }
   };
 
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
      <aside className="w-16 sm:w-64 bg-orange-800 text-white flex flex-col transition-all duration-300">
@@ -170,6 +249,11 @@ const GEmails = () => {
               <Link to="/gemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
                 <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {emailCount}
+                  </span>
+                )}
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">

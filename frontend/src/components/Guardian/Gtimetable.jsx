@@ -22,6 +22,7 @@ function Gtimetable() {
   const navigate = useNavigate();
   const [childrenTimetables, setChildrenTimetables] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState(null);
   const [activeChildIndex, setActiveChildIndex] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -51,35 +52,76 @@ function Gtimetable() {
   };
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "parent") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    fetchNotificationCount();
-    fetchEmailCount();
-    fetchData();
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
 
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-      fetchEmailCount();
-    }, 30000);
-    return () => clearInterval(interval);
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchNotificationCount();
+        fetchEmailCount();
+        fetchData();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchNotificationCount();
+          fetchEmailCount();
+          fetchData();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchNotificationCount = async () => {
-    const userData = localStorage.getItem("user");
-    if (!userData) return;
-    
-    const user = JSON.parse(userData);
-    const email = user?.email;
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
     
     if (!email) return;
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${email}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${email}`
       );
       if (response.data) {
         setNotificationCount(response.data.count);
@@ -91,17 +133,14 @@ function Gtimetable() {
   };
 
   const fetchEmailCount = async () => {
-    const userData = localStorage.getItem("user");
-    if (!userData) return;
-    
-    const user = JSON.parse(userData);
-    const email = user?.email;
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const email = userData?.email;
     
     if (!email) return;
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
         setEmailCount(response.data.count);
@@ -215,11 +254,22 @@ function Gtimetable() {
       startY: 30,
       theme: "grid",
       styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [128, 0, 128] },
+      headStyles: { fillColor: [255, 165, 0] },
     });
 
     doc.save(`${activeChild.name}_timetable.pdf`);
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -387,7 +437,7 @@ const Sidebar = ({ notificationCount, emailCount }) => (
           <Link to="/ggrades" className="flex items-center space-x-2">
             <FaChartLine className="text-xl" />
             <span className="hidden sm:block">Grades</span>
-          </Link>
+        </Link>
         </li>
         <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
           <Link to="/gattendance" className="flex items-center space-x-2">

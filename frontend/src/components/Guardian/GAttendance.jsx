@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link , useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaUserGraduate,
@@ -21,26 +21,71 @@ function GAttendance() {
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState("");
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
-      // Access Checking
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || userData.role !== "parent") {
-        navigate("/access");
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
 
-    fetchNotificationCount();
-    fetchEmailCount();
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-      fetchEmailCount();
-    }, 30000);
-    fetchParentData();
-    return () => clearInterval(interval);
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "parent") {
+        setIsVerifying(false);
+        fetchNotificationCount();
+        fetchEmailCount();
+        fetchParentData();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "parent" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "parent");
+          setIsVerifying(false);
+          fetchNotificationCount();
+          fetchEmailCount();
+          fetchParentData();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchNotificationCount = async () => {
@@ -51,7 +96,7 @@ function GAttendance() {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${email}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${email}`
       );
       if (response.data) {
         setNotificationCount(response.data.count);
@@ -70,7 +115,7 @@ function GAttendance() {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
         setEmailCount(response.data.count);
@@ -86,18 +131,21 @@ function GAttendance() {
       const userString = localStorage.getItem("user");
       if (!userString) {
         setError("Please log in to view this page");
+        setIsVerifying(false);
         return;
       }
 
       const loggedInUser = JSON.parse(userString);
       if (!loggedInUser || !loggedInUser.children_nin) {
         setError("No children records found");
+        setIsVerifying(false);
         return;
       }
 
       const childrenNin = JSON.parse(loggedInUser.children_nin);
       if (!Array.isArray(childrenNin) || childrenNin.length === 0) {
         setError("No children records found");
+        setIsVerifying(false);
         return;
       }
 
@@ -121,9 +169,11 @@ function GAttendance() {
       if (records.length > 0) {
         fetchAttendances(records[0].student_nin);
       }
+      setIsVerifying(false);
     } catch (error) {
       console.error("Error fetching parent data:", error);
       setError("Failed to load user data");
+      setIsVerifying(false);
     }
   };
 
@@ -172,6 +222,17 @@ function GAttendance() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -265,86 +326,86 @@ function GAttendance() {
 }
 
 const Sidebar = ({ notificationCount, emailCount }) => (
-     <aside className="w-16 sm:w-64 bg-orange-800 text-white flex flex-col transition-all duration-300">
-        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
-          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Guardian Dashboard</h1>
-          <h1 className="text-xl font-bold block sm:hidden">GD</h1>
-        </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/guardiandb" className="flex items-center space-x-2">
-                <FaUserGraduate className="text-xl" />
-                <span className="hidden sm:block">Dashboard</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gpayment" className="flex items-center space-x-2">
-                <FaMoneyCheck className="text-xl" />
-                <span className="hidden sm:block">Payment</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/ggrades" className="flex items-center space-x-2">
-                <FaChartLine className="text-xl" />
-                <span className="hidden sm:block">Grades</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gattendance" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Attendance</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gtimetable" className="flex items-center space-x-2">
-                <FaClock className="text-xl" />
-                <span className="hidden sm:block">Time-Table</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/gevent" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Events</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
-              <Link to="/gemails" className="flex items-center space-x-2">
-                <FaEnvelope className="text-xl" />
-                <span className="hidden sm:block">Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {emailCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
-              <Link to="/gnotification" className="flex items-center space-x-2">
-                <FaBell className="text-xl" />
-                <span className="hidden sm:block">Notifications</span>
-                {notificationCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
-              <Link to="/geditprofile" className="flex items-center space-x-2">
-                <FaIdCard className="text-xl" />
-                <span className="hidden sm:block">Profile</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt className="text-xl" />
-                <span className="hidden sm:block">Logout</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+  <aside className="w-16 sm:w-64 bg-orange-800 text-white flex flex-col transition-all duration-300">
+    <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+      <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Guardian Dashboard</h1>
+      <h1 className="text-xl font-bold block sm:hidden">GD</h1>
+    </div>
+    <nav className="mt-6">
+      <ul>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/guardiandb" className="flex items-center space-x-2">
+            <FaUserGraduate className="text-xl" />
+            <span className="hidden sm:block">Dashboard</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gpayment" className="flex items-center space-x-2">
+            <FaMoneyCheck className="text-xl" />
+            <span className="hidden sm:block">Payment</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/ggrades" className="flex items-center space-x-2">
+            <FaChartLine className="text-xl" />
+            <span className="hidden sm:block">Grades</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gattendance" className="flex items-center space-x-2">
+            <FaCalendarAlt className="text-xl" />
+            <span className="hidden sm:block">Attendance</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gtimetable" className="flex items-center space-x-2">
+            <FaClock className="text-xl" />
+            <span className="hidden sm:block">Time-Table</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/gevent" className="flex items-center space-x-2">
+            <FaCalendarAlt className="text-xl" />
+            <span className="hidden sm:block">Events</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
+          <Link to="/gemails" className="flex items-center space-x-2">
+            <FaEnvelope className="text-xl" />
+            <span className="hidden sm:block">Emails</span>
+            {emailCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {emailCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 relative flex justify-center sm:justify-start">
+          <Link to="/gnotification" className="flex items-center space-x-2">
+            <FaBell className="text-xl" />
+            <span className="hidden sm:block">Notifications</span>
+            {notificationCount > 0 && (
+              <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-orange-700 flex justify-center sm:justify-start">
+          <Link to="/geditprofile" className="flex items-center space-x-2">
+            <FaIdCard className="text-xl" />
+            <span className="hidden sm:block">Profile</span>
+          </Link>
+        </li>
+        <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+          <Link to="/" className="flex items-center space-x-2">
+            <FaSignOutAlt className="text-xl" />
+            <span className="hidden sm:block">Logout</span>
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 );
 
 export default GAttendance;
