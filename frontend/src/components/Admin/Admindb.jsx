@@ -36,39 +36,83 @@ function Admindb() {
   const [paymentStats, setPaymentStats] = useState({
     totalPaid: 0,
     totalUnpaid: 0,
-    latestPayments: []
+    latestPayments: [],
   });
   const [monthlyRevenue, setMonthlyRevenue] = useState([]);
   const [weeklyRevenue, setWeeklyRevenue] = useState([]);
   const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    AOS.init({ duration: 1000 });
-    fetchDashboardData();
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage 
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeDashboard();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeDashboard();
+        } else {
+          localStorage.removeItem("user"); 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");  // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const initializeDashboard = () => {
+      AOS.init({ duration: 1000 });
+      fetchDashboardData();
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
-    
+
     if (!email) return;
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://localhost:8000/api/emails/unread-count/${email}`,
+        { timeout: 3000 }
       );
       if (response.data) {
         setEmailCount(response.data.count);
-        localStorage.setItem('emailCount', response.data.count.toString());
+        localStorage.setItem("emailCount", response.data.count.toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);
@@ -77,6 +121,9 @@ function Admindb() {
 
   const fetchDashboardData = async () => {
     try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
       const [
         usersResponse,
         attendanceResponse,
@@ -87,48 +134,48 @@ function Admindb() {
         paymentsResponse,
         studentRecordsResponse,
         monthlyRevenueResponse,
-        weeklyRevenueResponse
+        weeklyRevenueResponse,
       ] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/users"),
-        fetch("http://127.0.0.1:8000/api/attendance"),
-        fetch("http://127.0.0.1:8000/api/events/latest"),
-        fetch("http://127.0.0.1:8000/api/users/latest/students"),
-        fetch("http://127.0.0.1:8000/api/users/latest/teachers"),
-        fetch("http://127.0.0.1:8000/api/courses/latest"),
-        fetch("http://127.0.0.1:8000/api/get-all-payments"),
-        fetch("http://127.0.0.1:8000/api/student-records"),
-        fetch("http://127.0.0.1:8000/api/payments-by-month"),
-        fetch("http://127.0.0.1:8000/api/payments-by-week")
+        axios.get("http://127.0.0.1:8000/api/users", { headers }),
+        axios.get("http://127.0.0.1:8000/api/attendance", { headers }),
+        axios.get("http://127.0.0.1:8000/api/events/latest", { headers }),
+        axios.get("http://127.0.0.1:8000/api/users/latest/students", { headers }),
+        axios.get("http://127.0.0.1:8000/api/users/latest/teachers", { headers }),
+        axios.get("http://127.0.0.1:8000/api/courses/latest", { headers }),
+        axios.get("http://127.0.0.1:8000/api/get-all-payments", { headers }),
+        axios.get("http://127.0.0.1:8000/api/student-records", { headers }),
+        axios.get("http://127.0.0.1:8000/api/payments-by-month", { headers }),
+        axios.get("http://127.0.0.1:8000/api/payments-by-week", { headers }),
       ]);
 
-      const usersData = await usersResponse.json();
+      const usersData = usersResponse.data;
       const studentCount = usersData.filter((user) => user.role === "student").length;
       const teacherCount = usersData.filter((user) => user.role === "teacher").length;
       setStudents(studentCount);
       setTeachers(teacherCount);
 
-      const attendanceData = await attendanceResponse.json();
+      const attendanceData = attendanceResponse.data;
       const presentCount = attendanceData?.attendances?.filter((a) => a.status === "Present").length || 0;
       const absentCount = attendanceData?.attendances?.filter((a) => a.status === "Absent").length || 0;
       const lateCount = attendanceData?.attendances?.filter((a) => a.status === "Late").length || 0;
       setAttendanceStats({ present: presentCount, absent: absentCount, late: lateCount });
 
-      const eventsData = await eventsResponse.json();
+      const eventsData = eventsResponse.data;
       setLatestEvents(eventsData?.events || []);
 
-      const studentsData = await studentsResponse.json();
+      const studentsData = studentsResponse.data;
       setLatestStudents(studentsData?.students || []);
 
-      const teachersData = await teachersResponse.json();
+      const teachersData = teachersResponse.data;
       setLatestTeachers(teachersData?.teachers || []);
 
-      const coursesData = await coursesResponse.json();
+      const coursesData = coursesResponse.data;
       setLatestCourses(coursesData?.courses || []);
 
-      const paymentsData = await paymentsResponse.json();
-      const studentRecordsData = await studentRecordsResponse.json();
-      const monthlyRevenueData = await monthlyRevenueResponse.json();
-      const weeklyRevenueData = await weeklyRevenueResponse.json();
+      const paymentsData = paymentsResponse.data;
+      const studentRecordsData = studentRecordsResponse.data;
+      const monthlyRevenueData = monthlyRevenueResponse.data;
+      const weeklyRevenueData = weeklyRevenueResponse.data;
 
       const totalPaymentAmount = studentRecordsData.data.reduce((sum, record) => {
         const amount = parseFloat(record.payment_amount) || 0;
@@ -138,20 +185,24 @@ function Admindb() {
 
       const totalPaid = parseFloat(paymentsData.totalPayments) || 0;
       const totalUnpaid = Math.max(0, totalPaymentAmount - totalPaid);
-      
+
       const latestPayments = paymentsData.payments?.slice(0, 4) || [];
-      
+
       setPaymentStats({
         totalPaid,
         totalUnpaid,
-        latestPayments
+        latestPayments,
       });
 
       setMonthlyRevenue(monthlyRevenueData.months || []);
       setWeeklyRevenue(weeklyRevenueData.weeks?.slice(0, 4) || []);
-
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
     }
   };
 
@@ -169,29 +220,29 @@ function Admindb() {
   };
 
   const monthlyRevenueChartData = {
-    labels: monthlyRevenue.map(item => item.month),
+    labels: monthlyRevenue.map((item) => item.month),
     datasets: [
       {
         label: "Monthly Revenue ($)",
-        data: monthlyRevenue.map(item => item.amount),
+        data: monthlyRevenue.map((item) => item.amount),
         backgroundColor: "rgba(54, 162, 235, 0.6)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
-        tension: 0.1
+        tension: 0.1,
       },
     ],
   };
 
   const weeklyRevenueChartData = {
-    labels: weeklyRevenue.map(item => `Week ${item.week}`),
+    labels: weeklyRevenue.map((item) => `Week ${item.week}`),
     datasets: [
       {
         label: "Weekly Revenue ($)",
-        data: weeklyRevenue.map(item => item.amount),
+        data: weeklyRevenue.map((item) => item.amount),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
-        tension: 0.1
+        tension: 0.1,
       },
     ],
   };
@@ -352,30 +403,30 @@ function Admindb() {
                 </div>
               </div>
               <div className="h-80">
-                <Line 
-                  data={monthlyRevenueChartData} 
+                <Line
+                  data={monthlyRevenueChartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                       title: {
                         display: true,
-                        text: 'Monthly Revenue Trend',
+                        text: "Monthly Revenue Trend",
                         font: { size: 16 },
-                        padding: { bottom: 20 }
+                        padding: { bottom: 20 },
                       },
-                      legend: { display: false }
+                      legend: { display: false },
                     },
                     scales: {
                       y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Revenue ($)' }
+                        title: { display: true, text: "Revenue ($)" },
                       },
                       x: {
-                        title: { display: true, text: 'Month' }
-                      }
-                    }
-                  }} 
+                        title: { display: true, text: "Month" },
+                      },
+                    },
+                  }}
                 />
               </div>
             </div>
@@ -389,9 +440,11 @@ function Admindb() {
                         <p className="font-medium text-gray-800">${payment.amount.toLocaleString()}</p>
                         <p className="text-sm text-gray-500">{new Date(payment.created_at).toLocaleDateString()}</p>
                       </div>
-                      <p className={`text-sm font-semibold ${
-                        payment.status === 'paid' ? 'text-green-600' : 'text-yellow-600'
-                      } capitalize`}>
+                      <p
+                        className={`text-sm font-semibold ${
+                          payment.status === "paid" ? "text-green-600" : "text-yellow-600"
+                        } capitalize`}
+                      >
                         {payment.status}
                       </p>
                     </div>
@@ -407,14 +460,14 @@ function Admindb() {
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Attendance Overview</h3>
               <div className="h-64">
-                <Pie 
-                  data={attendanceChartData} 
+                <Pie
+                  data={attendanceChartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                      legend: { position: 'bottom' }
-                    }
+                      legend: { position: "bottom" },
+                    },
                   }}
                 />
               </div>
@@ -422,29 +475,29 @@ function Admindb() {
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Weekly Revenue</h3>
               <div className="h-64">
-                <Bar 
-                  data={weeklyRevenueChartData} 
+                <Bar
+                  data={weeklyRevenueChartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                       title: {
                         display: true,
-                        text: 'Last 4 Weeks Revenue',
+                        text: "Last 4 Weeks Revenue",
                         font: { size: 16 },
-                        padding: { bottom: 20 }
+                        padding: { bottom: 20 },
                       },
-                      legend: { display: false }
+                      legend: { display: false },
                     },
                     scales: {
                       y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Revenue ($)' }
+                        title: { display: true, text: "Revenue ($)" },
                       },
                       x: {
-                        title: { display: true, text: 'Week' }
-                      }
-                    }
+                        title: { display: true, text: "Week" },
+                      },
+                    },
                   }}
                 />
               </div>
@@ -468,11 +521,11 @@ function Admindb() {
                           <h3 className="font-medium text-gray-800">{event.name}</h3>
                           <p className="text-sm text-gray-500 mt-1">{event.description}</p>
                           <p className="text-xs text-indigo-600 mt-2">
-                            {new Date(event.date).toLocaleDateString('en-US', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                            {new Date(event.date).toLocaleDateString("en-US", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
                             })}
                           </p>
                         </div>
@@ -489,7 +542,7 @@ function Admindb() {
               <div className="p-5 border-b border-gray-100">
                 <h2 className="text-lg font-semibold text-gray-800">New Students</h2>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div class repertoire-y divide-gray-100 >
                 {latestStudents.length > 0 ? (
                   latestStudents.map((student, index) => (
                     <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
@@ -513,7 +566,7 @@ function Admindb() {
               </div>
             </div>
           </div>
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-5 border-b border-gray-100">
                 <h2 className="text-lg font-semibold text-gray-800">New Teachers</h2>

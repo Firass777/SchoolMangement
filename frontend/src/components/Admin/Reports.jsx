@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaEnvelope, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
-import { Link , useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import html2canvas from 'html2canvas';
@@ -55,17 +55,61 @@ const AdminReports = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
-     // Access Checking
-     const userData = JSON.parse(localStorage.getItem("user"));
-     if (!userData || userData.role !== "admin") {
-       navigate("/access");
-       return;
-     }   
-    AOS.init({
-      duration: 1000,
-      once: true
-    });
-    fetchAllData();
+    // Access Checking with Role Verification
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeReports();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeReports();
+        } else {
+          localStorage.removeItem("user"); // Clear localStorage user data 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const initializeReports = () => {
+      AOS.init({
+        duration: 1000,
+        once: true
+      });
+      fetchAllData();
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchAllData = async () => {
@@ -357,53 +401,52 @@ const AdminReports = () => {
     ],
   };
 
+  const downloadPDF = async () => {
+    setPdfLoading(true);
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    `;
+    overlay.innerHTML = `
+      <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <p style="margin-top: 20px; font-size: 18px; color: #333;">Generating PDF...</p>
+    `;
+    document.body.appendChild(overlay);
 
- const downloadPDF = async () => {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255,255,255,0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  `;
-  overlay.innerHTML = `
-    <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-    <p style="margin-top: 20px; font-size: 18px; color: #333;">Generating PDF...</p>
-  `;
-  document.body.appendChild(overlay);
     try {
       const pdf = new jsPDF('p', 'pt', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      
 
       pdf.setFontSize(28);
-      pdf.setTextColor(40, 53, 147); 
+      pdf.setTextColor(40, 53, 147);
       pdf.text('School Management System Report', pageWidth / 2, 60, { align: 'center' });
-      
+
       pdf.setFontSize(16);
       pdf.setTextColor(0, 0, 0);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 90, { align: 'center' });
-      
 
       pdf.setFontSize(14);
       pdf.text('Summary Statistics', 40, 140);
       pdf.setDrawColor(200, 200, 200);
       pdf.line(40, 145, pageWidth - 40, 145);
-      
+
       pdf.setFontSize(12);
       pdf.text(`Total Students: ${students}`, 40, 170);
       pdf.text(`Total Teachers: ${teachers}`, 40, 190);
       pdf.text(`Attendance Rate: ${attendanceRate}%`, 40, 210);
       pdf.text(`Upcoming Events: ${upcomingEventsCount}`, 40, 230);
-      
+
       // Capture each section separately for better quality
       const sections = [
         { id: 'payment-section', title: 'Payment Analytics' },
@@ -413,46 +456,46 @@ const AdminReports = () => {
         { id: 'teacher-section', title: 'Teacher Workforce' },
         { id: 'events-section', title: 'Events Overview' }
       ];
-      
+
       let currentY = 260;
-      
+
       for (const section of sections) {
         const element = document.getElementById(section.id);
         if (!element) continue;
-        
+
         // Add new page if needed
         if (currentY > pageHeight - 100) {
           pdf.addPage();
           currentY = 40;
         }
-        
+
         // Add section title
         pdf.setFontSize(18);
         pdf.setTextColor(40, 53, 147);
         pdf.text(section.title, 40, currentY);
         currentY += 30;
-        
+
         const canvas = await html2canvas(element, {
           scale: 2,
           logging: false,
           useCORS: true,
           allowTaint: true
         });
-        
+
         const imgData = canvas.toDataURL('image/png');
         const imgWidth = pageWidth - 80;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
+
         // Add new page if image doesn't fit
         if (currentY + imgHeight > pageHeight - 40) {
           pdf.addPage();
           currentY = 40;
         }
-        
+
         pdf.addImage(imgData, 'PNG', 40, currentY, imgWidth, imgHeight);
         currentY += imgHeight + 40;
       }
-      
+
       // Add footer
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
@@ -466,7 +509,7 @@ const AdminReports = () => {
           { align: 'center' }
         );
       }
-      
+
       pdf.save('school_management_report.pdf');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -815,17 +858,16 @@ const AdminReports = () => {
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <div className="flex justify-center">
                   <p className="text-xs text-gray-500 font-semibold mt-2 text-center">
-                  {attendanceRate > 90
-                    ? 'Excellent attendance maintained.'
-                    : attendanceRate > 75
-                    ? 'Satisfactory attendance .'
-                    : attendanceRate > 50
-                    ? 'Attendance is moderate. Improvement needed.'
-                    : 'Attendance is below expected levels. Immediate action required.'}
-                 </p>
+                    {attendanceRate > 90
+                      ? 'Excellent attendance maintained.'
+                      : attendanceRate > 75
+                      ? 'Satisfactory attendance.'
+                      : attendanceRate > 50
+                      ? 'Attendance is moderate. Improvement needed.'
+                      : 'Attendance is below expected levels. Immediate action required.'}
+                  </p>
                 </div>
               </div>
-
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md" data-aos="fade-left">
@@ -910,7 +952,6 @@ const AdminReports = () => {
                 </div>
               </div>
             </div>
-          
 
             <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg" data-aos="fade-up" data-aos-delay="200">
               <h2 className="text-xl font-bold mb-4">Weak Graders in Each Class</h2>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaSignOutAlt, FaUserGraduate, FaChalkboardTeacher, FaSchool, FaChartBar, FaClipboardList, FaEnvelope, FaUserFriends, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
-import { Link , useNavigate  } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const NotificationForm = () => {
@@ -12,16 +12,60 @@ const NotificationForm = () => {
   const [emailCount, setEmailCount] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Role verification and initialization
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeNotifications();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeNotifications();
+        } else {
+          localStorage.removeItem("user"); // Clear localStorage user data 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const initializeNotifications = () => {
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
@@ -151,12 +195,12 @@ const NotificationForm = () => {
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
-                  <span className="hidden sm:block"> Emails</span>
-                    {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                  )}
+                )}
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">

@@ -16,6 +16,9 @@ use App\Http\Controllers\TeacherRecordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\RoleCheckController;
+
+Route::get('/user-role', [RoleCheckController::class, 'getUserRole'])->name('user.role');
 
 Route::get('/documents', [DocumentController::class, 'index']);
 Route::post('/documents', [DocumentController::class, 'upload']);

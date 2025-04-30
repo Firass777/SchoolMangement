@@ -17,42 +17,84 @@ const AEmails = () => {
   const [view, setView] = useState('inbox');
   const [emailCount, setEmailCount] = useState(0);
 
-  const userEmail = JSON.parse(localStorage.getItem('user')).email;
+  const userEmail = JSON.parse(localStorage.getItem('user'))?.email;
 
   useEffect(() => {
-    // Access Checking
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    const fetchEmails = async () => {
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeEmails();
+        return;
+      }
+
       try {
-        const response = await axios.get('http://localhost:8000/api/emails', {
-          params: { email: userEmail },
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
         });
 
-        const sortedEmails = response.data.emails.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-
-        setEmails(sortedEmails);
-        const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails);
-        setMessage('');
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeEmails();
+        } else {
+          localStorage.removeItem("user"); 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        setMessage('No emails found.');
-        setEmails([]);
-        setFilteredEmails([]);
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
       }
     };
-    
-    fetchEmails();
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
-  }, [userEmail, navigate]);
+
+    const initializeEmails = () => {
+      fetchEmails();
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
+
+  const fetchEmails = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/emails', {
+        params: { email: userEmail },
+      });
+
+      const sortedEmails = response.data.emails.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setEmails(sortedEmails);
+      const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
+      setFilteredEmails(inboxEmails);
+      setMessage('');
+    } catch (error) {
+      setMessage('No emails found.');
+      setEmails([]);
+      setFilteredEmails([]);
+    }
+  };
 
   const fetchEmailCount = async () => {
     try {
@@ -178,12 +220,6 @@ const AEmails = () => {
                 <span className="hidden lg:block">Teacher Record</span>
               </Link>
             </li> 
-            <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">
-              <Link to="/notificationform" className="flex items-center space-x-2">
-                <FaBell className="text-xl" />
-                <span className="hidden lg:block">Notifications</span>
-              </Link>
-            </li>
             <li className="px-4 py-3 hover:bg-blue-700 relative flex justify-center lg:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />

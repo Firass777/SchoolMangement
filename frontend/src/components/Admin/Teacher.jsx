@@ -43,16 +43,57 @@ function Teacher() {
   const [currentPage, setCurrentPage] = useState(1);
   const teachersPerPage = 10;
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    fetchTeachers();
-    fetchEmailCount();
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        setIsVerifying(false);
+        fetchTeachers();
+        fetchEmailCount();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin");
+          setIsVerifying(false);
+          fetchTeachers();
+          fetchEmailCount();
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
@@ -63,7 +104,7 @@ function Teacher() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       const data = await response.json();
       if (data) {
@@ -77,7 +118,7 @@ function Teacher() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/users");
+      const response = await axios.get("http://127.0.0.1:8000/api/users");
       const teachers = response.data.filter((user) => user.role === "teacher");
       setTeacherData(teachers);
     } catch (error) {
@@ -211,6 +252,17 @@ function Teacher() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Teachers");
     XLSX.writeFile(workbook, "Teachers.xlsx");
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 font-inter">
@@ -561,7 +613,7 @@ function Teacher() {
                   key={index + 1}
                   onClick={() => paginate(index + 1)}
                   className={`px-3 py-1 rounded text-xs sm:text-sm ${
-                    currentPage === indexmoderator
+                    currentPage === index + 1
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}

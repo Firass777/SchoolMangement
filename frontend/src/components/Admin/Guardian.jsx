@@ -46,15 +46,61 @@ function Guardian() {
   const guardiansPerPage = 10;
   const [emailCount, setEmailCount] = useState(0);
 
+  // Role verification and initialization
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    fetchGuardians();
-    fetchEmailCount();
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeGuardians();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeGuardians();
+        } else {
+          localStorage.removeItem("user"); // Clear localStorage user data 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const initializeGuardians = () => {
+      fetchGuardians();
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
@@ -64,13 +110,12 @@ function Guardian() {
     if (!email) return;
 
     try {
-      const response = await fetch(
+      const response = await axios.get(
         `http://localhost:8000/api/emails/unread-count/${email}`
       );
-      const data = await response.json();
-      if (data) {
-        setEmailCount(data.count);
-        localStorage.setItem("emailCount", data.count.toString());
+      if (response.data) {
+        setEmailCount(response.data.count);
+        localStorage.setItem('emailCount', response.data.count.toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);

@@ -22,6 +22,7 @@ import {
   FaTimes,
   FaList
 } from "react-icons/fa";
+import axios from "axios";
 
 function TimetableForm() {
   const [formData, setFormData] = useState({
@@ -42,6 +43,7 @@ function TimetableForm() {
   const [emailCount, setEmailCount] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [activeTab, setActiveTab] = useState("visual"); 
+  const [isVerifying, setIsVerifying] = useState(true);
   const formRef = useRef(null);
 
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -54,17 +56,58 @@ function TimetableForm() {
   ];
 
   useEffect(() => {
-    // Access Checking
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    if (filter.value) {
-      fetchTimetable();
-    }
-    fetchEmailCount();
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        setIsVerifying(false);
+        if (filter.value) {
+          fetchTimetable();
+        }
+        fetchEmailCount();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin");
+          setIsVerifying(false);
+          if (filter.value) {
+            fetchTimetable();
+          }
+          fetchEmailCount();
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
 
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -99,7 +142,7 @@ function TimetableForm() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       const data = await response.json();
       if (data) {
@@ -117,41 +160,50 @@ function TimetableForm() {
       (formData.type === "student" ? `/api/student-timetable/update/${editId}` : `/api/teacher-timetable/update/${editId}`) :
       (formData.type === "student" ? "/api/student-timetable/add" : "/api/teacher-timetable/add");
     const method = editId ? "PUT" : "POST";
-    const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    const data = await response.json();
-    
-    const event = new CustomEvent('showToast', {
-      detail: {
-        message: data.message,
-        type: 'success'
-      }
-    });
-    window.dispatchEvent(event);
-    
-    fetchTimetable();
-    setEditId(null);
-    setFormData({
-      type: "student",
-      class: "",
-      teacher_email: "",
-      day: "",
-      subject: "",
-      time: "",
-      location: "",
-    });
-    setShowForm(false);
+    try {
+      const response = await axios({
+        method,
+        url: `http://127.0.0.1:8000${endpoint}`,
+        headers: { "Content-Type": "application/json" },
+        data: formData,
+      });
+      
+      const event = new CustomEvent('showToast', {
+        detail: {
+          message: response.data.message,
+          type: 'success'
+        }
+      });
+      window.dispatchEvent(event);
+      
+      fetchTimetable();
+      setEditId(null);
+      setFormData({
+        type: "student",
+        class: "",
+        teacher_email: "",
+        day: "",
+        subject: "",
+        time: "",
+        location: "",
+      });
+      setShowForm(false);
+    } catch (error) {
+      const event = new CustomEvent('showToast', {
+        detail: {
+          message: error.response?.data?.message || "Failed to submit timetable entry",
+          type: 'error'
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const fetchTimetable = async () => {
     try {
       const endpoint = filter.type === "student" ? `/api/student-timetable/${filter.value}` : `/api/teacher-timetable/${filter.value}`;
-      const response = await fetch(`http://127.0.0.1:8000${endpoint}`);
-      const data = await response.json();
-      setTimetableData(data);
+      const response = await axios.get(`http://127.0.0.1:8000${endpoint}`);
+      setTimetableData(response.data);
     } catch (error) {
       const event = new CustomEvent('showToast', {
         detail: {
@@ -164,7 +216,6 @@ function TimetableForm() {
   };
 
   const handleDelete = async (id) => {
-
     const confirmDelete = await customConfirm(
       "Delete Timetable Entry",
       "Are you sure you want to delete this timetable entry?",
@@ -175,14 +226,11 @@ function TimetableForm() {
     if (confirmDelete) {
       try {
         const endpoint = filter.type === "student" ? `/api/student-timetable/delete/${id}` : `/api/teacher-timetable/delete/${id}`;
-        const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
-          method: "DELETE",
-        });
-        const data = await response.json();
+        const response = await axios.delete(`http://127.0.0.1:8000${endpoint}`);
         
         const event = new CustomEvent('showToast', {
           detail: {
-            message: data.message,
+            message: response.data.message,
             type: 'success'
           }
         });
@@ -200,7 +248,6 @@ function TimetableForm() {
       }
     }
   };
-
 
   const customConfirm = async (title, message, confirmText, cancelText) => {
     return new Promise(resolve => {
@@ -233,18 +280,15 @@ function TimetableForm() {
     scrollToForm();
   };
 
-
   const groupTimetableData = () => {
     const grouped = {};
     
-
     daysOfWeek.forEach(day => {
       grouped[day] = {};
       timeSlots.forEach(time => {
         grouped[day][time] = [];
       });
     });
-
 
     timetableData.forEach(entry => {
       if (grouped[entry.day] && grouped[entry.day][entry.time]) {
@@ -256,7 +300,6 @@ function TimetableForm() {
   };
 
   const groupedTimetable = groupTimetableData();
-
 
   const subjectColors = {
     "Math": "bg-indigo-100 border-indigo-300 text-indigo-800",
@@ -271,6 +314,17 @@ function TimetableForm() {
     const baseSubject = subject.split(' ')[0]; 
     return subjectColors[baseSubject] || subjectColors.default;
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
@@ -351,12 +405,12 @@ function TimetableForm() {
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
-                  <span className="hidden sm:block"> Emails</span>
-                    {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                  )}
+                )}
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">

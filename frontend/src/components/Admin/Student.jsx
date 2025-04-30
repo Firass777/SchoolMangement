@@ -44,16 +44,57 @@ function Student() {
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-    fetchStudents();
-    fetchEmailCount();
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        setIsVerifying(false);
+        fetchStudents();
+        fetchEmailCount();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin");
+          setIsVerifying(false);
+          fetchStudents();
+          fetchEmailCount();
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
@@ -64,7 +105,7 @@ function Student() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       const data = await response.json();
       if (data) {
@@ -78,7 +119,7 @@ function Student() {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/users");
+      const response = await axios.get("http://127.0.0.1:8000/api/users");
       const students = response.data.filter((user) => user.role === "student");
       setStudentData(students);
     } catch (error) {
@@ -214,6 +255,17 @@ function Student() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
     XLSX.writeFile(workbook, "Students.xlsx");
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 font-inter">

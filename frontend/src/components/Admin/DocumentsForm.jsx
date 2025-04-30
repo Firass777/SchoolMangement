@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link ,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FaSchool,
   FaClock,
@@ -24,7 +24,7 @@ import {
 } from 'react-icons/fa';
 
 const DocumentsForm = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [selectedStudentNIN, setSelectedStudentNIN] = useState('');
   const [year, setYear] = useState('');
@@ -51,59 +51,96 @@ const DocumentsForm = () => {
   const formRef = useRef(null);
   const certFormRef = useRef(null);
 
-  // Load students data
+  // Role verification and initialization
   useEffect(() => {
-    const fetchStudents = async () => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeDocuments();
+        return;
+      }
+
       try {
-        const usersRes = await axios.get('http://localhost:8000/api/users');
-        setStudents(usersRes.data.filter(user => user.role === 'student'));
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeDocuments();
+        } else {
+          localStorage.removeItem("user"); // Clear localStorage user data 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        console.error('Error loading students:', error);
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
       }
     };
-    fetchStudents();
-  }, []);
 
-  // Load certificates data
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const certRes = await axios.get('http://localhost:8000/api/certificates');
-        setCertificates(certRes.data.data);
-      } catch (error) {
-        console.error('Error loading certificates:', error);
-      }
+    const initializeDocuments = () => {
+      fetchStudents();
+      fetchCertificates();
+      fetchDocuments();
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
     };
-    fetchCertificates();
-  }, []);
 
-  // Load documents data
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const docsRes = await axios.get('http://localhost:8000/api/documents');
-        processDocuments(docsRes.data.documents);
-      } catch (error) {
-        console.error('Error loading documents:', error);
-      }
-    };
-    fetchDocuments();
-  }, []);
-
-  // Email count
-  useEffect(() => {
-    // Access Checking
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
-
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
+    verifyUserAndInitialize();
   }, [navigate]);
 
+  // Load students data
+  const fetchStudents = async () => {
+    try {
+      const usersRes = await axios.get('http://localhost:8000/api/users');
+      setStudents(usersRes.data.filter(user => user.role === 'student'));
+    } catch (error) {
+      console.error('Error loading students:', error);
+    }
+  };
+
+  // Load certificates data
+  const fetchCertificates = async () => {
+    try {
+      const certRes = await axios.get('http://localhost:8000/api/certificates');
+      setCertificates(certRes.data.data);
+    } catch (error) {
+      console.error('Error loading certificates:', error);
+    }
+  };
+
+  // Load documents data
+  const fetchDocuments = async () => {
+    try {
+      const docsRes = await axios.get('http://localhost:8000/api/documents');
+      processDocuments(docsRes.data.documents);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
+  };
+
+  // Email count
   const fetchEmailCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     const email = userData?.email;
@@ -128,15 +165,6 @@ const DocumentsForm = () => {
       ...doc,
       prediction: doc.prediction || { status: 'processing', category: null, confidence: null }
     })));
-  };
-
-  const fetchDocuments = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/api/documents');
-      processDocuments(response.data.documents);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-    }
   };
 
   const handleCertificateUpload = async (e) => {
@@ -374,7 +402,6 @@ const DocumentsForm = () => {
           </ul>
         </nav>
       </aside>
-
 
       <main className="flex-1 flex flex-col overflow-hidden p-4">
         <div className="max-w-6xl mx-auto w-full">

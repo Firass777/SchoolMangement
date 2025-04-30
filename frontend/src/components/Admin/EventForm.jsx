@@ -40,19 +40,61 @@ const EventForm = () => {
   const [emailCount, setEmailCount] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Fetch all events on component mount
+  // Role verification and initialization
   useEffect(() => {
-    // Access Checking
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData || userData.role !== "admin") {
-      navigate("/access");
-      return;
-    }
-    
-    fetchEvents();
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      // Immediate redirect if no token or local role
+      if (!token || !localRole) {
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      // Check if role is already verified in session storage
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "admin") {
+        initializeEvents();
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000, 
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "admin" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "admin"); 
+          initializeEvents();
+        } else {
+          localStorage.removeItem("user"); // Clear localStorage user data 
+          sessionStorage.removeItem("verifiedRole"); 
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user"); // Clear localStorage user data 
+        sessionStorage.removeItem("verifiedRole"); 
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const initializeEvents = () => {
+      fetchEvents();
+      fetchEmailCount();
+      const emailInterval = setInterval(fetchEmailCount, 30000);
+      return () => clearInterval(emailInterval);
+    };
+
+    verifyUserAndInitialize();
   }, [navigate]);
 
   const fetchEmailCount = async () => {
@@ -160,7 +202,7 @@ const EventForm = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Unchanged from original */}
+      {/* Sidebar */}
       <aside className="w-16 sm:w-64 bg-blue-800 text-white flex flex-col transition-all duration-300">
         <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
           <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Admin Dashboard</h1>
@@ -237,12 +279,12 @@ const EventForm = () => {
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 relative flex justify-center sm:justify-start">
               <Link to="/aemails" className="flex items-center space-x-2">
                 <FaEnvelope className="text-xl" />
-                  <span className="hidden sm:block"> Emails</span>
-                    {emailCount > 0 && (
-                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="hidden sm:block">Emails</span>
+                {emailCount > 0 && (
+                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {emailCount}
                   </span>
-                  )}
+                )}
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
@@ -255,7 +297,7 @@ const EventForm = () => {
         </nav>
       </aside>
 
-      {/* Main Content - Redesigned */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden p-6">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
@@ -290,7 +332,7 @@ const EventForm = () => {
           </div>
         )}
 
-        {/* Add Event Form - Redesigned */}
+        {/* Add Event Form */}
         {showForm && (
           <div className="mb-8 bg-white rounded-lg shadow-md p-6 border border-gray-200">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">Create New Event</h3>
@@ -452,7 +494,7 @@ const EventForm = () => {
           </div>
         )}
 
-        {/* Pagination - Redesigned */}
+        {/* Pagination */}
         {filteredEvents.length > eventsPerPage && (
           <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg shadow-md">
             <div className="flex-1 flex justify-between sm:hidden">
