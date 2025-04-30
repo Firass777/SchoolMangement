@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBook, FaSignOutAlt, FaClipboardList, FaBell, FaEnvelope, FaPaperPlane, FaSearch, FaClock, FaIdCard } from 'react-icons/fa';
 
 const TEmails = () => {
+  const navigate = useNavigate();
   const [emails, setEmails] = useState([]);
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
@@ -15,35 +16,89 @@ const TEmails = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('inbox');
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  const userEmail = JSON.parse(localStorage.getItem('user')).email;
+  const userEmail = localStorage.getItem('user') 
+    ? JSON.parse(localStorage.getItem('user')).email 
+    : '';
 
   useEffect(() => {
-    const fetchEmails = async () => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole || !userEmail) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "teacher") {
+        setIsVerifying(false);
+        fetchEmails();
+        fetchNotificationCount();
+        const interval = setInterval(fetchNotificationCount, 30000);
+        return () => clearInterval(interval);
+      }
+
       try {
-        const response = await axios.get('http://localhost:8000/api/emails', {
-          params: { email: userEmail },
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
         });
 
-        const sortedEmails = response.data.emails.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-
-        setEmails(sortedEmails);
-        const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails);
-        setMessage('');
+        if (
+          response.data.status === "success" &&
+          response.data.role === "teacher" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "teacher");
+          setIsVerifying(false);
+          fetchEmails();
+          fetchNotificationCount();
+          const interval = setInterval(fetchNotificationCount, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        setMessage('No emails found.');
-        setEmails([]);
-        setFilteredEmails([]);
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
       }
     };
-    fetchEmails();
-    fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, [userEmail]);
+
+    verifyUserAndInitialize();
+  }, [navigate, userEmail]);
+
+  const fetchEmails = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/emails', {
+        params: { email: userEmail },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const sortedEmails = response.data.emails.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setEmails(sortedEmails);
+      const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
+      setFilteredEmails(inboxEmails);
+      setMessage('');
+    } catch (error) {
+      setMessage('No emails found.');
+      setEmails([]);
+      setFilteredEmails([]);
+    }
+  };
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -53,7 +108,12 @@ const TEmails = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${email}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       if (response.data) {
         setNotificationCount(response.data.count);
@@ -87,11 +147,15 @@ const TEmails = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:8000/api/emails/send', {
+      const response = await axios.post('http://127.0.0.1:8000/api/emails/send', {
         from: userEmail,
         to,
         title,
         description,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       setMessage('Email sent successfully!');
@@ -99,10 +163,22 @@ const TEmails = () => {
       setTo('');
       setTitle('');
       setDescription('');
+      fetchEmails();
     } catch (error) {
       setMessage('Failed to send email.');
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">

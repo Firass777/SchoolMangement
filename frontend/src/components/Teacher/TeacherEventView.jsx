@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaChalkboardTeacher, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaClipboardList, FaSearch, FaUserGraduate, FaEnvelope, FaClock, FaIdCard } from 'react-icons/fa';
 
 const TeacherEventView = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [message, setMessage] = useState('');
@@ -12,44 +13,96 @@ const TeacherEventView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const eventsPerPage = 4; 
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData || !userData.role) {
-        setMessage('User role not found. Please log in again.');
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
         return;
       }
-      const userRole = userData.role;
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "teacher") {
+        setIsVerifying(false);
+        fetchEvents();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
       try {
-        const response = await axios.get('http://localhost:8000/api/events', {
-          params: { role: userRole },
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
         });
 
-        const sortedEvents = response.data.events.sort(
-          (a, b) => new Date(b.date) - new Date(a.date)
-        );
-
-        setEvents(sortedEvents);
-        setFilteredEvents(sortedEvents); 
-        setMessage('');
+        if (
+          response.data.status === "success" &&
+          response.data.role === "teacher" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "teacher");
+          setIsVerifying(false);
+          fetchEvents();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        setMessage('No events found.');
-        setEvents([]);
-        setFilteredEvents([]);
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
       }
     };
-    fetchEvents();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, []);
+
+    verifyUserAndInitialize();
+  }, [navigate]);
+
+  const fetchEvents = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || !userData.role) {
+      setMessage('User role not found. Please log in again.');
+      return;
+    }
+    const userRole = userData.role;
+    try {
+      const response = await axios.get('http://localhost:8000/api/events', {
+        params: { role: userRole },
+      });
+
+      const sortedEvents = response.data.events.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      setEvents(sortedEvents);
+      setFilteredEvents(sortedEvents); 
+      setMessage('');
+    } catch (error) {
+      setMessage('No events found.');
+      setEvents([]);
+      setFilteredEvents([]);
+    }
+  };
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -90,11 +143,7 @@ const TeacherEventView = () => {
   };
 
   const toggleEventDescription = (eventId) => {
-    if (expandedEventId === eventId) {
-      setExpandedEventId(null);
-    } else {
-      setExpandedEventId(eventId);
-    }
+    setExpandedEventId(expandedEventId === eventId ? null : eventId);
   };
 
   useEffect(() => {
@@ -113,6 +162,17 @@ const TeacherEventView = () => {
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">

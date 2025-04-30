@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaTrash } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const AttendanceForm = () => {
+  const navigate = useNavigate();
   const [studentNIN, setStudentNIN] = useState('');
   const [status, setStatus] = useState('Present');
   const [className, setClassName] = useState('');
@@ -18,43 +19,104 @@ const AttendanceForm = () => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const attendancesPerPage = 5;
 
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user')) || {};
   const teacherNin = user?.nin;
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/users');
-        const studentsData = response.data.filter((user) => user.role === 'student');
-        setStudents(studentsData);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-      }
-    };
-    fetchStudents();
-  }, []);
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
 
-  useEffect(() => {
-    const fetchAttendances = async () => {
+      if (!token || !localRole || !userData?.email) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "teacher") {
+        setIsVerifying(false);
+        fetchStudents();
+        fetchAttendances();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const notificationInterval = setInterval(fetchNotificationCount, 30000);
+        const emailInterval = setInterval(fetchEmailCount, 30000);
+        return () => {
+          clearInterval(notificationInterval);
+          clearInterval(emailInterval);
+        };
+      }
+
       try {
-        const response = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
-        setAttendances(response.data?.attendances || []);
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "teacher" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "teacher");
+          setIsVerifying(false);
+          fetchStudents();
+          fetchAttendances();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const notificationInterval = setInterval(fetchNotificationCount, 30000);
+          const emailInterval = setInterval(fetchEmailCount, 30000);
+          return () => {
+            clearInterval(notificationInterval);
+            clearInterval(emailInterval);
+          };
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        console.error('Error fetching attendances:', error);
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
       }
     };
-    fetchAttendances();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, [teacherNin]);
+
+    verifyUserAndInitialize();
+  }, [navigate, teacherNin]);
+
+  const fetchStudents = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/users', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const studentsData = response.data.filter((user) => user.role === 'student');
+      setStudents(studentsData);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  const fetchAttendances = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/attendance/teacher/${teacherNin}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setAttendances(response.data?.attendances || []);
+    } catch (error) {
+      console.error('Error fetching attendances:', error);
+    }
+  };
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -64,7 +126,12 @@ const AttendanceForm = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/notifications/unread-count/${email}`
+        `http://127.0.0.1:8000/api/notifications/unread-count/${email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       if (response.data) {
         setNotificationCount(response.data.count || 0);
@@ -83,7 +150,12 @@ const AttendanceForm = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       if (response.data) {
         setEmailCount(response.data.count || 0);
@@ -98,17 +170,25 @@ const AttendanceForm = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:8000/api/attendance/add', {
+      const response = await axios.post('http://127.0.0.1:8000/api/attendance/add', {
         student_nin: studentNIN,
         status,
         class: className,
         subject,
         teacher_nin: teacherNin,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       if (response.data) {
         setMessage('Attendance added successfully!');
-        const updatedAttendances = await axios.get(`http://localhost:8000/api/attendance/teacher/${teacherNin}`);
+        const updatedAttendances = await axios.get(`http://127.0.0.1:8000/api/attendance/teacher/${teacherNin}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setAttendances(updatedAttendances.data?.attendances || []);
         setStudentNIN('');
         setClassName('');
@@ -124,7 +204,11 @@ const AttendanceForm = () => {
     
     setIsDeleting(true);
     try {
-      const response = await axios.delete(`http://localhost:8000/api/attendance/${id}`);
+      const response = await axios.delete(`http://127.0.0.1:8000/api/attendance/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       
       if (response.status === 200) {
         setMessage('Attendance deleted successfully!');
@@ -152,89 +236,100 @@ const AttendanceForm = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-      <aside className="w-16 sm:w-64 bg-green-800 text-white flex flex-col transition-all duration-300">
-        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
-          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Teacher Dashboard</h1>
-          <h1 className="text-xl font-bold block sm:hidden">TD</h1>
-        </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/teacherdb" className="flex items-center space-x-2">
-                <FaChalkboardTeacher className="text-xl" />
-                <span className="hidden sm:block">Dashboard</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/ttimetable" className="flex items-center space-x-2">
-                <FaClock className="text-xl" />
-                <span className="hidden sm:block">Time-Table</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/attendanceform" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Attendance</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/gradesform" className="flex items-center space-x-2">
-                <FaChartLine className="text-xl" />
-                <span className="hidden sm:block">Grades</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/courseform" className="flex items-center space-x-2">
-                <FaBook className="text-xl" />
-                <span className="hidden sm:block">Courses</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/teachereventview" className="flex items-center space-x-2">
-                <FaClipboardList className="text-xl" />
-                <span className="hidden sm:block">Events</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
-              <Link to="/temails" className="flex items-center space-x-2">
-                <FaEnvelope className="text-xl" />
-                <span className="hidden sm:block">Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {emailCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
-              <Link to="/tnotificationview" className="flex items-center space-x-2">
-                <FaBell className="text-xl" />
-                <span className="hidden sm:block">Notifications</span>
-                {notificationCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
-              <Link to="/teditprofile" className="flex items-center space-x-2">
-                <FaIdCard className="text-xl" />
-                <span className="hidden sm:block">Profile</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt className="text-xl" />
-                <span className="hidden sm:block">Logout</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+        <aside className="w-16 sm:w-64 bg-green-800 text-white flex flex-col transition-all duration-300">
+          <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+            <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Teacher Dashboard</h1>
+            <h1 className="text-xl font-bold block sm:hidden">TD</h1>
+          </div>
+          <nav className="mt-6">
+            <ul>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/teacherdb" className="flex items-center space-x-2">
+                  <FaChalkboardTeacher className="text-xl" />
+                  <span className="hidden sm:block">Dashboard</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/ttimetable" className="flex items-center space-x-2">
+                  <FaClock className="text-xl" />
+                  <span className="hidden sm:block">Time-Table</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/attendanceform" className="flex items-center space-x-2">
+                  <FaCalendarAlt className="text-xl" />
+                  <span className="hidden sm:block">Attendance</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/gradesform" className="flex items-center space-x-2">
+                  <FaChartLine className="text-xl" />
+                  <span className="hidden sm:block">Grades</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/courseform" className="flex items-center space-x-2">
+                  <FaBook className="text-xl" />
+                  <span className="hidden sm:block">Courses</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/teachereventview" className="flex items-center space-x-2">
+                  <FaClipboardList className="text-xl" />
+                  <span className="hidden sm:block">Events</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
+                <Link to="/temails" className="flex items-center space-x-2">
+                  <FaEnvelope className="text-xl" />
+                  <span className="hidden sm:block">Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 relative flex justify-center sm:justify-start">
+                <Link to="/tnotificationview" className="flex items-center space-x-2">
+                  <FaBell className="text-xl" />
+                  <span className="hidden sm:block">Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-green-700 flex justify-center sm:justify-start">
+                <Link to="/teditprofile" className="flex items-center space-x-2">
+                  <FaIdCard className="text-xl" />
+                  <span className="hidden sm:block">Profile</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+                <Link to="/" className="flex items-center space-x-2">
+                  <FaSignOutAlt className="text-xl" />
+                  <span className="hidden sm:block">Logout</span>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </aside>
 
         <main className="flex-1 p-6 overflow-auto min-h-screen">
           <div className="mb-6">
