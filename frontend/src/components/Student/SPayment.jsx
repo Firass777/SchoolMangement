@@ -1,21 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaCreditCard, FaMoneyCheck } from 'react-icons/fa';
 import { motion } from 'framer-motion'; 
 import axios from 'axios';
 
 const Spayment = () => {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [payments, setPayments] = useState([]); 
-  const [allPayments, setAllPayments] = useState([]);
   const [totalPayments, setTotalPayments] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   const user = JSON.parse(localStorage.getItem('user'));
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        if (user) {
+          fetchPayments(currentPage);
+        }
+        fetchNotificationCount();
+        fetchEmailCount();
+        const notificationInterval = setInterval(fetchNotificationCount, 30000);
+        const emailInterval = setInterval(fetchEmailCount, 30000);
+        return () => {
+          clearInterval(notificationInterval);
+          clearInterval(emailInterval);
+        };
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          if (user) {
+            fetchPayments(currentPage);
+          }
+          fetchNotificationCount();
+          fetchEmailCount();
+          const notificationInterval = setInterval(fetchNotificationCount, 30000);
+          const emailInterval = setInterval(fetchEmailCount, 30000);
+          return () => {
+            clearInterval(notificationInterval);
+            clearInterval(emailInterval);
+          };
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate, currentPage]);
 
   // Fetch notification count
   const fetchNotificationCount = async () => {
@@ -56,40 +125,40 @@ const Spayment = () => {
     }
   };
 
-  // Fetch paginated payments from the backend
+  // Fetch total paid and payment history from the new API
   const fetchPayments = async (page) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/get-payments?user_id=${user.id}&page=${page}`);
+      const response = await fetch(`http://localhost:8000/api/user-payments?user_id=${user.id}&page=${page}&per_page=10`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const data = await response.json();
 
-      if (response.ok) {
-        setPayments(data.payments.data);
-        setTotalPages(data.payments.last_page);
+      if (response.ok && data.status === 'success') {
+        // Parse amounts to floats
+        const parsedPayments = data.data.payments.data.map(payment => ({
+          ...payment,
+          amount: parseFloat(payment.amount) || 0
+        }));
+        setPayments(parsedPayments);
+        setTotalPayments(parseFloat(data.data.total_paid) || 0);
+        setTotalPages(data.data.payments.last_page);
       } else {
-        alert('Failed to fetch payments.');
+        alert('Failed to fetch payment data.');
+        setPayments([]);
+        setTotalPayments(0);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
+      alert('Error fetching payment data.');
+      setPayments([]);
+      setTotalPayments(0);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Fetch all payments for the summary
-  const fetchAllPayments = async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/get-all-payments?user_id=${user.id}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setAllPayments(data.payments);
-        setTotalPayments(data.totalPayments);
-      } else {
-        alert('Failed to fetch all payments.');
-      }
-    } catch (error) {
-      console.error('Error fetching all payments:', error);
     }
   };
 
@@ -98,21 +167,6 @@ const Spayment = () => {
       setCurrentPage(page);
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      fetchPayments(currentPage);
-      fetchAllPayments(); 
-      fetchNotificationCount();
-      fetchEmailCount();
-      const notificationInterval = setInterval(fetchNotificationCount, 30000);
-      const emailInterval = setInterval(fetchEmailCount, 30000);
-      return () => {
-        clearInterval(notificationInterval);
-        clearInterval(emailInterval);
-      };
-    }
-  }, [currentPage]);
 
   const handlePayment = async () => {
     if (!user) {
@@ -143,7 +197,7 @@ const Spayment = () => {
       // Save payment details in local storage
       const paymentDetails = {
         user_id: user.id,
-        amount: amount,
+        amount: parseFloat(amount),
         created_at: new Date().toISOString(),
         stripe_payment_id: 'temp_id',
         status: 'pending',
@@ -157,10 +211,12 @@ const Spayment = () => {
     }
   };
 
-  // Calculate payment statistics using all payments
-  const totalPaymentsCount = allPayments.length;
-  const averagePaymentAmount = totalPaymentsCount > 0 ? (totalPayments / totalPaymentsCount).toFixed(2) : 0;
-  const lastPaymentDate = totalPaymentsCount > 0 ? new Date(allPayments[0].created_at).toLocaleDateString() : 'N/A';
+  // Calculate payment statistics using payments
+  const totalPaymentsCount = payments.length;
+  const averagePaymentAmount = totalPaymentsCount > 0 ? (totalPayments / totalPaymentsCount).toFixed(2) : '0.00';
+  const lastPaymentDate = totalPaymentsCount > 0 && payments[0]?.created_at 
+    ? new Date(payments[0].created_at).toLocaleDateString() 
+    : 'N/A';
 
   // Animation variants for table rows
   const rowVariants = {
@@ -173,6 +229,17 @@ const Spayment = () => {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { opacity: 1, scale: 1 },
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -379,6 +446,8 @@ const Spayment = () => {
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Recent Payments</h3>
           {isLoading ? (
             <p className="text-gray-600">Loading payments...</p>
+          ) : payments.length === 0 ? (
+            <p className="text-gray-600">No payments found.</p>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -400,9 +469,15 @@ const Spayment = () => {
                         animate="visible"
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                       >
-                        <td className="px-4 sm:px-6 py-2 sm:py-3">{new Date(payment.created_at).toLocaleDateString()}</td>
-                        <td className="px-4 sm:px-6 py-2 sm:py-3">${payment.amount}</td>
-                        <td className="px-4 sm:px-6 py-2 sm:py-3 text-green-600">{payment.status}</td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">
+                          {payment.created_at ? new Date(payment.created_at).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3">
+                          ${typeof payment.amount === 'number' ? payment.amount.toFixed(2) : '0.00'}
+                        </td>
+                        <td className="px-4 sm:px-6 py-2 sm:py-3 text-green-600">
+                          {payment.status || 'N/A'}
+                        </td>
                       </motion.tr>
                     ))}
                   </tbody>

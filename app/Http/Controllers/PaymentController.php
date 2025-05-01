@@ -331,4 +331,45 @@ class PaymentController extends Controller
             })
         ]);
     }
+
+    public function getUserPayments(Request $request)
+    {
+        try {
+            // Get the user ID from the request (assuming token-based authentication)
+            $userId = $request->query('user_id');
+
+            if (!$userId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User ID is required.'
+                ], 400);
+            }
+
+            // Fetch total paid amount
+            $totalPaid = Payment::where('user_id', $userId)
+                ->where('status', 'paid')
+                ->sum('amount');
+
+            // Fetch paginated payment history
+            $perPage = $request->query('per_page', 10); // Default to 10 payments per page
+            $payments = Payment::where('user_id', $userId)
+                ->where('status', 'paid')
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'total_paid' => $totalPaid,
+                    'payments' => $payments
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch payment data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt,
   FaBook, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaMoneyCheck,
@@ -25,74 +25,139 @@ const DashboardCard = ({ title, value, icon: Icon, color }) => (
 );
 
 const StudentDB = () => {
+  const navigate = useNavigate();
   const [attendance, setAttendance] = useState([]);
   const [grades, setGrades] = useState([]);
   const [payments, setPayments] = useState({ total: 0, pending: 0, amountDue: 0 });
   const [prediction, setPrediction] = useState('Loading...');
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const studentData = JSON.parse(localStorage.getItem('user'));
   const studentNIN = studentData?.nin;
 
   useEffect(() => {
-    const fetchPrediction = async () => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchData();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
       try {
-        const response = await fetch(`http://localhost:8000/api/predict?nin=${studentNIN}`);
-        const data = await response.json();
-        setPrediction(data.prediction || 'No prediction available');
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchData();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
       } catch (error) {
-        console.error('Prediction fetch error:', error);
-        setPrediction('Prediction unavailable');
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
       }
     };
 
-    const fetchPayments = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/payment-summary?user_id=${studentData.id}`);
-        const data = await response.json();
-        
-        if (response.ok) {
-          setPayments({ 
-            total: data.total_paid,
-            pending: data.pending_payments,
-            amountDue: data.amount_due
-          });
+    const fetchData = async () => {
+      const fetchPrediction = async () => {
+        try {
+          const response = await fetch(`http://localhost:8000/api/predict?nin=${studentNIN}`);
+          const data = await response.json();
+          setPrediction(data.prediction || 'No prediction available');
+        } catch (error) {
+          console.error('Prediction fetch error:', error);
+          setPrediction('Prediction unavailable');
         }
-      } catch (error) {
-        console.error('Payment fetch error:', error);
-      }
-    };
+      };
 
-    const fetchAttendance = async () => {
-      if (!studentNIN) return;
-
-      try {
-        const response = await fetch(`http://localhost:8000/api/attendance/${studentNIN}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          const sortedAttendance = data.attendances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          setAttendance(sortedAttendance);
+      const fetchPayments = async () => {
+        try {
+          const response = await fetch(`http://localhost:8000/api/payment-summary?user_id=${studentData.id}`);
+          const data = await response.json();
+          
+          if (response.ok) {
+            setPayments({ 
+              total: data.total_paid,
+              pending: data.pending_payments,
+              amountDue: data.amount_due
+            });
+          }
+        } catch (error) {
+          console.error('Payment fetch error:', error);
         }
-      } catch (error) {
-        console.error('Error fetching attendance:', error);
-      }
-    };
+      };
 
-    const fetchGrades = async () => {
-      if (!studentNIN) return;
+      const fetchAttendance = async () => {
+        if (!studentNIN) return;
 
-      try {
-        const response = await fetch(`http://localhost:8000/api/grades/${studentNIN}`);
-        const data = await response.json();
+        try {
+          const response = await fetch(`http://localhost:8000/api/attendance/${studentNIN}`);
+          const data = await response.json();
 
-        if (response.ok) {
-          const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          setGrades(sortedGrades);
+          if (response.ok) {
+            const sortedAttendance = data.attendances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            setAttendance(sortedAttendance);
+          }
+        } catch (error) {
+          console.error('Error fetching attendance:', error);
         }
-      } catch (error) {
-        console.error('Error fetching grades:', error);
+      };
+
+      const fetchGrades = async () => {
+        if (!studentNIN) return;
+
+        try {
+          const response = await fetch(`http://localhost:8000/api/grades/${studentNIN}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            setGrades(sortedGrades);
+          }
+        } catch (error) {
+          console.error('Error fetching grades:', error);
+        }
+      };
+
+      fetchPrediction();
+      if (studentData?.id) {
+        fetchPayments();
       }
+      fetchAttendance();
+      fetchGrades();
     };
 
     const fetchNotificationCount = async () => {
@@ -133,21 +198,8 @@ const StudentDB = () => {
       }
     };
 
-    fetchPrediction();
-    if (studentData?.id) {
-      fetchPayments();
-    }
-    fetchAttendance();
-    fetchGrades();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, [studentNIN, studentData]);
+    verifyUserAndInitialize();
+  }, [navigate, studentNIN, studentData]);
 
   const attendanceChartData = {
     labels: ['Present', 'Absent', 'Late'],
@@ -256,6 +308,17 @@ const StudentDB = () => {
       },
     },
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100 animate-fade-in">
@@ -451,7 +514,7 @@ const StudentDB = () => {
                         <td className="px-4 sm:px-6 py-2 sm:py-3">{record.subject}</td>
                         <td className="px-4 sm:px-6 py-2 sm:py-3">{record.status || record.grade}</td>
                         <td className="px-4 sm:px-6 py-2 sm:py-3">{record.class}</td>
-                        <td className="px-4 sm:px-6 py-2 sm:py-3">{new Date(record.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 سم:px-6 py-2 sm:py-3">{new Date(record.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

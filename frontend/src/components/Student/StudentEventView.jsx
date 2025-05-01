@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaSearch, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaMoneyCheck } from 'react-icons/fa';
 
 const StudentEventView = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [message, setMessage] = useState('');
@@ -12,7 +13,72 @@ const StudentEventView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const eventsPerPage = 4;
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchEvents();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const notificationInterval = setInterval(fetchNotificationCount, 30000);
+        const emailInterval = setInterval(fetchEmailCount, 30000);
+        return () => {
+          clearInterval(notificationInterval);
+          clearInterval(emailInterval);
+        };
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchEvents();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const notificationInterval = setInterval(fetchNotificationCount, 30000);
+          const emailInterval = setInterval(fetchEmailCount, 30000);
+          return () => {
+            clearInterval(notificationInterval);
+            clearInterval(emailInterval);
+          };
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
 
   // Fetch notification count
   const fetchNotificationCount = async () => {
@@ -53,43 +119,32 @@ const StudentEventView = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData || !userData.role) {
-        setMessage('User role not found. Please log in again.');
-        return;
-      }
-      const userRole = userData.role;
-      try {
-        const response = await axios.get('http://localhost:8000/api/events', {
-          params: { role: userRole },
-        });
+  const fetchEvents = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || !userData.role) {
+      setMessage('User role not found. Please log in again.');
+      return;
+    }
+    const userRole = userData.role;
+    try {
+      const response = await axios.get('http://localhost:8000/api/events', {
+        params: { role: userRole },
+      });
 
-        // Sort events by date (newest to oldest)
-        const sortedEvents = response.data.events.sort(
-          (a, b) => new Date(b.date) - new Date(a.date)
-        );
+      // Sort events by date (newest to oldest)
+      const sortedEvents = response.data.events.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
 
-        setEvents(sortedEvents);
-        setFilteredEvents(sortedEvents); 
-        setMessage('');
-      } catch (error) {
-        setMessage('No events found.');
-        setEvents([]);
-        setFilteredEvents([]);
-      }
-    };
-    fetchEvents();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, []);
+      setEvents(sortedEvents);
+      setFilteredEvents(sortedEvents); 
+      setMessage('');
+    } catch (error) {
+      setMessage('No events found.');
+      setEvents([]);
+      setFilteredEvents([]);
+    }
+  };
 
   // Toggle the expanded state of an event
   const toggleEventDescription = (eventId) => {
@@ -119,6 +174,17 @@ const StudentEventView = () => {
 
   // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">

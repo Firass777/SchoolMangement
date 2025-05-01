@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaBook, FaEnvelope, FaPaperPlane, FaSearch, FaClock, FaIdCard, FaFileInvoice, FaMoneyCheck } from 'react-icons/fa';
 
 const SEmails = () => {
+  const navigate = useNavigate();
   const [emails, setEmails] = useState([]);
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
@@ -16,10 +17,117 @@ const SEmails = () => {
   const [view, setView] = useState('inbox');
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  const userEmail = JSON.parse(localStorage.getItem('user')).email;
+  const userEmail = JSON.parse(localStorage.getItem('user'))?.email;
 
-  // Fetch notification count
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("verifiedRole");
+    navigate("/", { replace: true });
+  };
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async (retries = 2) => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole || !userData?.email) {
+        console.log("Missing token, role, or email, redirecting to /access");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole && cachedRole !== "student") {
+        console.log("Clearing stale verifiedRole:", cachedRole);
+        sessionStorage.removeItem("verifiedRole");
+      }
+
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchEmails();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 5000,
+        });
+
+        console.log("Role API Response:", response.data);
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchEmails();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          console.log("Invalid role or mismatch:", response.data);
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error.response?.data || error.message);
+        if (retries > 0 && error.response?.status === 401) {
+          console.log(`Retrying role verification (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return verifyUserAndInitialize(retries - 1);
+        }
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const fetchEmails = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/emails', {
+          params: { email: userEmail },
+        });
+
+        const sortedEmails = response.data.emails.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        setEmails(sortedEmails);
+
+        const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
+        setFilteredEmails(inboxEmails);
+
+        setMessage('');
+      } catch (error) {
+        setMessage('No emails found.');
+        setEmails([]);
+        setFilteredEmails([]);
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate, userEmail]);
+
   const fetchNotificationCount = async () => {
     try {
       const response = await axios.get(
@@ -33,40 +141,6 @@ const SEmails = () => {
       console.error("Error fetching notification count:", error);
     }
   };
-
-  // Fetch emails and filter based on the default view
-  useEffect(() => {
-    const fetchEmails = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/emails', {
-          params: { email: userEmail },
-        });
-
-        // Sort emails by date (newest to oldest)
-        const sortedEmails = response.data.emails.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-
-        setEmails(sortedEmails);
-
-        // Filter emails based on the default view (inbox)
-        const inboxEmails = sortedEmails.filter(email => email.to === userEmail);
-        setFilteredEmails(inboxEmails); 
-
-        setMessage('');
-      } catch (error) {
-        setMessage('No emails found.');
-        setEmails([]);
-        setFilteredEmails([]);
-      }
-    };
-
-    fetchEmails();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => clearInterval(emailInterval);
-  }, [userEmail]);
 
   const fetchEmailCount = async () => {
     try {
@@ -90,7 +164,6 @@ const SEmails = () => {
         email.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Apply view filter on top of search results
     if (view === 'inbox') {
       setFilteredEmails(filtered.filter(email => email.to === userEmail));
     } else {
@@ -98,7 +171,6 @@ const SEmails = () => {
     }
   }, [searchQuery, emails, view, userEmail]);
 
-  // Toggle between inbox and sent views
   const toggleView = (viewType) => {
     setView(viewType);
   };
@@ -119,10 +191,37 @@ const SEmails = () => {
       setTo('');
       setTitle('');
       setDescription('');
+
+      const updatedEmails = await axios.get('http://localhost:8000/api/emails', {
+        params: { email: userEmail },
+      });
+
+      const sortedEmails = updatedEmails.data.emails.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setEmails(sortedEmails);
+
+      if (view === 'sent') {
+        setFilteredEmails(sortedEmails.filter(email => email.from === userEmail));
+      } else {
+        setFilteredEmails(sortedEmails.filter(email => email.to === userEmail));
+      }
     } catch (error) {
       setMessage('Failed to send email.');
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -210,16 +309,15 @@ const SEmails = () => {
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
+              <button onClick={handleLogout} className="flex items-center space-x-2">
                 <FaSignOutAlt className="text-xl" />
                 <span className="hidden sm:block">Logout</span>
-              </Link>
+              </button>
             </li>
           </ul>
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="p-4 bg-white border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-800">{view === 'inbox' ? 'Inbox' : 'Sent'}</h2>
@@ -273,7 +371,7 @@ const SEmails = () => {
                 <div
                   key={email.id}
                   className={`p-3 bg-white rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow ${
-                    selectedEmail?.id === email.id ? 'border-2 border-purple-600' : ''
+                    selectedEmail?.id === attractedEmail.id ? 'border-2 border-purple-600' : ''
                   }`}
                   onClick={() => setSelectedEmail(email)}
                 >

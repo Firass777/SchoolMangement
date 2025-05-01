@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaUserGraduate,
   FaChartLine,
@@ -19,9 +19,11 @@ import autoTable from "jspdf-autotable";
 import axios from "axios";
 
 function STimetable() {
+  const navigate = useNavigate();
   const [timetable, setTimetable] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const studentClass = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user")).class
     : "";
@@ -43,6 +45,74 @@ function STimetable() {
     "React": "bg-blue-100 border-blue-300 text-blue-800",
     "default": "bg-gray-100 border-gray-300 text-gray-800"
   };
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        if (studentClass) {
+          fetchTimetable();
+        }
+        fetchNotificationCount();
+        fetchEmailCount();
+        const notificationInterval = setInterval(fetchNotificationCount, 30000);
+        const emailInterval = setInterval(fetchEmailCount, 30000);
+        return () => {
+          clearInterval(notificationInterval);
+          clearInterval(emailInterval);
+        };
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          if (studentClass) {
+            fetchTimetable();
+          }
+          fetchNotificationCount();
+          fetchEmailCount();
+          const notificationInterval = setInterval(fetchNotificationCount, 30000);
+          const emailInterval = setInterval(fetchEmailCount, 30000);
+          return () => {
+            clearInterval(notificationInterval);
+            clearInterval(emailInterval);
+          };
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate, studentClass]);
 
   const getSubjectColor = (subject) => {
     const baseSubject = subject?.split(' ')[0]; 
@@ -86,20 +156,6 @@ function STimetable() {
       console.error("Error fetching email count:", error);
     }
   };
-
-  useEffect(() => {
-    if (studentClass) {
-      fetchTimetable();
-    }
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, [studentClass]);
 
   const fetchTimetable = async () => {
     try {
@@ -160,6 +216,17 @@ function STimetable() {
 
     doc.save("student_timetable.pdf");
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">

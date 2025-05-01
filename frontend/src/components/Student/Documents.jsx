@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUserGraduate,
   FaCalendarAlt,
@@ -16,11 +16,109 @@ import {
 } from 'react-icons/fa';
 
 const Documents = () => {
+  const navigate = useNavigate();
   const [certificates, setCertificates] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const user = JSON.parse(localStorage.getItem('user'));
-  const studentNIN = user.nin;
+  const studentNIN = user?.nin;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("verifiedRole");
+    navigate("/", { replace: true });
+  };
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async (retries = 2) => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole || !userData?.email) {
+        console.log("Missing token, role, or email, redirecting to /access");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole && cachedRole !== "student") {
+        console.log("Clearing stale verifiedRole:", cachedRole);
+        sessionStorage.removeItem("verifiedRole");
+      }
+
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchCertificates();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 5000,
+        });
+
+        console.log("Role API Response:", response.data);
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchCertificates();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          console.log("Invalid role or mismatch:", response.data);
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error.response?.data || error.message);
+        if (retries > 0 && error.response?.status === 401) {
+          console.log(`Retrying role verification (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return verifyUserAndInitialize(retries - 1);
+        }
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const fetchCertificates = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/certificates');
+        const studentCertificates = response.data.data.filter(
+          (cert) => cert.student_nin === studentNIN
+        );
+        setCertificates(studentCertificates);
+      } catch (error) {
+        console.error('Error fetching certificates:', error);
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate, studentNIN]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -60,31 +158,16 @@ const Documents = () => {
     }
   };
 
-  useEffect(() => {
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/certificates');
-        const studentCertificates = response.data.data.filter(
-          (cert) => cert.student_nin === studentNIN
-        );
-        setCertificates(studentCertificates);
-      } catch (error) {
-        console.error('Error fetching certificates:', error);
-      }
-    };
-    fetchCertificates();
-  }, [studentNIN]);
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -172,10 +255,10 @@ const Documents = () => {
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
+              <button onClick={handleLogout} className="flex items-center space-x-2">
                 <FaSignOutAlt className="text-xl" />
                 <span className="hidden sm:block">Logout</span>
-              </Link>
+              </button>
             </li>
           </ul>
         </nav>

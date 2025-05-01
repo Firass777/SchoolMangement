@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaDownload, FaBook, FaEnvelope, FaClock, FaIdCard, FaFileInvoice, FaMoneyCheck } from 'react-icons/fa';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -9,9 +9,116 @@ import axios from 'axios';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const GradesView = () => {
+  const navigate = useNavigate();
   const [grades, setGrades] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("verifiedRole");
+    navigate("/", { replace: true });
+  };
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async (retries = 2) => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole || !userData?.email) {
+        console.log("Missing token, role, or email, redirecting to /access");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole && cachedRole !== "student") {
+        console.log("Clearing stale verifiedRole:", cachedRole);
+        sessionStorage.removeItem("verifiedRole");
+      }
+
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchGrades();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const interval = setInterval(() => {
+          fetchNotificationCount();
+          fetchEmailCount();
+        }, 30000);
+        return () => clearInterval(interval);
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 5000,
+        });
+
+        console.log("Role API Response:", response.data);
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchGrades();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const interval = setInterval(() => {
+            fetchNotificationCount();
+            fetchEmailCount();
+          }, 30000);
+          return () => clearInterval(interval);
+        } else {
+          console.log("Invalid role or mismatch:", response.data);
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error.response?.data || error.message);
+        if (retries > 0 && error.response?.status === 401) {
+          console.log(`Retrying role verification (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return verifyUserAndInitialize(retries - 1);
+        }
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    const fetchGrades = async () => {
+      const studentData = JSON.parse(localStorage.getItem('user'));
+      const studentNIN = studentData?.nin;
+
+      if (!studentNIN) return;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/grades/${studentNIN}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          setGrades(sortedGrades);
+        } else {
+          alert(data.message || 'Failed to fetch grades.');
+        }
+      } catch (error) {
+        console.error('Error fetching grades:', error);
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -50,39 +157,6 @@ const GradesView = () => {
       console.error("Error fetching email count:", error);
     }
   };
-
-  useEffect(() => {
-    const fetchGrades = async () => {
-      const studentData = JSON.parse(localStorage.getItem('user'));
-      const studentNIN = studentData?.nin;
-
-      if (!studentNIN) return;
-
-      try {
-        const response = await fetch(`http://localhost:8000/api/grades/${studentNIN}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          const sortedGrades = data.grades.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          setGrades(sortedGrades);
-        } else {
-          alert(data.message || 'Failed to fetch grades.');
-        }
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-      }
-    };
-
-    fetchGrades();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, []);
 
   const chartData = {
     labels: grades.map((grade) => grade.subject),
@@ -130,6 +204,17 @@ const GradesView = () => {
     };
     html2pdf().from(element).set(opt).save();
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -217,10 +302,10 @@ const GradesView = () => {
               </Link>
             </li>
             <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
+              <button onClick={handleLogout} className="flex items-center space-x-2">
                 <FaSignOutAlt className="text-xl" />
                 <span className="hidden sm:block">Logout</span>
-              </Link>
+              </button>
             </li>
           </ul>
         </nav>

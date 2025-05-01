@@ -1,16 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaMoneyCheck, FaBook, FaFileInvoice } from 'react-icons/fa';
 import axios from 'axios';
 
 const SNotification = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
   const notificationsPerPage = 4;
+
+  useEffect(() => {
+    const verifyUserAndInitialize = async () => {
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const localRole = userData?.role;
+
+      if (!token || !localRole) {
+        localStorage.removeItem("user");
+        navigate("/access", { replace: true });
+        return;
+      }
+
+      const cachedRole = sessionStorage.getItem("verifiedRole");
+      if (cachedRole === "student") {
+        setIsVerifying(false);
+        fetchNotifications();
+        markAsRead();
+        fetchNotificationCount();
+        fetchEmailCount();
+        const notificationInterval = setInterval(fetchNotificationCount, 30000);
+        const emailInterval = setInterval(fetchEmailCount, 30000);
+        return () => {
+          clearInterval(notificationInterval);
+          clearInterval(emailInterval);
+        };
+      }
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
+          params: { token },
+          timeout: 3000,
+        });
+
+        if (
+          response.data.status === "success" &&
+          response.data.role === "student" &&
+          response.data.role === localRole
+        ) {
+          sessionStorage.setItem("verifiedRole", "student");
+          setIsVerifying(false);
+          fetchNotifications();
+          markAsRead();
+          fetchNotificationCount();
+          fetchEmailCount();
+          const notificationInterval = setInterval(fetchNotificationCount, 30000);
+          const emailInterval = setInterval(fetchEmailCount, 30000);
+          return () => {
+            clearInterval(notificationInterval);
+            clearInterval(emailInterval);
+          };
+        } else {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
+          navigate("/access", { replace: true });
+        }
+      } catch (error) {
+        console.error("Error verifying role:", error);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
+        navigate("/access", { replace: true });
+      }
+    };
+
+    verifyUserAndInitialize();
+  }, [navigate]);
 
   const fetchNotificationCount = async () => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -50,67 +118,56 @@ const SNotification = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      const email = userData?.email;
+  const fetchNotifications = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const email = userData?.email;
 
-      if (!email) {
-        setError('User email not found in localStorage.');
-        return;
+    if (!email) {
+      setError('User email not found in localStorage.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/notifications/${email}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setNotifications(data.notifications);
+        const unreadCount = data.notifications.filter(n => !n.read_at).length;
+        setNotificationCount(unreadCount);
+        localStorage.setItem('notificationCount', unreadCount.toString());
+      } else {
+        setError(data.message || 'Failed to fetch notifications.');
       }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
-      try {
-        const response = await fetch(`http://localhost:8000/api/notifications/${email}`);
-        const data = await response.json();
+  const markAsRead = async () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const email = userData?.email;
+    
+    if (!email) return;
 
-        if (response.ok) {
-          setNotifications(data.notifications);
-          const unreadCount = data.notifications.filter(n => !n.read_at).length;
-          localStorage.setItem('notificationCount', unreadCount.toString());
-        } else {
-          setError(data.message || 'Failed to fetch notifications.');
-        }
-      } catch (error) {
-        setError('An error occurred. Please try again.');
-        console.error('Error fetching notifications:', error);
+    try {
+      const response = await fetch(`http://localhost:8000/api/notifications/mark-as-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (response.ok) {
+        setNotificationCount(0);
+        localStorage.setItem('notificationCount', '0');
       }
-    };
-
-    const markAsRead = async () => {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      const email = userData?.email;
-      
-      if (!email) return;
-
-      try {
-        const response = await fetch(`http://localhost:8000/api/notifications/mark-as-read`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email })
-        });
-
-        if (response.ok) {
-          localStorage.setItem('notificationCount', '0');
-        }
-      } catch (error) {
-        console.error('Error marking notifications as read:', error);
-      }
-    };
-
-    fetchNotifications();
-    markAsRead();
-    fetchNotificationCount();
-    fetchEmailCount();
-    const notificationInterval = setInterval(fetchNotificationCount, 30000);
-    const emailInterval = setInterval(fetchEmailCount, 30000);
-    return () => {
-      clearInterval(notificationInterval);
-      clearInterval(emailInterval);
-    };
-  }, []);
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
+  };
 
   const filteredNotifications = notifications.filter(
     (notification) =>
@@ -126,6 +183,17 @@ const SNotification = () => {
   );
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -242,7 +310,7 @@ const SNotification = () => {
                 placeholder="Search notifications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-Purple-500"
+                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
@@ -259,7 +327,7 @@ const SNotification = () => {
                   key={notification.id}
                   className={`p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 ${
                     !notification.read_at 
-                      ? 'border-Purple-500 bg-Purple-50' 
+                      ? 'border-purple-500 bg-purple-50' 
                       : 'border-gray-300'
                   } hover:shadow-lg transition-shadow`}
                 >
@@ -267,7 +335,7 @@ const SNotification = () => {
                     <h3 className="text-xl font-semibold text-gray-800">
                       {notification.title}
                       {!notification.read_at && (
-                        <span className="ml-2 text-xs bg-Purple-500 text-white px-2 py-1 rounded-full">
+                        <span className="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded-full">
                           New
                         </span>
                       )}
@@ -291,8 +359,8 @@ const SNotification = () => {
                     onClick={() => paginate(index + 1)}
                     className={`px-4 py-2 rounded-lg ${
                       currentPage === index + 1
-                        ? 'bg-Purple-600 text-white'
-                        : 'bg-white text-Purple-600 border border-Purple-600 hover:bg-Purple-50'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
                     }`}
                   >
                     {index + 1}
