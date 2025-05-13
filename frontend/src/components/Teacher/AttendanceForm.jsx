@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChalkboardTeacher, FaUserGraduate, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaTrash } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaPlus,FaSearch, FaCalendarAlt, FaSignOutAlt, FaChartLine, FaBell, FaBook, FaClipboardList, FaEnvelope, FaClock, FaIdCard, FaTrash } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -331,169 +331,192 @@ const AttendanceForm = () => {
           </nav>
         </aside>
 
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Add Attendance</h2>
-            <p className="text-gray-600">Enter the attendance details below.</p>
-          </div>
-
-          <div className="mb-6 flex justify-between items-center">
-            {showSearch && (
-              <div className="flex items-center bg-white p-4 rounded-md shadow-md">
-                <input
-                  type="text"
-                  className="ml-4 w-full p-2 border rounded-md"
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        <main className="flex-1 p-8 overflow-auto min-h-screen">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Attendance Management</h1>
+                <p className="text-gray-500 mt-2">Track and manage student attendance records</p>
               </div>
-            )}
-
-            <button
-              onClick={() => {
-                setShowStudents(!showStudents);
-                setShowSearch(!showSearch);
-              }}
-              className="py-2 px-4 ml-4 bg-green-800 text-white rounded hover:bg-green-700"
-            >
-              {showStudents ? 'Hide Students' : 'Show Students'}
-            </button>
-          </div>
-
-          {showStudents && (
-            <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Student</h3>
-              <ul className="space-y-4 max-h-64 overflow-y-auto">
-                {filteredStudents.map((student) => (
-                  <li key={student.id} className="flex justify-between items-center border-b py-2">
-                    <span>{student.name} ({student.email})</span>
-                    <button
-                      onClick={() => setStudentNIN(student.nin)}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Select
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700">Student NIN:</label>
-                <input
-                  type="text"
-                  value={studentNIN}
-                  onChange={(e) => setStudentNIN(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Status:</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="Present">Present</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Late">Late</option>
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Class:</label>
-                <input
-                  type="text"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Subject:</label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Add Attendance
+              <button
+                onClick={() => {
+                  setShowStudents(!showStudents);
+                  setShowSearch(!showSearch);
+                }}
+                className="flex items-center bg-green-700 hover:bg-green-800 text-white px-6 py-2.5 rounded-lg transition-colors"
+              >
+                <FaPlus className="mr-2" />
+                {showStudents ? 'Close Student List' : 'Show Student List'}
               </button>
-            </form>
+            </div>
+
             {message && (
-              <p className={`mt-4 ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`mb-6 p-4 rounded-xl ${
+                message.includes('success') 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
+              }`}>
                 {message}
-              </p>
+              </div>
             )}
-          </div>
 
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Your Attendances</h3>
-            {attendances.length > 0 ? (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto min-w-max">
-                    <thead>
-                      <tr className="bg-green-800 text-white">
-                        <th className="px-4 py-2 text-left">Student NIN</th>
-                        <th className="px-4 py-2 text-left">Status</th>
-                        <th className="px-4 py-2 text-left">Class</th>
-                        <th className="px-4 py-2 text-left">Subject</th>
-                        <th className="px-4 py-2 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentAttendances.map((attendance) => (
-                        <tr key={attendance.id} className="border-b hover:bg-gray-100">
-                          <td className="px-4 py-2">{attendance.student_nin}</td>
-                          <td className="px-4 py-2">{attendance.status}</td>
-                          <td className="px-4 py-2">{attendance.class}</td>
-                          <td className="px-4 py-2">{attendance.subject}</td>
-                          <td className="px-4 py-2">
-                            <button
-                              onClick={() => handleDelete(attendance.id)}
-                              className="text-red-500 hover:text-red-700"
-                              disabled={isDeleting}
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {showSearch && (
+              <div className="mb-6 relative bg-white rounded-xl shadow-sm p-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-700"
+                  />
+                  <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
                 </div>
+              </div>
+            )}
 
-                <div className="flex justify-center mt-6">
-                  {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }, (_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => paginate(i + 1)}
-                      className={`mx-1 px-4 py-2 rounded ${
-                        currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
+            {showStudents && (
+              <div className="mb-6 bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Student Directory</h3>
+                <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                  {filteredStudents.map((student) => (
+                    <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div>
+                        <h4 className="font-medium text-gray-800">{student.name}</h4>
+                        <p className="text-sm text-gray-500">{student.email}</p>
+                      </div>
+                      <button
+                        onClick={() => setStudentNIN(student.nin)}
+                        className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm transition-colors"
+                      >
+                        Select
+                      </button>
+                    </div>
                   ))}
                 </div>
-              </>
-            ) : (
-              <p className="text-center py-8 text-gray-500">No attendance records found.</p>
+              </div>
             )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-6">New Attendance Record</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Student NIN</label>
+                    <input
+                      value={studentNIN}
+                      onChange={(e) => setStudentNIN(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                    >
+                      <option value="Present">Present</option>
+                      <option value="Absent">Absent</option>
+                      <option value="Late">Late</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                      <input
+                        value={className}
+                        onChange={(e) => setClassName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                      <input
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-green-700 hover:bg-green-800 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Submit Attendance
+                  </button>
+                </form>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-6">Attendance History</h2>
+                <div className="space-y-4">
+                  {currentAttendances.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      No attendance records found
+                    </div>
+                  ) : (
+                    currentAttendances.map((attendance) => (
+                      <div key={attendance.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg group hover:bg-white transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium text-gray-800">{attendance.student_nin}</span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              attendance.status === 'Present' 
+                                ? 'bg-green-100 text-green-800' 
+                                : attendance.status === 'Absent'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {attendance.status}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {attendance.class} • {attendance.subject}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(attendance.id)}
+                          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                          disabled={isDeleting}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {attendances.length > attendancesPerPage && (
+                  <div className="mt-6 flex justify-center">
+                    <nav className="inline-flex space-x-1">
+                      {Array.from({ length: Math.ceil(attendances.length / attendancesPerPage) }).map(
+                        (_, index) => (
+                          <button
+                            key={index + 1}
+                            onClick={() => paginate(index + 1)}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              currentPage === index + 1
+                                ? 'bg-green-700 text-white'
+                                : 'bg-white text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        )
+                      )}
+                    </nav>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </main>
       </div>
