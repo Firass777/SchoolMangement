@@ -328,163 +328,182 @@ const GradesForm = () => {
           </nav>
         </aside>
 
-        <main className="flex-1 p-6 overflow-auto min-h-screen">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Add Grade</h2>
-            <p className="text-gray-600">Enter the grade details below.</p>
-          </div>
-
-          <div className="mb-6 flex justify-between items-center">
-            {showSearch && (
-              <div className="flex items-center bg-white p-4 rounded-md shadow-md">
-                <input
-                  type="text"
-                  className="ml-4 w-full p-2 border rounded-md"
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        <main className="flex-1 p-8 overflow-auto min-h-screen">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Grade Management</h1>
+                <p className="text-gray-500 mt-2">Record and manage student academic performance</p>
               </div>
-            )}
-
-            <button
-              onClick={() => {
-                setShowStudents(!showStudents);
-                setShowSearch(!showSearch);
-              }}
-              className="py-2 px-4 ml-4 bg-green-800 text-white rounded hover:bg-green-700"
-            >
-              {showStudents ? 'Hide Students' : 'Show Students'}
-            </button>
-          </div>
-
-          {showStudents && (
-            <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Student</h3>
-              <ul className="space-y-4 max-h-64 overflow-y-auto">
-                {filteredStudents.map((student) => (
-                  <li key={student.id} className="flex justify-between items-center border-b py-2">
-                    <span>{student.name} ({student.email})</span>
-                    <button
-                      onClick={() => setStudentNIN(student.nin)}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Select
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="bg-white shadow-lg p-6 rounded-lg mb-6">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700">Student NIN:</label>
-                <input
-                  type="text"
-                  value={studentNIN}
-                  onChange={(e) => setStudentNIN(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Subject:</label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Grade:</label>
-                <input
-                  type="text"
-                  value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">Class:</label>
-                <input
-                  type="text"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Add Grade
+              <button
+                onClick={() => {
+                  setShowStudents(!showStudents);
+                  setShowSearch(!showSearch);
+                }}
+                className="flex items-center bg-green-700 hover:bg-green-800 text-white px-6 py-2.5 rounded-lg transition-colors"
+              >
+                <FaPlus className="mr-2" />
+                {showStudents ? 'Close Student List' : 'Show Student List'}
               </button>
-            </form>
+            </div>
+
             {message && (
-              <p className={`mt-4 ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`mb-6 p-4 rounded-xl ${
+                message.includes('success') 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
+              }`}>
                 {message}
-              </p>
-            )}
-          </div>
-
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Grades List</h3>
-            {currentGrades.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto min-w-max">
-                  <thead>
-                    <tr className="bg-green-800 text-white">
-                      <th className="px-4 py-2 text-left">Student NIN</th>
-                      <th className="px-4 py-2 text-left">Subject</th>
-                      <th className="px-4 py-2 text-left">Grade</th>
-                      <th className="px-4 py-2 text-left">Class</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentGrades.map((grade) => (
-                      <tr key={grade.id} className="border-b hover:bg-gray-100">
-                        <td className="px-4 py-2">{grade.student_nin}</td>
-                        <td className="px-4 py-2">{grade.subject}</td>
-                        <td className="px-4 py-2">{grade.grade}</td>
-                        <td className="px-4 py-2">{grade.class}</td>
-                        <td className="px-4 py-2">
-                          <button
-                            onClick={() => handleDelete(grade.id)}
-                            className="text-red-500 hover:text-red-700"
-                            disabled={isDeleting}
-                          >
-                            <FaTrash />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
-            ) : (
-              <p className="text-center py-8 text-gray-500">No grade records found.</p>
             )}
 
-            <div className="flex justify-center mt-6">
-              {Array.from({ length: Math.ceil(grades.length / gradesPerPage) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`mx-1 px-4 py-2 rounded ${
-                    currentPage === i + 1 ? 'bg-green-800 text-white' : 'bg-gray-200'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+            {showSearch && (
+              <div className="mb-6 relative bg-white rounded-xl shadow-sm p-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-700"
+                  />
+                  <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
+                </div>
+              </div>
+            )}
+
+            {showStudents && (
+              <div className="mb-6 bg-white rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Student Directory</h3>
+                <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                  {filteredStudents.map((student) => (
+                    <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div>
+                        <h4 className="font-medium text-gray-800">{student.name}</h4>
+                        <p className="text-sm text-gray-500">{student.email}</p>
+                      </div>
+                      <button
+                        onClick={() => setStudentNIN(student.nin)}
+                        className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm transition-colors"
+                      >
+                        Select
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-6">New Grade Entry</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Student NIN</label>
+                    <input
+                      value={studentNIN}
+                      onChange={(e) => setStudentNIN(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                      <input
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Grade</label>
+                      <input
+                        value={grade}
+                        onChange={(e) => setGrade(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                    <input
+                      value={className}
+                      onChange={(e) => setClassName(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-700 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-green-700 hover:bg-green-800 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Submit Grade
+                  </button>
+                </form>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-6">Grade Records</h2>
+                <div className="space-y-4">
+                  {currentGrades.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      No grade records found
+                    </div>
+                  ) : (
+                    currentGrades.map((grade) => (
+                      <div key={grade.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg group hover:bg-white transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium text-gray-800">{grade.student_nin}</span>
+                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                              {grade.class}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {grade.subject} • Grade: {grade.grade}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(grade.id)}
+                          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                          disabled={isDeleting}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {grades.length > gradesPerPage && (
+                  <div className="mt-6 flex justify-center">
+                    <nav className="inline-flex space-x-1">
+                      {Array.from({ length: Math.ceil(grades.length / gradesPerPage) }).map(
+                        (_, index) => (
+                          <button
+                            key={index + 1}
+                            onClick={() => paginate(index + 1)}
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              currentPage === index + 1
+                                ? 'bg-green-700 text-white'
+                                : 'bg-white text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        )
+                      )}
+                    </nav>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </main>
