@@ -237,12 +237,18 @@ const AEmails = () => {
                 )}
               </Link>
             </li>
-            <li className="px-4 py-3 hover:bg-red-600 flex justify-center lg:justify-start">
-              <Link to="/" className="flex items-center space-x-2">
-                <FaSignOutAlt className="text-xl" />
-                <span className="hidden lg:block">Logout</span>
-              </Link>
-            </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+                <Link
+                  to="/"
+                  className="flex items-center space-x-2"
+                  onClick={() => {
+                    localStorage.clear(); 
+                  }}
+                >
+                  <FaSignOutAlt className="text-xl" />
+                  <span className="hidden sm:block">Logout</span>
+                </Link>
+              </li>
           </ul>
         </nav>
       </aside>
