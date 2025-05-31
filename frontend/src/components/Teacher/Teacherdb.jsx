@@ -175,13 +175,13 @@ function Teacherdb() {
       const statsRes = await Promise.all([
         axios.get(`http://127.0.0.1:8000/api/attendance/students-count/${user.nin}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }),
+        }).catch(() => ({ data: { count: 0 } })),
         axios.get(`http://127.0.0.1:8000/api/attendance/rate/${user.nin}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }),
+        }).catch(() => ({ data: { attendance_rate: 0 } })),
         axios.get(`http://127.0.0.1:8000/api/grades/average/${user.nin}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }),
+        }).catch(() => ({ data: { average_grade: 0 } })),
       ]);
 
       const [studentsData, attendanceData, gradesData] = statsRes.map(res => res.data);
@@ -192,105 +192,50 @@ function Teacherdb() {
         grades: gradesData.average_grade || 0
       });
 
-      try {
-        const attendanceRes = await axios.get(`http://127.0.0.1:8000/api/attendance/last-7-days/${user.nin}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const attendanceChart = attendanceRes.data;
-        
-        setBarData({
-          labels: attendanceChart.labels || ['No data'],
-          datasets: [{
-            label: "Student Attendance",
-            backgroundColor: "#4F46E5",
-            borderColor: "#4F46E5",
-            borderWidth: 1,
-            data: attendanceChart.data || [0]
-          }]
-        });
-      } catch (err) {
-        console.error("Error fetching attendance chart:", err);
-        setBarData({
-          labels: ['No data'],
-          datasets: [{
-            label: "Student Attendance",
-            backgroundColor: "#4F46E5",
-            borderColor: "#4F46E5",
-            borderWidth: 1,
-            data: [0]
-          }]
-        });
-      }
+      const attendanceChartRes = await axios.get(`http://127.0.0.1:8000/api/attendance/last-7-days/${user.nin}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => ({ data: { labels: ['No data'], data: [0] } }));
+      
+      setBarData({
+        labels: attendanceChartRes.data.labels || ['No data'],
+        datasets: [{
+          label: "Student Attendance",
+          backgroundColor: "#4F46E5",
+          borderColor: "#4F46E5",
+          borderWidth: 1,
+          data: attendanceChartRes.data.data || [0]
+        }]
+      });
 
-      try {
-        const gradesRes = await axios.get(`http://127.0.0.1:8000/api/grades/last-7-days/${user.nin}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const gradesChart = gradesRes.data;
-        
-        setLineData({
-          labels: gradesChart.labels || ['No data'],
-          datasets: [{
-            label: "Class Performance",
-            backgroundColor: "#10B981",
-            borderColor: "#10B981",
-            borderWidth: 2,
-            data: gradesChart.data || [0]
-          }]
-        });
-      } catch (err) {
-        console.error("Error fetching grades chart:", err);
-        setLineData({
-          labels: ['No data'],
-          datasets: [{
-            label: "Class Performance",
-            backgroundColor: "#10B981",
-            borderColor: "#10B981",
-            borderWidth: 2,
-            data: [0]
-          }]
-        });
-      }
+      const gradesChartRes = await axios.get(`http://127.0.0.1:8000/api/grades/last-7-days/${user.nin}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => ({ data: { labels: ['No data'], data: [0] } }));
+      
+      setLineData({
+        labels: gradesChartRes.data.labels || ['No data'],
+        datasets: [{
+          label: "Class Performance",
+          backgroundColor: "#10B981",
+          borderColor: "#10B981",
+          borderWidth: 2,
+          data: gradesChartRes.data.data || [0]
+        }]
+      });
 
-      try {
-        const recentRes = await axios.get(`http://127.0.0.1:8000/api/attendance/teacher/${user.nin}?limit=3`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setRecentAttendance(recentRes.data.attendances || []);
-      } catch (err) {
-        console.error("Error fetching recent attendance:", err);
-        setRecentAttendance([]);
-      }
+      const recentRes = await axios.get(`http://127.0.0.1:8000/api/attendance/teacher/${user.nin}?limit=3`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => ({ data: { attendances: [] } }));
+      setRecentAttendance(recentRes.data.attendances || []);
 
-      try {
-        const timetableRes = await axios.get(`http://127.0.0.1:8000/api/timetable/next-class/${user.email}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setNextClass(timetableRes.data.nextClass || { 
-          subject: 'No upcoming classes', 
-          day: '', 
-          time: '', 
-          location: '' 
-        });
-      } catch (err) {
-        console.error("Error fetching next class:", err);
-        setNextClass({ 
-          subject: 'No upcoming classes', 
-          day: '', 
-          time: '', 
-          location: '' 
-        });
-      }
+      const timetableRes = await axios.get(`http://127.0.0.1:8000/api/timetable/next-class/${user.email}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => ({ data: { nextClass: { subject: 'No upcoming classes' } } }));
+      setNextClass(timetableRes.data.nextClass || { subject: 'No upcoming classes' });
 
-      try {
-        const eventsRes = await axios.get(`http://127.0.0.1:8000/api/events/latest-for-teacher`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setLatestEvents(eventsRes.data.events || []);
-      } catch (err) {
-        console.error("Error fetching latest events:", err);
-        setLatestEvents([]);
-      }
+      const eventsRes = await axios.get(`http://127.0.0.1:8000/api/events/latest-for-teacher`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).catch(() => ({ data: { events: [] } }));
+      setLatestEvents(eventsRes.data.events || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(error.message);
@@ -303,23 +248,6 @@ function Teacherdb() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="bg-red-100 p-4 rounded-lg">
-          <h2 className="text-red-600 font-bold">Error</h2>
-          <p className="text-red-600">{error}</p>
-          <button
-            onClick={fetchData}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Retry
-          </button>
         </div>
       </div>
     );
