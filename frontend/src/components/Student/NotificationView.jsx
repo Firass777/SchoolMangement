@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaMoneyCheck, FaBook, FaFileInvoice } from 'react-icons/fa';
+import { FaUserGraduate, FaCalendarAlt, FaChartLine, FaBell, FaSignOutAlt, FaEnvelope, FaSearch, FaClock, FaIdCard, FaMoneyCheck, FaBook, FaFileInvoice, FaRegCheckCircle } from 'react-icons/fa';
 import axios from 'axios';
 
 const SNotification = () => {
@@ -198,184 +198,202 @@ const SNotification = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1">
-      <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
-        <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
-          <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
-          <h1 className="text-xl font-bold block sm:hidden">SD</h1>
-        </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/studentdb" className="flex items-center space-x-2">
-                <FaUserGraduate className="text-xl" />
-                <span className="hidden sm:block">Dashboard</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/spayment" className="flex items-center space-x-2">
-                <FaMoneyCheck className="text-xl" />
-                <span className="hidden sm:block">Payment</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/stimetable" className="flex items-center space-x-2">
-                <FaClock className="text-xl" />
-                <span className="hidden sm:block">Time-Table</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/gradesview" className="flex items-center space-x-2">
-                <FaChartLine className="text-xl" />
-                <span className="hidden sm:block">Grades</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/attendanceview" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Attendance</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/courseview" className="flex items-center space-x-2">
-                <FaBook className="text-xl" />
-                <span className="hidden sm:block">Courses</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/studenteventview" className="flex items-center space-x-2">
-                <FaCalendarAlt className="text-xl" />
-                <span className="hidden sm:block">Events</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
-              <Link to="/semails" className="flex items-center space-x-2">
-                <FaEnvelope className="text-xl" />
-                <span className="hidden sm:block">Emails</span>
-                {emailCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {emailCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/documents" className="flex items-center space-x-2">
-                <FaFileInvoice className="text-xl" />
-                <span className="hidden sm:block">Documents</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
-              <Link to="/notificationview" className="flex items-center space-x-2">
-                <FaBell className="text-xl" />
-                <span className="hidden sm:block">Notifications</span>
-                {notificationCount > 0 && (
-                  <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
-              <Link to="/seditprofile" className="flex items-center space-x-2">
-                <FaIdCard className="text-xl" />
-                <span className="hidden sm:block">Profile</span>
-              </Link>
-            </li>
-            <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
-              <Link
-                to="/"
-                className="flex items-center space-x-2"
-                onClick={() => {
-                  localStorage.clear();
-                }}
-              >
-                <FaSignOutAlt className="text-xl" />
-                <span className="hidden sm:block">Logout</span>
-              </Link>
-            </li>
-
-          </ul>
-        </nav>
-      </aside>
-
-        <main className="flex-1 p-8 overflow-auto min-h-screen bg-gray-50">
-          <div className="mb-6">
-            <h2 className="text-4xl font-bold text-gray-900">Notifications</h2>
-            <p className="text-lg text-gray-600 mt-2">Stay updated with the latest alerts.</p>
+        <aside className="w-16 sm:w-64 bg-purple-800 text-white flex flex-col transition-all duration-300">
+          <div className="p-4 sm:p-6 flex justify-center sm:justify-start">
+            <h1 className="text-xl sm:text-2xl font-bold hidden sm:block">Student Dashboard</h1>
+            <h1 className="text-xl font-bold block sm:hidden">SD</h1>
           </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-400 text-red-700 rounded-lg shadow">
-              {error}
-            </div>
-          )}
-
-          <div className="mb-6">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search notifications..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {currentNotifications.length === 0 ? (
-              <div className="p-6 bg-white shadow-md rounded-lg text-gray-500 text-center">
-                No notifications found.
-              </div>
-            ) : (
-              currentNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-6 bg-white shadow-md rounded-lg flex justify-between items-center border-l-4 ${
-                    !notification.read_at 
-                      ? 'border-purple-500 bg-purple-50' 
-                      : 'border-gray-300'
-                  } hover:shadow-lg transition-shadow`}
+          <nav className="mt-6">
+            <ul>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/studentdb" className="flex items-center space-x-2">
+                  <FaUserGraduate className="text-xl" />
+                  <span className="hidden sm:block">Dashboard</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/spayment" className="flex items-center space-x-2">
+                  <FaMoneyCheck className="text-xl" />
+                  <span className="hidden sm:block">Payment</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/stimetable" className="flex items-center space-x-2">
+                  <FaClock className="text-xl" />
+                  <span className="hidden sm:block">Time-Table</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/gradesview" className="flex items-center space-x-2">
+                  <FaChartLine className="text-xl" />
+                  <span className="hidden sm:block">Grades</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/attendanceview" className="flex items-center space-x-2">
+                  <FaCalendarAlt className="text-xl" />
+                  <span className="hidden sm:block">Attendance</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/courseview" className="flex items-center space-x-2">
+                  <FaBook className="text-xl" />
+                  <span className="hidden sm:block">Courses</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/studenteventview" className="flex items-center space-x-2">
+                  <FaCalendarAlt className="text-xl" />
+                  <span className="hidden sm:block">Events</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+                <Link to="/semails" className="flex items-center space-x-2">
+                  <FaEnvelope className="text-xl" />
+                  <span className="hidden sm:block">Emails</span>
+                  {emailCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {emailCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/documents" className="flex items-center space-x-2">
+                  <FaFileInvoice className="text-xl" />
+                  <span className="hidden sm:block">Documents</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 relative flex justify-center sm:justify-start">
+                <Link to="/notificationview" className="flex items-center space-x-2">
+                  <FaBell className="text-xl" />
+                  <span className="hidden sm:block">Notifications</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-purple-700 flex justify-center sm:justify-start">
+                <Link to="/seditprofile" className="flex items-center space-x-2">
+                  <FaIdCard className="text-xl" />
+                  <span className="hidden sm:block">Profile</span>
+                </Link>
+              </li>
+              <li className="px-3 sm:px-6 py-3 hover:bg-red-600 flex justify-center sm:justify-start">
+                <Link
+                  to="/"
+                  className="flex items-center space-x-2"
+                  onClick={() => {
+                    localStorage.clear();
+                  }}
                 >
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-800">
-                      {notification.title}
-                      {!notification.read_at && (
-                        <span className="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded-full">
-                          New
-                        </span>
-                      )}
-                    </h3>
-                    <p className="mt-2 text-gray-600">{notification.description}</p>
-                  </div>
-                  <span className="text-sm text-gray-500 ml-6 italic">
-                    {new Date(notification.created_at).toLocaleString()}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+                  <FaSignOutAlt className="text-xl" />
+                  <span className="hidden sm:block">Logout</span>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </aside>
 
-          {filteredNotifications.length > notificationsPerPage && (
-            <div className="mt-8 flex justify-center space-x-2">
-              {Array.from({ length: Math.ceil(filteredNotifications.length / notificationsPerPage) }).map(
-                (_, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => paginate(index + 1)}
-                    className={`px-4 py-2 rounded-lg ${
-                      currentPage === index + 1
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
+        <main className="flex-1 p-8 overflow-auto min-h-screen">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Notifications Center</h1>
+                <p className="text-gray-500 mt-2">Manage and review your alerts</p>
+              </div>
+              <div className="flex gap-4 w-full md:w-auto">
+                <button
+                  onClick={markAsRead}
+                  className="flex items-center bg-purple-700 hover:bg-purple-800 text-white px-6 py-2.5 rounded-lg transition-colors"
+                >
+                  <FaRegCheckCircle className="mr-2" />
+                  Mark All Read
+                </button>
+                <div className="relative w-full md:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search notifications..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-700"
+                  />
+                  <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-400 text-red-700 rounded-xl shadow-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+              {currentNotifications.length === 0 ? (
+                <div className="col-span-full py-12 text-center bg-white rounded-xl shadow-sm">
+                  <div className="text-gray-300 text-6xl mb-3">
+                    <FaBell className="inline-block" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-500">No notifications found</h3>
+                  <p className="text-gray-400 mt-1">All caught up! Check back later.</p>
+                </div>
+              ) : (
+                currentNotifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-6 bg-white rounded-xl shadow-sm flex items-start justify-between transition-all ${
+                      !notification.read_at
+                        ? 'border-l-4 border-purple-600 hover:shadow-md'
+                        : 'opacity-90 hover:opacity-100'
                     }`}
                   >
-                    {index + 1}
-                  </button>
-                )
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-medium text-gray-800">
+                          {notification.title}
+                        </h3>
+                        {!notification.read_at && (
+                          <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                            Unread
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600">{notification.description}</p>
+                      <div className="mt-3 flex items-center text-sm text-gray-400">
+                        <FaClock className="mr-2" />
+                        {new Date(notification.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
-          )}
+
+            {filteredNotifications.length > notificationsPerPage && (
+              <div className="mt-8 flex justify-center">
+                <nav className="inline-flex space-x-1">
+                  {Array.from({ length: Math.ceil(filteredNotifications.length / notificationsPerPage) }).map(
+                    (_, index) => (
+                      <button
+                        key={index + 1}
+                        onClick={() => paginate(index + 1)}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          currentPage === index + 1
+                            ? 'bg-purple-700 text-white'
+                            : 'bg-white text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {index + 1}
+                      </button>
+                    )
+                  )}
+                </nav>
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </div>
