@@ -371,7 +371,7 @@ const SEmails = () => {
                 <div
                   key={email.id}
                   className={`p-3 bg-white rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow ${
-                    selectedEmail?.id === attractedEmail.id ? 'border-2 border-purple-600' : ''
+                    selectedEmail?.id === email.id ? 'border-2 border-purple-600' : ''
                   }`}
                   onClick={() => setSelectedEmail(email)}
                 >
