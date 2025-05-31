@@ -9,7 +9,7 @@ const Register = () => {
     email: "",
     nin: "",
     password: "",
-    role: "student",
+    role: "teacher",
     class: "",
     children_count: 1,
     children_nin: []

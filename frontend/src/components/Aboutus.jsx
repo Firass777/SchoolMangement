@@ -168,16 +168,16 @@ const AboutUs = () => {
             </p>
             <div className="flex justify-center gap-6">
               <a
-                href="/apply"
+                href="/register"
                 className="px-8 py-4 bg-white text-blue-900 text-lg font-semibold rounded-full transition-all hover:bg-gray-100 hover:scale-105"
               >
-                Apply Now
+                Register
               </a>
               <a
-                href="/contact"
+                href="/login"
                 className="px-8 py-4 border-2 border-white text-white text-lg rounded-full hover:bg-white/10 transition-all"
               >
-                Contact Us
+                Login
               </a>
             </div>
           </div>
