@@ -21,7 +21,8 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaInfoCircle,
-  FaTimes
+  FaTimes,
+  FaUserTie
 } from "react-icons/fa";
 
 const EventForm = () => {
@@ -221,7 +222,13 @@ const EventForm = () => {
                 <FaClock className="text-xl" />
                 <span className="hidden sm:block">Time-Table</span>
               </Link>
-            </li>                        
+            </li>    
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
+              <Link to="/admins" className="flex items-center space-x-2">
+                <FaUserTie className="text-xl" />
+                <span className="hidden sm:block">Admins</span>
+              </Link>
+            </li>                              
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate className="text-xl" />

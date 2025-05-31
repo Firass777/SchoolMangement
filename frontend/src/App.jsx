@@ -10,6 +10,7 @@ import Register from './components/Register';
 import Access from "./components/Acess";
 
 import Admindb from './components/Admin/Admindb';
+import Admin from "./components/Admin/Admin";
 import Student from './components/Admin/Student';  
 import Teacher from './components/Admin/Teacher';
 import Guardian from "./components/Admin/Guardian";
@@ -138,6 +139,7 @@ function App() {
           <Route path="/access" element={<Access />} />
 
           <Route path="/admindb" element={<Admindb />} />
+          <Route path="/admins" element={<Admin />} /> 
           <Route path="/students" element={<Student />} /> 
           <Route path="/teachers" element={<Teacher />} /> 
           <Route path="/parent" element={<Guardian />} /> 

@@ -184,7 +184,7 @@ const Register = () => {
                   className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm text-white rounded-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                   required
                 >
-                  {["student", "teacher", "admin", "parent"].map((role) => (
+                  {["student", "teacher", "parent"].map((role) => (
                     <option key={role} value={role} className="bg-gray-800 text-white">
                       {role.charAt(0).toUpperCase() + role.slice(1)}
                     </option>

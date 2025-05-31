@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaPaperPlane, FaUserFriends, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell, FaSearch, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaChartBar,FaUserTie, FaPaperPlane, FaUserFriends, FaEnvelope, FaSchool, FaSignOutAlt, FaClipboardList, FaBell, FaSearch, FaClock, FaFileInvoice, FaFile } from 'react-icons/fa';
 
 const AEmails = () => {
   const navigate = useNavigate();
@@ -164,6 +164,12 @@ const AEmails = () => {
               <Link to="/admindb" className="flex items-center space-x-2">
                 <FaSchool className="text-xl" />
                 <span className="hidden lg:block">Dashboard</span>
+              </Link>
+            </li>
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
+              <Link to="/admins" className="flex items-center space-x-2">
+                <FaUserTie className="text-xl" />
+                <span className="hidden sm:block">Admins</span>
               </Link>
             </li>
             <li className="px-4 py-3 hover:bg-blue-700 flex justify-center lg:justify-start">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar, FaClipboardList, FaBell, FaUserFriends, FaEnvelope, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
+import { FaSchool, FaUserGraduate, FaChalkboardTeacher, FaChartBar,FaUserTie, FaClipboardList, FaBell, FaUserFriends, FaEnvelope, FaSignOutAlt, FaDownload, FaClock, FaFileInvoice, FaFile, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaMoneyBillWave } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bar, Pie, Doughnut, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -552,7 +552,13 @@ const AdminReports = () => {
                 <FaClock className="text-xl" />
                 <span className="hidden sm:block">Time-Table</span>
               </Link>
-            </li>                        
+            </li>  
+            <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
+              <Link to="/admins" className="flex items-center space-x-2">
+                <FaUserTie className="text-xl" />
+                <span className="hidden sm:block">Admins</span>
+              </Link>
+            </li>                      
             <li className="px-3 sm:px-6 py-3 hover:bg-blue-700 flex justify-center sm:justify-start">
               <Link to="/students" className="flex items-center space-x-2">
                 <FaUserGraduate className="text-xl" />

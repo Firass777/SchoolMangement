@@ -7,6 +7,7 @@ import {
   FaSchool,
   FaChalkboardTeacher,
   FaChartBar,
+  FaUserFriends,
   FaEnvelope,
   FaSignOutAlt,
   FaBell,
@@ -19,13 +20,18 @@ import {
   FaFileInvoice,
   FaFile,
   FaFileExcel,
-  FaUserFriends,
-  FaUserTie
+  FaUsers,
+  FaArrowLeft,
+  FaArrowRight,
+  FaInfoCircle,
+  FaTimes,
+  FaUserShield,
+  FaUserTie,
 } from "react-icons/fa";
 
-function Guardian() {
+function Admin() {
   const navigate = useNavigate();
-  const [guardianData, setGuardianData] = useState([]);
+  const [adminData, setAdminData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
@@ -36,42 +42,40 @@ function Guardian() {
     email: "",
     nin: "",
     password: "",
-    role: "parent",
-    children_nin: [],
+    role: "admin",
   });
-  const [childrenCount, setChildrenCount] = useState(1);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const guardiansPerPage = 10;
+  const adminsPerPage = 10;
   const [emailCount, setEmailCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  // Role verification and initialization
   useEffect(() => {
     const verifyUserAndInitialize = async () => {
       const token = localStorage.getItem("token");
       const userData = JSON.parse(localStorage.getItem("user"));
       const localRole = userData?.role;
 
-      // Immediate redirect if no token or local role
       if (!token || !localRole) {
-        localStorage.removeItem("user"); // Clear localStorage user data 
+        localStorage.removeItem("user");
         navigate("/access", { replace: true });
         return;
       }
 
-      // Check if role is already verified in session storage
       const cachedRole = sessionStorage.getItem("verifiedRole");
       if (cachedRole === "admin") {
-        initializeGuardians();
+        setIsVerifying(false);
+        fetchAdmins();
+        fetchEmailCount();
         return;
       }
 
       try {
         const response = await axios.get("http://127.0.0.1:8000/api/user-role", {
           params: { token },
-          timeout: 3000, 
+          timeout: 3000,
         });
 
         if (
@@ -79,26 +83,21 @@ function Guardian() {
           response.data.role === "admin" &&
           response.data.role === localRole
         ) {
-          sessionStorage.setItem("verifiedRole", "admin"); 
-          initializeGuardians();
+          sessionStorage.setItem("verifiedRole", "admin");
+          setIsVerifying(false);
+          fetchAdmins();
+          fetchEmailCount();
         } else {
-          localStorage.removeItem("user"); // Clear localStorage user data 
-          sessionStorage.removeItem("verifiedRole"); 
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("verifiedRole");
           navigate("/access", { replace: true });
         }
       } catch (error) {
         console.error("Error verifying role:", error);
-        localStorage.removeItem("user"); // Clear localStorage user data 
-        sessionStorage.removeItem("verifiedRole"); 
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("verifiedRole");
         navigate("/access", { replace: true });
       }
-    };
-
-    const initializeGuardians = () => {
-      fetchGuardians();
-      fetchEmailCount();
-      const emailInterval = setInterval(fetchEmailCount, 30000);
-      return () => clearInterval(emailInterval);
     };
 
     verifyUserAndInitialize();
@@ -112,22 +111,22 @@ function Guardian() {
 
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/emails/unread-count/${email}`
+        `http://127.0.0.1:8000/api/emails/unread-count/${email}`
       );
       if (response.data) {
         setEmailCount(response.data.count);
-        localStorage.setItem('emailCount', response.data.count.toString());
+        localStorage.setItem("emailCount", response.data.count.toString());
       }
     } catch (error) {
       console.error("Error fetching email count:", error);
     }
   };
 
-  const fetchGuardians = async () => {
+  const fetchAdmins = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/users");
-      const guardians = response.data.filter((user) => user.role === "parent");
-      setGuardianData(guardians);
+      const response = await axios.get("http://127.0.0.1:8000/api/users");
+      const admins = response.data.filter((user) => user.role === "admin");
+      setAdminData(admins);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -140,27 +139,15 @@ function Guardian() {
     setSuccess("");
 
     try {
-      const filteredChildrenNin = formData.children_nin.filter((nin) => nin.trim() !== "");
-      const response = await axios.post("http://127.0.0.1:8000/api/register", {
-        ...formData,
-        children_nin: filteredChildrenNin,
-      });
-      setSuccess("Parent added successfully!");
+      const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
+      setSuccess("Admin added successfully!");
       setShowAddForm(false);
-      setFormData({
-        name: "",
-        email: "",
-        nin: "",
-        password: "",
-        role: "parent",
-        children_nin: [],
-      });
-      setChildrenCount(1);
-      fetchGuardians();
+      setFormData({ name: "", email: "", nin: "", password: "", role: "admin" });
+      fetchAdmins();
     } catch (err) {
       setLoading(false);
       if (err.response && err.response.data.errors) {
-        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to add parent.");
+        setError(err.response.data.errors.email || "Failed to add admin.");
       } else {
         setError("Something went wrong.");
       }
@@ -176,32 +163,19 @@ function Guardian() {
     setSuccess("");
 
     try {
-      const filteredChildrenNin = formData.children_nin.filter((nin) => nin.trim() !== "");
-      const dataToSend = {
-        ...formData,
-        children_nin: filteredChildrenNin,
-      };
+      const dataToSend = { ...formData };
       if (!dataToSend.password) {
         delete dataToSend.password;
       }
 
       const response = await axios.put(`http://127.0.0.1:8000/api/users/${formData.id}`, dataToSend);
-      setSuccess("Parent updated successfully!");
+      setSuccess("Admin updated successfully!");
       setShowUpdateForm(false);
-      setFormData({
-        id: "",
-        name: "",
-        email: "",
-        nin: "",
-        password: "",
-        role: "parent",
-        children_nin: [],
-      });
-      setChildrenCount(1);
-      fetchGuardians();
+      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "admin" });
+      fetchAdmins();
     } catch (err) {
       if (err.response && err.response.data.errors) {
-        setError(err.response.data.errors.email?.[0] || err.response.data.errors.nin?.[0] || "Failed to update parent.");
+        setError(err.response.data.errors.email || "Failed to update admin.");
       } else {
         setError("Something went wrong.");
       }
@@ -218,20 +192,12 @@ function Guardian() {
 
     try {
       const response = await axios.delete(`http://127.0.0.1:8000/api/users/${formData.id}`);
-      setSuccess("Parent deleted successfully!");
+      setSuccess("Admin deleted successfully!");
       setShowDeleteForm(false);
-      setFormData({
-        id: "",
-        name: "",
-        email: "",
-        nin: "",
-        password: "",
-        role: "parent",
-        children_nin: [],
-      });
-      fetchGuardians();
+      setFormData({ id: "", name: "", email: "", nin: "", password: "", role: "admin" });
+      fetchAdmins();
     } catch (err) {
-      setError("Failed to delete parent.");
+      setError("Failed to delete admin.");
     } finally {
       setLoading(false);
     }
@@ -241,95 +207,68 @@ function Guardian() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleChildNinChange = (index, value) => {
-    const newChildrenNin = [...formData.children_nin];
-    newChildrenNin[index] = value;
-    setFormData({ ...formData, children_nin: newChildrenNin });
-  };
-
-  const addChildField = () => {
-    setChildrenCount(childrenCount + 1);
-    setFormData({ ...formData, children_nin: [...formData.children_nin, ""] });
-  };
-
-  const removeChildField = (index) => {
-    if (childrenCount > 1) {
-      const newChildrenNin = [...formData.children_nin];
-      newChildrenNin.splice(index, 1);
-      setChildrenCount(childrenCount - 1);
-      setFormData({ ...formData, children_nin: newChildrenNin });
-    }
-  };
-
-  const handleEditClick = (guardian) => {
-    if (showUpdateForm && formData.id === guardian.id) {
+  const handleEditClick = (admin) => {
+    if (showUpdateForm && formData.id === admin.id) {
       setShowUpdateForm(false);
     } else {
-      const childrenNin = guardian.children_nin
-        ? Array.isArray(guardian.children_nin)
-          ? guardian.children_nin
-          : JSON.parse(guardian.children_nin)
-        : [];
       setFormData({
-        id: guardian.id,
-        name: guardian.name,
-        email: guardian.email,
-        nin: guardian.nin,
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        nin: admin.nin,
         password: "",
-        role: guardian.role,
-        children_nin: childrenNin,
+        role: admin.role,
       });
-      setChildrenCount(childrenNin.length > 0 ? childrenNin.length : 1);
       setShowUpdateForm(true);
     }
   };
 
-  const handleDeleteClick = (guardian) => {
-    if (showDeleteForm && formData.id === guardian.id) {
+  const handleDeleteClick = (admin) => {
+    if (showDeleteForm && formData.id === admin.id) {
       setShowDeleteForm(false);
     } else {
       setFormData({
-        id: guardian.id,
-        name: guardian.name,
-        email: guardian.email,
-        nin: guardian.nin,
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        nin: admin.nin,
         password: "",
-        role: guardian.role,
-        children_nin: guardian.children_nin || [],
+        role: admin.role,
       });
       setShowDeleteForm(true);
     }
   };
 
-  const filteredGuardians = guardianData.filter(
-    (guardian) =>
-      guardian.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guardian.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guardian.id.toString().includes(searchTerm)
+  const filteredAdmins = adminData.filter(
+    (admin) =>
+      admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.id.toString().includes(searchTerm)
   );
 
-  const indexOfLastGuardian = currentPage * guardiansPerPage;
-  const indexOfFirstGuardian = indexOfLastGuardian - guardiansPerPage;
-  const currentGuardians = filteredGuardians.slice(indexOfFirstGuardian, indexOfLastGuardian);
+  const indexOfLastAdmin = currentPage * adminsPerPage;
+  const indexOfFirstAdmin = indexOfLastAdmin - adminsPerPage;
+  const currentAdmins = filteredAdmins.slice(indexOfFirstAdmin, indexOfLastAdmin);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredGuardians);
+    const worksheet = XLSX.utils.json_to_sheet(filteredAdmins);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Parents");
-    XLSX.writeFile(workbook, "Parents.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+    XLSX.writeFile(workbook, "Admins.xlsx");
   };
 
-  const formatChildrenNin = (childrenNin) => {
-    if (!childrenNin) return "None";
-    try {
-      const parsed = Array.isArray(childrenNin) ? childrenNin : JSON.parse(childrenNin);
-      return parsed.join(", ") || "None";
-    } catch {
-      return "Invalid data";
-    }
-  };
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 font-inter">
@@ -437,17 +376,17 @@ function Guardian() {
         <div className="mx-auto max-w-full sm:max-w-7xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Parent Management</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage parent records and information</p>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Admin Management</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage admin accounts and information</p>
             </div>
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
-                  placeholder="Search parents..."
+                  placeholder="Search admins..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full"
+                  className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm w-full"
                 />
                 <FaSearch className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
               </div>
@@ -455,7 +394,7 @@ function Guardian() {
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition w-full sm:w-auto justify-center"
               >
-                <FaPlus className="mr-2" /> Add Parent
+                <FaPlus className="mr-2" /> Add Admin
               </button>
               <button
                 onClick={exportToExcel}
@@ -468,7 +407,7 @@ function Guardian() {
 
           {showAddForm && (
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Add New Parent</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Add New Admin</h3>
               <form onSubmit={handleAddSubmit} className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -477,7 +416,7 @@ function Guardian() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -488,7 +427,7 @@ function Guardian() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -499,7 +438,7 @@ function Guardian() {
                     name="nin"
                     value={formData.nin}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -510,41 +449,9 @@ function Guardian() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Children NINs</label>
-                  {Array.from({ length: childrenCount }).map((_, index) => (
-                    <div key={index} className="flex mb-2 items-center">
-                      <input
-                        type="text"
-                        placeholder={`Child ${index + 1} NIN`}
-                        value={formData.children_nin[index] || ""}
-                        onChange={(e) => handleChildNinChange(index, e.target.value)}
-                        className="flex-1 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                      {index === childrenCount - 1 && (
-                        <button
-                          type="button"
-                          onClick={addChildField}
-                          className="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                        >
-                          +
-                        </button>
-                      )}
-                      {childrenCount > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeChildField(index)}
-                          className="ml-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                          -
-                        </button>
-                      )}
-                    </div>
-                  ))}
                 </div>
                 <div className="flex space-x-3">
                   <button
@@ -552,7 +459,7 @@ function Guardian() {
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                     disabled={loading}
                   >
-                    {loading ? "Adding..." : "Add Parent"}
+                    {loading ? "Adding..." : "Add Admin"}
                   </button>
                   <button
                     type="button"
@@ -570,7 +477,7 @@ function Guardian() {
 
           {showUpdateForm && (
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Update Parent</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Update Admin</h3>
               <form onSubmit={handleUpdateSubmit} className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -579,7 +486,7 @@ function Guardian() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -590,7 +497,7 @@ function Guardian() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -601,7 +508,7 @@ function Guardian() {
                     name="nin"
                     value={formData.nin}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                     required
                   />
                 </div>
@@ -612,40 +519,8 @@ function Guardian() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Children NINs</label>
-                  {Array.from({ length: childrenCount }).map((_, index) => (
-                    <div key={index} className="flex mb-2 items-center">
-                      <input
-                        type="text"
-                        placeholder={`Child ${index + 1} NIN`}
-                        value={formData.children_nin[index] || ""}
-                        onChange={(e) => handleChildNinChange(index, e.target.value)}
-                        className="flex-1 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                      {index === childrenCount - 1 && (
-                        <button
-                          type="button"
-                          onClick={addChildField}
-                          className="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                        >
-                          +
-                        </button>
-                      )}
-                      {childrenCount > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeChildField(index)}
-                          className="ml-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                          -
-                        </button>
-                      )}
-                    </div>
-                  ))}
                 </div>
                 <div className="flex space-x-3">
                   <button
@@ -653,7 +528,7 @@ function Guardian() {
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                     disabled={loading}
                   >
-                    {loading ? "Updating..." : "Update Parent"}
+                    {loading ? "Updating..." : "Update Admin"}
                   </button>
                   <button
                     type="button"
@@ -671,7 +546,7 @@ function Guardian() {
 
           {showDeleteForm && (
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Delete Parent</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Delete Admin</h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
                 Are you sure you want to delete <span className="font-medium">{formData.name}</span>?
               </p>
@@ -699,9 +574,9 @@ function Guardian() {
           )}
 
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Parent List</h3>
-            {filteredGuardians.length === 0 ? (
-              <p className="text-gray-500 text-xs sm:text-sm">No parents found.</p>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Admin List</h3>
+            {filteredAdmins.length === 0 ? (
+              <p className="text-gray-500 text-xs sm:text-sm">No admins found.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm">
@@ -711,27 +586,25 @@ function Guardian() {
                       <th className="p-2 sm:p-3 text-left font-medium">Name</th>
                       <th className="p-2 sm:p-3 text-left font-medium">Email</th>
                       <th className="p-2 sm:p-3 text-left font-medium">NIN</th>
-                      <th className="p-2 sm:p-3 text-left font-medium">Children NINs</th>
                       <th className="p-2 sm:p-3 text-left font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentGuardians.map((guardian) => (
-                      <tr key={guardian.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="p-2 sm:p-3 text-gray-800">{guardian.id}</td>
-                        <td className="p-2 sm:p-3 text-gray-800">{guardian.name}</td>
-                        <td className="p-2 sm:p-3 text-gray-800">{guardian.email}</td>
-                        <td className="p-2 sm:p-3 text-gray-800">{guardian.nin}</td>
-                        <td className="p-2 sm:p-3 text-gray-800">{formatChildrenNin(guardian.children_nin)}</td>
+                    {currentAdmins.map((admin) => (
+                      <tr key={admin.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="p-2 sm:p-3 text-gray-800">{admin.id}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{admin.name}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{admin.email}</td>
+                        <td className="p-2 sm:p-3 text-gray-800">{admin.nin}</td>
                         <td className="p-2 sm:p-3">
                           <button
-                            onClick={() => handleEditClick(guardian)}
+                            onClick={() => handleEditClick(admin)}
                             className="text-blue-600 hover:text-blue-800 mr-2 sm:mr-3"
                           >
                             <FaEdit />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(guardian)}
+                            onClick={() => handleDeleteClick(admin)}
                             className="text-red-600 hover:text-red-800"
                           >
                             <FaTrash />
@@ -745,9 +618,9 @@ function Guardian() {
             )}
           </div>
 
-          {filteredGuardians.length > guardiansPerPage && (
+          {filteredAdmins.length > adminsPerPage && (
             <div className="flex justify-center mt-6 flex-wrap gap-2">
-              {Array.from({ length: Math.ceil(filteredGuardians.length / guardiansPerPage) }).map((_, index) => (
+              {Array.from({ length: Math.ceil(filteredAdmins.length / adminsPerPage) }).map((_, index) => (
                 <button
                   key={index + 1}
                   onClick={() => paginate(index + 1)}
@@ -768,4 +641,4 @@ function Guardian() {
   );
 }
 
-export default Guardian;
+export default Admin;
