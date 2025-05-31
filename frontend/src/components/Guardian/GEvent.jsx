@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link , useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   FaUserGraduate, 
   FaCalendarAlt, 
@@ -11,7 +11,12 @@ import {
   FaEnvelope, 
   FaIdCard, 
   FaClock, 
-  FaMoneyCheck 
+  FaMoneyCheck,
+  FaArrowLeft,
+  FaArrowRight,
+  FaUsers,
+  FaInfoCircle,
+  FaTimes
 } from 'react-icons/fa';
 
 const GEvent = () => {
@@ -174,6 +179,19 @@ const GEvent = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  const getEventTypeColor = (type) => {
+    switch (type.toLowerCase()) {
+      case 'event':
+        return 'bg-blue-100 text-blue-800';
+      case 'training':
+        return 'bg-green-100 text-green-800';
+      case 'meeting':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   if (isVerifying) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -189,69 +207,153 @@ const GEvent = () => {
     <div className="flex h-screen bg-gray-100">
       <Sidebar notificationCount={notificationCount} emailCount={emailCount} />
       
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Events</h2>
+      <main className="flex-1 flex flex-col overflow-hidden p-6">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Event Management</h1>
+            <p className="text-gray-600">View school events</p>
+          </div>
+        </div>
 
-          <div className="mb-6">
-            <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
-              <FaSearch className="text-gray-500" />
+        {/* Search and Filter Section */}
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
               <input
                 type="text"
-                placeholder="Search events..."
+                placeholder="Search events by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full p-2 ml-2 outline-none"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <span>Showing {filteredEvents.length} events</span>
+            </div>
           </div>
+        </div>
 
-          {message && <p className="mt-4 text-red-600">{message}</p>}
-
-          <div className="space-y-6">
+        {/* Events List - Card Layout */}
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
             {currentEvents.map((event) => (
-              <div
-                key={event.id}
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              <div 
+                key={event.id} 
+                className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
                 onClick={() => toggleEventDescription(event.id)}
               >
-                <h3 className="text-2xl font-semibold text-orange-800 mb-2">{event.name}</h3>
-                <p className="text-gray-600 mb-1">
-                  <span className="font-medium">Type:</span> {event.type}
-                </p>
-                <p className="text-gray-600 mb-1">
-                  <span className="font-medium">Date:</span> {new Date(event.date).toLocaleDateString()}
-                </p>
-
-                {expandedEventId === event.id && (
-                  <p className="text-gray-600 mt-4">
-                    <span className="font-medium">Description:</span> {event.description}
+                <div className={`p-4 ${getEventTypeColor(event.type)}`}>
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-lg truncate">{event.name}</h3>
+                    <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
+                      {event.type}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center text-gray-600 mb-3">
+                    <FaCalendarAlt className="mr-2" />
+                    <span>{new Date(event.date).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      weekday: 'short'
+                    })}</span>
+                  </div>
+                  <p className={`text-gray-700 text-sm mb-4 ${expandedEventId === event.id ? '' : 'line-clamp-2'}`}>
+                    {event.description}
                   </p>
-                )}
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <FaUsers className="mr-2" />
+                    <span>Visible to: {event.visible_to.join(", ")}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-
-          {filteredEvents.length > eventsPerPage && (
-            <div className="mt-6 flex justify-center space-x-2">
-              {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }).map(
-                (_, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => paginate(index + 1)}
-                    className={`px-4 py-2 ${
-                      currentPage === index + 1
-                        ? 'bg-orange-800 text-white'
-                        : 'bg-white text-orange-800'
-                    } rounded-lg shadow-md hover:shadow-lg transition-shadow`}
-                  >
-                    {index + 1}
-                  </button>
-                )
-              )}
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <FaCalendarAlt className="text-5xl mx-auto" />
             </div>
-          )}
-        </div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">No events found</h3>
+            <p className="text-gray-500">
+              {searchQuery ? 
+                "No events match your search criteria" : 
+                "There are currently no events scheduled"}
+            </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredEvents.length > eventsPerPage && (
+          <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg shadow-md">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={indexOfLastEvent >= filteredEvents.length}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{indexOfFirstEvent + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {indexOfLastEvent > filteredEvents.length ? filteredEvents.length : indexOfLastEvent}
+                  </span>{' '}
+                  of <span className="font-medium">{filteredEvents.length}</span> results
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <FaArrowLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => paginate(index + 1)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === index + 1
+                          ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={indexOfLastEvent >= filteredEvents.length}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <FaArrowRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
